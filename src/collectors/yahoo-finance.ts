@@ -7,6 +7,7 @@ import {
   MarketOverview,
   DataItem,
 } from './types';
+import { historyManager } from './history';
 
 // 创建 yahoo-finance2 v3 实例
 const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
@@ -164,6 +165,9 @@ export class YahooFinanceCollector extends BaseCollector<YahooFinanceConfig> {
         await this.saveRawData({ quotes, market });
       }
       await this.saveProcessedData(result);
+
+      // 保存历史数据
+      await historyManager.saveQuotes(quotes);
 
       this.log(`Collected ${quotes.length} quotes successfully`);
       return result;

@@ -11,6 +11,7 @@ dist/
 # Data files (can be regenerated)
 data/raw/
 data/processed/
+data/history/
 
 # Output files (can be regenerated)
 output/
