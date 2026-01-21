@@ -1,0 +1,36 @@
+{
+  "name": "finance-briefing-agent",
+  "version": "1.0.0",
+  "description": "AI-powered finance briefing generator",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "collect": "tsx src/scripts/collect.ts",
+    "collect:yahoo": "tsx src/scripts/collect-yahoo.ts",
+    "collect:finnhub": "tsx src/scripts/collect-finnhub.ts",
+    "collect:fred": "tsx src/scripts/collect-fred.ts",
+    "analyze": "tsx src/scripts/analyze.ts",
+    "generate": "tsx src/scripts/generate.ts"
+  },
+  "keywords": [
+    "finance",
+    "briefing",
+    "ai",
+    "stock",
+    "market"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "yahoo-finance2": "^3.11.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}
