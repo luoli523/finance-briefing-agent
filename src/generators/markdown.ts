@@ -1,6 +1,7 @@
 import { ComprehensiveAnalysis, MarketAnalysis, NewsAnalysis, EconomicAnalysis } from '../analyzers/types';
 import { BaseGenerator } from './base';
 import { GeneratedBriefing, BriefingSection, GeneratorConfig, OutputFormat } from './types';
+import { historyManager } from '../collectors/history';
 
 /**
  * Markdown 简报生成器
@@ -33,22 +34,12 @@ export class MarkdownGenerator extends BaseGenerator {
       order: order++,
     });
 
-    // 市场分析
-    if (analysis.market) {
-      sections.push({
-        id: 'market',
-        title: '📊 市场行情',
-        content: this.generateMarketSection(analysis.market),
-        order: order++,
-      });
-    }
-
-    // 板块分析
+    // 全部持仓明细（按行业分类）- 包含指数、ETF和个股
     if (analysis.market && analysis.market.sectors.length > 0) {
       sections.push({
-        id: 'sectors',
-        title: '🏭 板块表现',
-        content: this.generateSectorsSection(analysis.market),
+        id: 'all-stocks',
+        title: '📊 全部持仓明细（按行业分类）',
+        content: await this.generateAllStocksSection(analysis.market),
         order: order++,
       });
     }
@@ -57,18 +48,8 @@ export class MarkdownGenerator extends BaseGenerator {
     if (analysis.market) {
       sections.push({
         id: 'movers',
-        title: '📈 涨跌榜',
+        title: '📈 涨跌榜 Top 5',
         content: this.generateMoversSection(analysis.market),
-        order: order++,
-      });
-    }
-
-    // 全部持仓明细（按行业分类）
-    if (analysis.market && analysis.market.sectors.length > 0) {
-      sections.push({
-        id: 'all-stocks',
-        title: '📋 全部持仓明细',
-        content: this.generateAllStocksSection(analysis.market),
         order: order++,
       });
     }
@@ -259,7 +240,7 @@ export class MarkdownGenerator extends BaseGenerator {
   /**
    * 生成全部持仓明细（按行业分类）
    */
-  private generateAllStocksSection(market: MarketAnalysis): string {
+  private async generateAllStocksSection(market: MarketAnalysis): Promise<string> {
     const lines: string[] = [];
 
     // 统计信息
@@ -268,7 +249,14 @@ export class MarkdownGenerator extends BaseGenerator {
     const losers = market.sectors.reduce((sum, s) => sum + s.stocks.filter(st => st.changePercent < 0).length, 0);
     const unchanged = totalStocks - gainers - losers;
 
+    // 尝试获取历史数据对比
+    const previousDay = await historyManager.getPreviousTradingDay();
+    const hasPreviousData = previousDay !== null;
+
     lines.push(`> 📊 **统计**: 共 ${totalStocks} 只标的 | 🟢 上涨 ${gainers} | 🔴 下跌 ${losers} | ⚪ 持平 ${unchanged}`);
+    if (hasPreviousData) {
+      lines.push(`> 📅 **对比日期**: ${previousDay.date}`);
+    }
     lines.push('');
 
     // 按行业分类显示
@@ -280,12 +268,19 @@ export class MarkdownGenerator extends BaseGenerator {
       const sectorLosers = sector.stocks.filter(s => s.changePercent < 0).length;
       const sectorEmoji = sector.performance >= 0 ? '🟢' : '🔴';
 
-      lines.push(`### ${sectorEmoji} ${sector.name} (${this.formatPercent(sector.performance)})`);
+      lines.push(`### ${sectorEmoji} ${sector.name} (平均: ${this.formatPercent(sector.performance)})`);
       lines.push('');
-      lines.push(`*${sector.stocks.length} 只标的 | 上涨 ${sectorGainers} | 下跌 ${sectorLosers}*`);
+      lines.push(`*${sector.stocks.length} 只标的 | 🟢 上涨 ${sectorGainers} | 🔴 下跌 ${sectorLosers}*`);
       lines.push('');
-      lines.push('| 代码 | 名称 | 价格 | 涨跌 | 涨跌幅 |');
-      lines.push('|:-----|:-----|-----:|-----:|-------:|');
+
+      // 表格表头（根据是否有历史数据决定列）
+      if (hasPreviousData) {
+        lines.push('| 代码 | 名称 | 当前价 | 日涨跌 | 日涨跌幅 | 前收盘 | 对比前日 |');
+        lines.push('|:-----|:-----|-------:|-------:|---------:|-------:|---------:|');
+      } else {
+        lines.push('| 代码 | 名称 | 当前价 | 日涨跌 | 日涨跌幅 |');
+        lines.push('|:-----|:-----|-------:|-------:|---------:|');
+      }
 
       // 按涨跌幅排序
       const sortedStocks = [...sector.stocks].sort((a, b) => b.changePercent - a.changePercent);
@@ -293,7 +288,24 @@ export class MarkdownGenerator extends BaseGenerator {
       for (const stock of sortedStocks) {
         const emoji = stock.changePercent > 0 ? '🟢' : stock.changePercent < 0 ? '🔴' : '⚪';
         const changeSign = stock.change >= 0 ? '+' : '';
-        lines.push(`| ${emoji} ${stock.symbol} | ${stock.name.slice(0, 18)} | $${stock.price.toFixed(2)} | ${changeSign}${stock.change.toFixed(2)} | ${this.formatPercent(stock.changePercent)} |`);
+
+        if (hasPreviousData && previousDay) {
+          // 查找历史数据
+          const prevQuote = previousDay.quotes.find(q => q.symbol === stock.symbol);
+          if (prevQuote) {
+            const prevClose = prevQuote.price;
+            const periodChange = stock.price - prevClose;
+            const periodChangePercent = (periodChange / prevClose) * 100;
+            const periodEmoji = periodChange > 0 ? '🟢' : periodChange < 0 ? '🔴' : '⚪';
+            const periodSign = periodChange >= 0 ? '+' : '';
+
+            lines.push(`| ${emoji} ${stock.symbol} | ${stock.name.slice(0, 15)} | $${stock.price.toFixed(2)} | ${changeSign}${stock.change.toFixed(2)} | ${this.formatPercent(stock.changePercent)} | $${prevClose.toFixed(2)} | ${periodEmoji} ${periodSign}${periodChangePercent.toFixed(2)}% |`);
+          } else {
+            lines.push(`| ${emoji} ${stock.symbol} | ${stock.name.slice(0, 15)} | $${stock.price.toFixed(2)} | ${changeSign}${stock.change.toFixed(2)} | ${this.formatPercent(stock.changePercent)} | - | - |`);
+          }
+        } else {
+          lines.push(`| ${emoji} ${stock.symbol} | ${stock.name.slice(0, 15)} | $${stock.price.toFixed(2)} | ${changeSign}${stock.change.toFixed(2)} | ${this.formatPercent(stock.changePercent)} |`);
+        }
       }
 
       lines.push('');

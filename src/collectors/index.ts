@@ -12,3 +12,7 @@ export { BaseCollector } from './base';
 export { YahooFinanceCollector, yahooFinanceCollector } from './yahoo-finance';
 export { FinnhubCollector, createFinnhubCollector } from './finnhub';
 export { FredCollector, createFredCollector, ECONOMIC_SERIES, DEFAULT_SERIES } from './fred';
+
+// 历史数据管理
+export { HistoryManager, historyManager } from './history';
+export type { HistoricalDataPoint, HistoricalRecord } from './history';

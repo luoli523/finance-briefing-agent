@@ -11,14 +11,18 @@ import {
 
 // 板块分类配置
 const SECTOR_MAPPING: Record<string, string[]> = {
+  '主要指数': ['^GSPC', '^DJI', '^IXIC', '^RUT', '^VIX', '^SPX'],
+  'ETF': ['SPY', 'QQQ', 'VOO', 'SOXX', 'SMH', 'GLD'],
   '科技巨头': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'ORCL'],
   '半导体': ['NVDA', 'AMD', 'INTC', 'AVGO', 'QCOM', 'TSM', 'ASML', 'MU', 'MRVL', 'ARM', 'LRCX', 'AMAT', 'KLAC'],
   '存储': ['WDC', 'STX', 'PSTG'],
   '数据中心': ['VRT', 'DELL', 'ANET'],
   '能源/核电': ['VST', 'CEG', 'LEU', 'OKLO', 'BE'],
   'AI/软件': ['PLTR', 'CRWV'],
+  '航天': ['RKLB'],
   '金融': ['BRK-B', 'JPM', 'V'],
-  'ETF': ['SPY', 'QQQ', 'VOO', 'SOXX', 'SMH', 'GLD'],
+  '保险科技': ['LMND'],
+  '医疗': ['LLY'],
 };
 
 // 主要指数代码
@@ -42,15 +46,15 @@ export class MarketAnalyzer extends BaseAnalyzer<MarketAnalysis> {
 
     const quotes = data.items.map(item => item.metadata as QuoteData);
 
-    // 分离指数和股票
+    // 分离指数和股票（用于特殊处理）
     const indices = quotes.filter(q => MAJOR_INDICES.includes(q.symbol));
     const stocks = quotes.filter(q => !MAJOR_INDICES.includes(q.symbol));
 
     // 分析指数
     const indicesAnalysis = this.analyzeIndices(indices);
 
-    // 分析板块
-    const sectors = this.analyzeSectors(stocks);
+    // 分析所有板块（包括指数作为一个板块）
+    const sectors = this.analyzeSectors(quotes);
 
     // 获取涨跌榜
     const sortedStocks = [...stocks].sort((a, b) => b.changePercent - a.changePercent);
@@ -135,9 +139,7 @@ export class MarketAnalyzer extends BaseAnalyzer<MarketAnalysis> {
       });
     }
 
-    // 按表现排序
-    sectors.sort((a, b) => b.performance - a.performance);
-
+    // 保持配置顺序（不排序），便于简报中按类别顺序显示
     return sectors;
   }
 
