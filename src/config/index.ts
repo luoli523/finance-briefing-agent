@@ -189,6 +189,19 @@ export const RSS_FEEDS = {
     // 'https://nitter.net/markets/rss',
   ],
   
+  // 政府机构官方 RSS (✅ 已测试可用)
+  government: [
+    // 美联储 (Federal Reserve)
+    'https://www.federalreserve.gov/feeds/press_all.xml',      // 美联储新闻稿
+    'https://www.federalreserve.gov/feeds/speeches.xml',       // 美联储官员讲话
+    
+    // SEC (证券交易委员会)
+    'https://www.sec.gov/news/pressreleases.rss',              // SEC 新闻稿
+    
+    // Federal Register (联邦公报)
+    'https://www.federalregister.gov/api/v1/documents.rss',   // 联邦政府公告
+  ],
+  
   // 其他 RSS 源（新闻网站、博客等）
   // 可以添加任何支持 RSS 的网站
   others: [
@@ -203,8 +216,9 @@ export const RSS_FEEDS = {
  */
 export function getAllRSSFeeds(): string[] {
   return [
-    ...RSS_FEEDS.twitter,
-    ...RSS_FEEDS.others,
+    ...RSS_FEEDS.twitter,      // Twitter feeds (目前已禁用)
+    ...RSS_FEEDS.government,   // 政府机构 RSS
+    ...RSS_FEEDS.others,       // 其他 RSS
   ];
 }
 
@@ -235,7 +249,7 @@ export const appConfig = {
   // RSS 配置
   rss: {
     feeds: getAllRSSFeeds(),
-    enabled: false, // 暂时禁用 (Twitter feeds 不可用)
+    enabled: true, // 已启用 (政府机构 RSS 可用)
   },
 
   // 数据目录
