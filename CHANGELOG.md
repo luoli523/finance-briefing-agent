@@ -2,6 +2,57 @@
 
 ## [未发布] - 2026-01-22
 
+### 📝 Prompt 自定义管理系统（最新！）
+
+#### ✨ 集中化 Prompt 管理
+- **独立的 Prompt 文件**: 将 prompt 从代码中分离到 `prompts/` 目录
+- **可视化编辑**: 直接编辑 `.txt` 文件，无需改代码
+- **立即生效**: 修改 prompt 后无需重新编译
+- **自定义支持**: 支持创建自定义 prompt 并保留默认版本
+
+#### 📁 新增文件
+```
+prompts/
+├── README.md                    # 详细使用指南
+├── system-prompt.txt            # 系统提示词（定义 AI 角色）
+├── analysis-task.txt            # 分析任务（定义输出格式）
+├── analysis-focus.txt           # 分析侧重配置（参考）
+└── custom/                      # 自定义 prompt 目录
+```
+
+#### 🎯 主要功能
+1. **集中管理**: 所有 prompt 在一个地方管理
+2. **灵活自定义**: 轻松调整分析侧重、角色定位、输出格式
+3. **备份机制**: 支持自定义 prompt 同时保留默认版本
+4. **版本控制**: 可用 Git 管理 prompt 历史版本
+
+#### 🔧 使用方式
+```bash
+# 方式 1: 直接编辑（推荐）
+vim prompts/system-prompt.txt
+vim prompts/analysis-task.txt
+npm run analyze:enhanced
+
+# 方式 2: 使用自定义 prompt
+cp prompts/system-prompt.txt prompts/custom/system-prompt.txt
+vim prompts/custom/system-prompt.txt
+echo "LLM_CUSTOM_PROMPTS=true" >> .env
+npm run analyze:enhanced
+```
+
+#### 💡 常见应用场景
+- 侧重短期交易策略
+- 专注特定行业（如：半导体）
+- 调整风险偏好（保守/平衡/进取）
+- 修改输出详细程度（简洁/标准/详尽）
+- 添加自定义分析框架
+
+#### 📚 新增文档
+- **`docs/PROMPT_CUSTOMIZATION.md`**: 快速自定义指南
+- **`prompts/README.md`**: 完整使用手册（包含大量示例）
+
+---
+
 ### 🆕 新增 LLM 提供商与模型（最新！）
 
 #### ✨ Google Gemini 支持

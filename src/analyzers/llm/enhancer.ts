@@ -6,7 +6,7 @@
 import { IntelligentAnalysis } from '../intelligent';
 import { LLMConfig, LLMDeepInsights, EnhancedIntelligentAnalysis } from './types';
 import { createLLMProvider } from './providers';
-import { SYSTEM_PROMPT, generateAnalysisPrompt, generateSimplifiedPrompt } from './prompts';
+import { getSystemPrompt, generateAnalysisPrompt, generateSimplifiedPrompt } from './prompts';
 
 export class LLMEnhancer {
   private config: LLMConfig;
@@ -38,7 +38,7 @@ export class LLMEnhancer {
 
       // 调用 LLM
       const messages = [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: getSystemPrompt() },
         { role: 'user', content: userPrompt },
       ];
 
