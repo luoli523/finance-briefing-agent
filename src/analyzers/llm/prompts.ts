@@ -12,7 +12,8 @@ import * as path from 'path';
  * 获取 prompt 文件路径
  */
 function getPromptPath(filename: string): string {
-  const projectRoot = path.join(__dirname, '../../../');
+  // 使用 process.cwd() 而不是 __dirname，因为编译后的代码在 dist 目录
+  const projectRoot = process.cwd();
   
   // 优先使用自定义 prompt（如果启用）
   const useCustom = process.env.LLM_CUSTOM_PROMPTS === 'true';
@@ -30,7 +31,7 @@ function getPromptPath(filename: string): string {
     return defaultPath;
   }
   
-  throw new Error(`Prompt 文件不存在: ${filename}`);
+  throw new Error(`Prompt 文件不存在: ${filename} (尝试路径: ${defaultPath})`);
 }
 
 /**

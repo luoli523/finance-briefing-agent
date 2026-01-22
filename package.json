@@ -20,7 +20,11 @@
     "generate": "tsx src/scripts/generate.ts",
     "generate:intelligent": "tsx src/scripts/generate-intelligent.ts",
     "workflow:intelligent": "tsx src/scripts/run-intelligent-workflow.ts",
-    "verify:config": "tsx src/scripts/verify-config.ts"
+    "verify:config": "tsx src/scripts/verify-config.ts",
+    "generate:decision": "tsx src/scripts/generate-decision-report.ts",
+    "generate:decision-enhanced": "tsx src/scripts/generate-decision-enhanced.ts",
+    "workflow:decision": "tsx src/scripts/collect.ts && tsx src/scripts/analyze.ts && tsx src/scripts/generate-decision-report.ts",
+    "workflow:decision-enhanced": "tsx src/scripts/collect.ts && tsx src/scripts/analyze-intelligent.ts && tsx src/scripts/analyze-enhanced.ts && tsx src/scripts/generate-decision-enhanced.ts"
   },
   "keywords": [
     "finance",
