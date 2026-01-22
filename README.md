@@ -1,50 +1,171 @@
 # Finance Briefing Agent
 
-基于 AI 的财经简报自动生成系统，用于收集、分析财经数据并生成结构化的每日财经简报。
+> 🚀 基于 AI 的财经简报自动生成系统
 
-## 功能特性
+专业的全自动化财经简报生成工具，每日自动收集美股市场、财经新闻、宏观经济数据，通过智能分析生成结构化的投资决策参考报告。
 
-- **多源数据收集** - Yahoo Finance 美股行情、Finnhub 财经新闻、FRED 宏观经济数据
-- **智能数据分析** - 市场状态判断、板块分析、情感分析、风险信号检测
-- **多格式输出** - 支持 Markdown 和 HTML 格式的精美简报
+## ✨ 核心特性
 
-## 快速开始
+### 📊 多维度数据收集
+- **Yahoo Finance** - 51 只美股标的实时行情（无需 API Key）
+- **Finnhub** - 全球财经新闻和市场动态
+- **FRED** - 美国宏观经济指标（失业率、CPI、利率等）
 
-### 1. 安装依赖
+### 🧠 智能数据分析
+- **市场分析** - 市场状态判断、12 个行业板块分析、风险信号检测
+- **新闻分析** - 热门话题提取、情感分析、重要新闻筛选
+- **经济分析** - 经济展望判断、关键指标解读、收益率曲线监控
+
+### 📈 历史数据追踪
+- **自动保存** - 每日收盘数据自动归档（保留 90 天）
+- **多周期对比** - 支持日、周、月涨跌幅对比
+- **52 周高低** - 显示年度价格区间，把握相对位置
+
+### 📄 多格式精美输出
+- **Markdown** - 结构化文本，便于版本管理和协作
+- **HTML** - 响应式网页设计，支持移动端，可直接浏览器打开
+
+### 🏭 按行业分类展示
+- **12 个行业板块** - 主要指数、ETF、科技巨头、半导体、存储、数据中心、能源、航天、金融、保险、制药、新兴行业
+- **完整持仓视图** - 所有 51 只标的按行业分类展示，一目了然
+- **多维度数据** - 现价、日涨跌、周涨跌、月涨跌、52周高低
+
+## 🚀 快速开始
+
+### 第一步：克隆项目并安装依赖
 
 ```bash
+git clone https://github.com/luoli523/finance-briefing-agent.git
+cd finance-briefing-agent
 npm install
 ```
 
-### 2. 配置 API Keys（可选）
+### 第二步：配置 API Keys（可选但推荐）
 
-复制环境变量模板并填入 API Keys：
+#### 2.1 创建配置文件
 
 ```bash
 cp .env.example .env
 ```
 
+#### 2.2 申请免费 API Keys
+
+| API | 用途 | 免费额度 | 申请地址 |
+|-----|------|----------|----------|
+| **Yahoo Finance** | 美股行情 | ✅ 无限制 | 无需注册 |
+| **Finnhub** | 财经新闻 | 60 次/分钟 | https://finnhub.io/ |
+| **FRED** | 经济数据 | 1000 次/天 | https://fred.stlouisfed.org/docs/api/api_key.html |
+| **Alpha Vantage** | 备用数据源 | 25 次/天 | https://www.alphavantage.co/support/#api-key |
+
+#### 2.3 填入 API Keys
+
 编辑 `.env` 文件：
 
 ```env
-# Finnhub API Key (免费: https://finnhub.io)
-FINNHUB_API_KEY=your_finnhub_api_key
+# Finnhub API Key（财经新闻）
+FINNHUB_API_KEY=your_finnhub_api_key_here
 
-# FRED API Key (免费: https://fred.stlouisfed.org/docs/api/api_key.html)
-FRED_API_KEY=your_fred_api_key
+# FRED API Key（经济数据）
+FRED_API_KEY=your_fred_api_key_here
+
+# Alpha Vantage API Key（备用数据源，可选）
+ALPHA_VANTAGE_API_KEY=your_alpha_vantage_api_key_here
 ```
 
-> **注意**: Yahoo Finance 数据无需 API Key，即使不配置其他 API Key 也可以生成基础简报。
+> 💡 **提示**: 
+> - Yahoo Finance 无需 API Key，即使不配置其他 API 也能生成基础简报（包含 51 只股票行情）
+> - Finnhub 和 FRED 可选但强烈推荐，能获得新闻分析和经济数据
+> - Alpha Vantage 作为备用数据源，在主数据源失败时自动切换
 
-### 3. 一键生成简报
+### 第三步：一键生成简报 🎯
 
 ```bash
 npm run collect && npm run analyze && npm run generate
 ```
 
+执行过程：
+1. **📊 收集数据** (约 25 秒) - 获取市场、新闻、经济数据
+2. **🧠 分析数据** (约 2 秒) - 多维度智能分析
+3. **📄 生成简报** (约 1 秒) - 输出 Markdown + HTML 报告
+
 生成的简报位于 `output/` 目录：
 - `briefing-YYYY-MM-DD.md` - Markdown 格式
-- `briefing-YYYY-MM-DD.html` - HTML 格式（可直接在浏览器打开）
+- `briefing-YYYY-MM-DD.html` - HTML 格式
+
+### 第四步：查看简报
+
+#### 方式 1：浏览器打开 HTML（推荐）
+
+```bash
+# macOS
+open output/briefing-2026-01-22.html
+
+# Linux
+xdg-open output/briefing-2026-01-22.html
+
+# Windows
+start output/briefing-2026-01-22.html
+```
+
+#### 方式 2：查看 Markdown
+
+```bash
+cat output/briefing-2026-01-22.md
+# 或使用任何 Markdown 编辑器打开
+```
+
+---
+
+## 📊 生成的简报包含什么？
+
+### 📋 今日要点
+- 市场状态（risk-on / risk-off / mixed）
+- 整体情绪（bullish / bearish / neutral）
+- 关键要点（涨跌明显的股票、热门话题）
+- 市场展望
+
+### 📊 全部持仓明细（按行业分类）⭐
+**12 个行业板块，51 只标的完整展示**
+
+每只股票包含：
+- 📈 日涨跌 - 今日表现
+- 📊 周涨跌 - 近一周趋势
+- 📉 月涨跌 - 近一月走势
+- 🎯 52周高低 - 年度价格区间
+
+行业分类：
+1. **主要指数** (6) - S&P 500, Dow Jones, NASDAQ, Russell 2000, VIX, SPX
+2. **ETF** (6) - SPY, QQQ, VOO, SOXX, SMH, GLD
+3. **科技巨头** (7) - AAPL, MSFT, GOOGL, AMZN, META, TSLA, ORCL
+4. **半导体** (13) - NVDA, AMD, INTC, AVGO, QCOM, TSM, ASML, MU, MRVL, ARM, LRCX, AMAT, KLAC
+5. **存储** (5) - WDC, STX, PSTG, VRT, DELL
+6. **数据中心** (4) - ANET, VST, CEG, LEU
+7. **能源** (3) - OKLO, BE, RKLB
+8. **航天** (1) - RKLB
+9. **金融** (2) - BRK-B, JPM
+10. **保险** (1) - LMND
+11. **制药** (1) - LLY
+12. **其他/新兴** (2) - V, CRWV, PLTR
+
+### 📊 市场行情
+- 主要指数表现
+- 板块排名（8个行业）
+- 涨跌榜 Top 5
+
+### 📰 新闻要闻
+- 热门话题（AI、财报、地缘政治等）
+- 重要新闻精选
+- 新闻情感分析
+
+### 🏦 经济数据
+- 关键经济指标（失业率、CPI、利率等）
+- 收益率曲线状态
+- 经济展望判断
+
+### ⚠️ 风险关注
+- VIX 恐慌指数监控
+- 收益率曲线倒挂警告
+- 市场异常波动提示
 
 ---
 
@@ -332,41 +453,91 @@ finance-briefing-agent/
 
 ---
 
-## 数据源说明
+## 📊 数据源详解
 
-### Yahoo Finance（美股行情）
+### Yahoo Finance（美股实时行情）
 
-**无需 API Key**，默认收集以下标的：
+**✅ 无需 API Key**，默认监控 **51 只标的**，按行业分类：
 
-**指数 (6个)**
-| 代码 | 名称 |
-|------|------|
-| ^GSPC | S&P 500 |
-| ^DJI | Dow Jones |
-| ^IXIC | NASDAQ |
-| ^RUT | Russell 2000 |
-| ^VIX | VIX 恐慌指数 |
-| ^SPX | S&P 500 Index |
+#### 1️⃣ 主要指数 (6只)
+| 代码 | 名称 | 说明 |
+|------|------|------|
+| ^GSPC | S&P 500 | 美国大盘标杆指数 |
+| ^DJI | Dow Jones Industrial Average | 道琼斯工业平均指数 |
+| ^IXIC | NASDAQ Composite | 纳斯达克综合指数 |
+| ^RUT | Russell 2000 | 小盘股指数 |
+| ^VIX | CBOE Volatility Index | VIX 恐慌指数 |
+| ^SPX | S&P 500 Index | 标普500指数 |
 
-**ETF (6个)**
-| 代码 | 名称 |
-|------|------|
-| SPY | SPDR S&P 500 ETF |
-| QQQ | Invesco QQQ (NASDAQ 100) |
-| VOO | Vanguard S&P 500 ETF |
-| SOXX | iShares Semiconductor ETF |
-| SMH | VanEck Semiconductor ETF |
-| GLD | SPDR Gold Trust |
+#### 2️⃣ ETF (6只)
+| 代码 | 名称 | 类型 |
+|------|------|------|
+| SPY | SPDR S&P 500 ETF | 大盘ETF |
+| QQQ | Invesco QQQ | 纳斯达克100 ETF |
+| VOO | Vanguard S&P 500 ETF | 大盘ETF |
+| **SOXX** | **iShares Semiconductor ETF** | **半导体ETF** ⭐ |
+| SMH | VanEck Semiconductor ETF | 半导体ETF |
+| GLD | SPDR Gold Trust | 黄金ETF |
 
-**个股 (39个)**
-- 科技巨头: AAPL, MSFT, GOOGL, AMZN, META, TSLA, ORCL, PLTR
-- 半导体: NVDA, AMD, INTC, AVGO, QCOM, TSM, ASML, MU, MRVL, ARM, LRCX, AMAT, KLAC
-- 存储: WDC, STX, PSTG
-- 数据中心: VRT, DELL, ANET
-- 能源/核电: VST, CEG, LEU, OKLO, BE
-- 航天: RKLB
-- 金融: BRK-B, JPM, V
-- 其他: LMND, LLY, CRWV
+#### 3️⃣ 科技巨头 (7只)
+- **AAPL** - Apple Inc.
+- **MSFT** - Microsoft Corporation
+- **GOOGL** - Alphabet Inc.
+- **AMZN** - Amazon.com, Inc.
+- **META** - Meta Platforms, Inc.
+- **TSLA** - Tesla, Inc.
+- **ORCL** - Oracle Corporation
+
+#### 4️⃣ 半导体 (13只)
+- **NVDA** - NVIDIA Corporation（AI芯片龙头）
+- **AMD** - Advanced Micro Devices
+- **INTC** - Intel Corporation
+- **AVGO** - Broadcom Inc.
+- **QCOM** - QUALCOMM Incorporated
+- **TSM** - Taiwan Semiconductor（台积电）
+- **ASML** - ASML Holding N.V.（光刻机）
+- **MU** - Micron Technology（存储芯片）
+- **MRVL** - Marvell Technology, Inc.
+- **ARM** - Arm Holdings plc
+- **LRCX** - Lam Research Corporation
+- **AMAT** - Applied Materials, Inc.
+- **KLAC** - KLA Corporation
+
+#### 5️⃣ 存储 (5只)
+- **WDC** - Western Digital Corporation
+- **STX** - Seagate Technology Holdings
+- **PSTG** - Pure Storage, Inc.
+- **VRT** - Vertiv Holdings Co
+- **DELL** - Dell Technologies Inc.
+
+#### 6️⃣ 数据中心 (4只)
+- **ANET** - Arista Networks, Inc.
+- **VST** - Vistra Corp.
+- **CEG** - Constellation Energy Corporation
+- **LEU** - Centrus Energy Corp.
+
+#### 7️⃣ 能源 (3只)
+- **OKLO** - Oklo Inc.（核能）
+- **BE** - Bloom Energy Corporation
+- **RKLB** - Rocket Lab USA, Inc.
+
+#### 8️⃣ 航天 (1只)
+- **RKLB** - Rocket Lab USA, Inc.
+
+#### 9️⃣ 金融 (2只)
+- **BRK-B** - Berkshire Hathaway Inc.
+- **JPM** - JPMorgan Chase & Co.
+
+#### 🔟 保险 (1只)
+- **LMND** - Lemonade, Inc.
+
+#### 1️⃣1️⃣ 制药 (1只)
+- **LLY** - Eli Lilly and Company
+
+#### 1️⃣2️⃣ 其他/新兴 (2只)
+- **V** - Visa Inc.
+- **CRWV** - Crown Electrokinetics Corp.
+- **PLTR** - Palantir Technologies Inc.
 
 ### Finnhub（财经新闻）
 
@@ -395,72 +566,308 @@ finance-briefing-agent/
 
 ---
 
-## 分析功能
+## 📈 历史数据管理
 
-### 市场分析 (MarketAnalyzer)
-- 判断市场状态（risk-on / risk-off / mixed）
-- 板块表现分析和排名
-- 涨跌榜 Top 5
-- 风险信号检测（VIX、科技股集体下跌等）
+### 自动数据归档
+系统在每次运行 `collect` 命令时，会自动保存当日的收盘数据到 `data/history/market-history.json`。
 
-### 新闻分析 (NewsAnalyzer)
-- 热门话题提取（AI、美联储、财报等）
-- 新闻情感分析（bullish / bearish / neutral）
-- 重要新闻筛选和排序
+**特性：**
+- ✅ **自动保存** - 每日收盘数据自动归档
+- ✅ **智能维护** - 保留最近 90 天数据，自动清理旧数据
+- ✅ **高效查询** - 支持按日期、股票代码快速检索
+- ✅ **多周期对比** - 日、周、月涨跌幅自动计算
 
-### 经济分析 (EconomicAnalyzer)
-- 经济展望判断（expansion / contraction / stable）
-- 关键指标解读
-- 收益率曲线状态监控
-- 风险因素识别
+### 数据结构
+
+```json
+{
+  "date": "2026-01-22",
+  "timestamp": "2026-01-22T09:46:38.000Z",
+  "quotes": [
+    {
+      "symbol": "AAPL",
+      "date": "2026-01-22",
+      "price": 247.65,
+      "change": 0.96,
+      "changePercent": 0.39,
+      "volume": 45678900,
+      "marketCap": 3741234567890,
+      "fiftyTwoWeekHigh": 288.62,
+      "fiftyTwoWeekLow": 169.21
+    }
+  ]
+}
+```
+
+### 历史数据 API
+
+系统提供了 `HistoryManager` 类来管理历史数据：
+
+```typescript
+import { historyManager } from './collectors/history';
+
+// 获取指定日期的数据
+const quotes = await historyManager.getQuotesByDate('2026-01-22');
+
+// 获取最近 N 天的数据
+const recent = await historyManager.getRecentQuotes(7);
+
+// 获取单个股票的历史数据
+const appleHistory = await historyManager.getSymbolHistory('AAPL', 30);
+
+// 获取一周前的数据
+const weekAgo = await historyManager.getWeekAgoData();
+
+// 获取一个月前的数据
+const monthAgo = await historyManager.getMonthAgoData();
+
+// 多周期对比
+const comparison = await historyManager.getMultiPeriodComparison(currentQuotes);
+```
+
+### 在简报中的应用
+
+历史数据自动应用于简报生成：
+
+| 字段 | 说明 | 对比基准 |
+|------|------|----------|
+| 日涨跌 | 当日涨跌幅 | 前一交易日收盘价 |
+| 周涨跌 | 一周涨跌幅 | 7天前收盘价 |
+| 月涨跌 | 一个月涨跌幅 | 30天前收盘价 |
+| 52周高 | 年度最高价 | 过去52周数据 |
+| 52周低 | 年度最低价 | 过去52周数据 |
+
+**示例显示：**
+```
+| 代码 | 名称 | 现价 | 日涨跌 | 周涨跌 | 月涨跌 | 52周高 | 52周低 |
+| AAPL | Apple Inc. | $247.65 | 🟢+0.39% | 🟢+2.15% | 🔴-5.20% | $288.62 | $169.21 |
+```
 
 ---
 
-## 输出示例
+## 🧠 智能分析功能
+
+### 市场分析 (MarketAnalyzer)
+**功能：**
+- ✅ 市场状态判断（risk-on / risk-off / mixed）
+- ✅ 12 个行业板块表现分析和排名
+- ✅ 涨跌榜 Top 5（最大涨幅和跌幅）
+- ✅ 风险信号检测（VIX > 30、科技股集体下跌等）
+- ✅ 板块领涨/领跌股识别
+
+**输出指标：**
+- 主要指数表现
+- 板块平均涨跌幅
+- 单个股票详细数据（价格、涨跌、市值、成交量）
+- 52周高低价位置
+
+### 新闻分析 (NewsAnalyzer)
+**功能：**
+- ✅ 热门话题自动提取（AI、美联储、财报、地缘政治等）
+- ✅ 新闻情感分析（bullish / bearish / neutral）
+- ✅ 重要新闻自动筛选和排序
+- ✅ 新闻来源标注
+- ✅ 相关股票代码识别
+
+**支持的话题类别：**
+- AI/人工智能
+- 美联储/货币政策
+- 财报季
+- 科技股
+- 通胀/CPI
+- 地缘政治
+- 加密货币
+- ESG/可持续发展
+
+### 经济分析 (EconomicAnalyzer)
+**功能：**
+- ✅ 经济展望判断（expansion / contraction / stable）
+- ✅ 关键经济指标自动解读
+- ✅ 收益率曲线状态实时监控（正常/倒挂/平坦）
+- ✅ 风险因素自动识别
+- ✅ 经济数据同比/环比变化分析
+
+**监控的经济指标：**
+- **就业** - 失业率 (UNRATE)、初请失业金 (ICSA)
+- **通胀** - CPI 消费者物价指数 (CPIAUCSL)
+- **利率** - 联邦基金利率 (FEDFUNDS)、10年期国债 (DGS10)、2年期国债 (DGS2)
+- **收益率曲线** - 10Y-2Y利差 (T10Y2Y)
+- **信心** - 密歇根消费者信心指数 (UMCSENT)
+
+---
+
+## 📄 输出示例
 
 ### Markdown 简报预览
 
 ```markdown
-# 财经早报 | 2026年1月21日星期三
+# 财经早报 | 2026年1月22日星期四
 
-> **市场状态**: 🔴 避险情绪浓厚
-> **整体情绪**: 📉 偏空
-
-**关键要点：**
-- 标普500 大跌 -2.06%，市场波动加剧
-- 半导体板块领跌，平均跌幅 -4.32%
-
-## 📊 市场行情
-
-### 主要指数
-
-| 指数 | 收盘价 | 涨跌幅 |
-|------|--------|--------|
-| 🔴 S&P 500 | 6796.86 | -2.06% |
-| 🔴 NASDAQ | 22954.32 | -2.39% |
-| 🔴 Dow Jones | 48488.59 | -1.76% |
-```
-
-### HTML 简报
-
-精美的网页格式，支持：
-- 响应式布局，适配手机和电脑
-- 深色主题标题
-- 数据表格和卡片
-- 涨跌颜色标识
+*生成时间: 2026/1/22 09:46:38*
 
 ---
 
-## 自定义配置
+## 📋 今日要点
 
-### 修改股票列表
+> **市场状态**: 🟢 风险偏好上升
+> **整体情绪**: 📈 偏多
 
-编辑 `src/collectors/yahoo-finance.ts` 中的 `DEFAULT_CONFIG`：
+**关键要点：**
+- Intel Corporation (INTC) 大涨 +11.72%
+- 今日热点：AI/人工智能，相关新闻 41 条
+- 新闻情绪偏乐观，利好消息占主导
+
+**市场展望：** 市场风险偏好较高，经济运行总体平稳。
+
+---
+
+## 📊 全部持仓明细（按行业分类）
+
+> 📊 **统计**: 共 51 只标的 | 🟢 上涨 36 | 🔴 下跌 15 | ⚪ 持平 0
+> 📅 **历史数据**: 周对比: 2026-01-15 | 月对比: 2025-12-22
+
+### 🟢 半导体 (平均: +3.73%)
+
+*13 只标的 | 🟢 上涨 11 | 🔴 下跌 2*
+
+| 代码 | 名称 | 现价 | 日涨跌 | 周涨跌 | 月涨跌 | 52周高 | 52周低 |
+|:-----|:-----|-------:|---------:|---------:|---------:|-------:|-------:|
+| 🟢 INTC | Intel Corpor | $54.25 | 🟢+11.72% | 🟢+15.20% | 🟢+45.89% | $54.41 | $17.67 |
+| 🟢 AMD | Advanced Mic | $249.80 | 🟢+7.71% | 🟢+9.45% | 🔴-3.20% | $267.08 | $76.48 |
+| 🟢 NVDA | NVIDIA Corpo | $183.32 | 🟢+2.95% | 🟢+5.12% | 🟢+8.30% | $212.19 | $86.62 |
+...
+```
+
+### 📊 主要指数表现
+
+| 指数 | 收盘价 | 涨跌幅 |
+|------|--------|--------|
+| 🟢 S&P 500 | 6875.62 | +1.16% |
+| 🟢 NASDAQ | 23224.82 | +1.18% |
+| 🟢 Dow Jones | 49077.23 | +1.21% |
+| 🟢 Russell 2000 | 2698.17 | +2.00% |
+| 🔴 VIX | 16.90 | -15.88% |
+```
+
+### 📰 新闻要闻
+
+**🔥 热门话题:**
+- AI/人工智能 (41 条)
+- 地缘政治 (16 条)
+- 财报 (15 条)
+
+**📌 重要新闻:**
+1. Jim Cramer says Trump-fueled market volatility once again proves to be a buying opportunity
+2. Trump says he wants 'people to be able to a buy a home'...
+...
+```
+
+### 🏦 经济数据
+
+**收益率曲线**: 🟢 正常 (0.66%)
+
+| 指标 | 数值 | 解读 |
+|------|------|------|
+| 失业率 | 4.40% | 处于健康水平 |
+| CPI | 326.03 | 通胀上升 |
+| 联邦基金利率 | 3.72% | 维持高位 |
+| 10年期国债 | 4.30% | - |
+```
+
+---
+
+### HTML 简报特性
+
+精美的响应式网页设计，包含：
+
+✅ **现代化界面**
+- 深色渐变标题
+- 卡片式布局
+- 圆角阴影设计
+
+✅ **数据可视化**
+- 涨跌颜色标识（绿色/红色）
+- 表格自动排版
+- 数据对齐优化
+
+✅ **响应式设计**
+- 自适应桌面和移动端
+- 1200px 宽容器，更好展示数据
+- 移动端友好的表格滚动
+
+✅ **完整内容**
+- 所有 Markdown 内容完整呈现
+- 12 个行业板块分类展示
+- 51 只股票详细数据
+- 历史数据对比（日、周、月）
+
+**预览截图结构：**
+```
+┌─────────────────────────────────┐
+│  📊 财经早报 | 2026年1月22日  │
+│  生成时间: 2026/1/22 09:46:38  │
+└─────────────────────────────────┘
+
+┌─────────────────────────────────┐
+│  📋 今日要点                     │
+│  - 市场状态: 风险偏好上升        │
+│  - 关键要点...                   │
+└─────────────────────────────────┘
+
+┌─────────────────────────────────┐
+│  📊 全部持仓明细（按行业分类）   │
+│  ├─ 🔴 主要指数 (6只)           │
+│  ├─ 🟢 ETF (6只)               │
+│  ├─ 🟢 科技巨头 (7只)           │
+│  ├─ 🟢 半导体 (13只)            │
+│  └─ ...                         │
+└─────────────────────────────────┘
+
+... 更多板块 ...
+```
+
+---
+
+## ⚙️ 自定义配置
+
+### 修改股票监控列表
+
+编辑 `src/collectors/yahoo-finance.ts` 中的 `DEFAULT_SYMBOLS`：
 
 ```typescript
-const DEFAULT_CONFIG: YahooFinanceConfig = {
-  indices: ['^GSPC', '^DJI', '^IXIC'],  // 指数
-  symbols: ['AAPL', 'MSFT', 'GOOGL'],   // 个股
+const DEFAULT_SYMBOLS = [
+  // 主要指数
+  '^GSPC', '^DJI', '^IXIC', '^RUT', '^VIX', '^SPX',
+  
+  // ETF
+  'SPY', 'QQQ', 'VOO', 'SOXX', 'SMH', 'GLD',
+  
+  // 科技巨头
+  'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'ORCL',
+  
+  // 半导体
+  'NVDA', 'AMD', 'INTC', 'AVGO', 'QCOM', 'TSM', 'ASML',
+  'MU', 'MRVL', 'ARM', 'LRCX', 'AMAT', 'KLAC',
+  
+  // 自定义添加...
+  'YOUR_STOCK_HERE',
+];
+```
+
+### 修改行业分类
+
+编辑 `src/analyzers/market.ts` 中的 `SECTOR_MAPPING`：
+
+```typescript
+const SECTOR_MAPPING: Record<string, string[]> = {
+  '主要指数': ['^GSPC', '^DJI', '^IXIC', '^RUT', '^VIX', '^SPX'],
+  'ETF': ['SPY', 'QQQ', 'VOO', 'SOXX', 'SMH', 'GLD'],
+  '科技巨头': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'ORCL'],
+  '半导体': ['NVDA', 'AMD', 'INTC', 'AVGO', 'QCOM', 'TSM', 'ASML', 
+            'MU', 'MRVL', 'ARM', 'LRCX', 'AMAT', 'KLAC'],
+  
+  // 添加新的行业分类
+  '你的行业': ['STOCK1', 'STOCK2', 'STOCK3'],
 };
 ```
 
@@ -469,27 +876,547 @@ const DEFAULT_CONFIG: YahooFinanceConfig = {
 编辑 `src/collectors/fred.ts` 中的 `DEFAULT_SERIES`：
 
 ```typescript
-const DEFAULT_SERIES = [
+export const DEFAULT_SERIES = [
   'UNRATE',    // 失业率
+  'CPIAUCSL',  // CPI 消费者物价指数
   'FEDFUNDS',  // 联邦基金利率
-  'DGS10',     // 10年期国债
+  'DGS10',     // 10年期国债收益率
+  'DGS2',      // 2年期国债收益率
+  'T10Y2Y',    // 10Y-2Y 收益率利差
+  'UMCSENT',   // 密歇根消费者信心指数
+  'ICSA',      // 初请失业金人数
+  
+  // 添加更多 FRED 系列...
+  // 查找更多指标: https://fred.stlouisfed.org/
 ];
 ```
 
----
+### 修改新闻类别
 
-## 开发
+编辑 `src/collectors/finnhub.ts` 的配置：
 
-```bash
-# 构建
-npm run build
+```typescript
+const DEFAULT_CONFIG = {
+  category: 'general',  // 可选: general, forex, crypto, merger
+  timeout: 30000,       // 超时时间 (毫秒)
+  retries: 3,           // 重试次数
+};
+```
 
-# 开发模式（监听文件变化）
-npm run dev
+### 自定义简报模板
+
+#### Markdown 模板
+
+编辑 `src/generators/markdown.ts`，修改生成逻辑：
+
+```typescript
+private generateSummarySection(summary: ComprehensiveSummary): string {
+  // 自定义摘要格式
+  return `
+## 📋 自定义标题
+
+> **您的自定义内容**
+  `;
+}
+```
+
+#### HTML 样式
+
+编辑 `src/generators/html.ts` 中的 CSS 样式：
+
+```typescript
+.container { 
+  max-width: 1200px;  // 调整容器宽度
+  margin: 0 auto; 
+}
+
+.positive { 
+  color: #22c55e;  // 涨颜色
+}
+
+.negative { 
+  color: #ef4444;  // 跌颜色
+}
 ```
 
 ---
 
-## License
+## 🛠️ 技术栈
 
-MIT
+### 核心技术
+- **TypeScript** - 类型安全的 JavaScript 超集
+- **Node.js** - JavaScript 运行时
+- **ESM** - ES Modules 模块系统
+
+### 数据源 API
+- **yahoo-finance2** - Yahoo Finance 数据接口
+- **Finnhub API** - 财经新闻 REST API
+- **FRED API** - 圣路易斯联储经济数据 API
+- **Alpha Vantage API** - 备用金融数据 API
+
+### 开发工具
+- **tsx** - TypeScript 执行器
+- **dotenv** - 环境变量管理
+- **https-proxy-agent** - 网络代理支持
+
+### 架构特点
+- ✅ **模块化设计** - Collectors / Analyzers / Generators 三层架构
+- ✅ **类型安全** - 完整的 TypeScript 类型定义
+- ✅ **错误处理** - 完善的异常捕获和日志记录
+- ✅ **数据持久化** - JSON 格式存储，便于查询和追溯
+- ✅ **可扩展性** - 易于添加新的数据源和分析模块
+
+---
+
+## 🚀 高级功能
+
+### 1. 自动故障转移
+
+系统支持多数据源自动切换：
+
+```typescript
+// 当 Yahoo Finance 失败时，自动切换到 Alpha Vantage
+const marketCollector = new MarketCollector({
+  primarySource: 'yahoo',
+  backupSource: 'alphavantage',
+  autoFailover: true,
+});
+```
+
+### 2. 代理支持
+
+对于需要代理的网络环境：
+
+```typescript
+// .env 文件
+HTTP_PROXY=http://proxy.example.com:8080
+HTTPS_PROXY=http://proxy.example.com:8080
+```
+
+### 3. 批量数据获取
+
+支持批量获取历史数据：
+
+```typescript
+import { historyManager } from './collectors/history';
+
+// 获取最近 30 天的所有数据
+const recentData = await historyManager.getRecentQuotes(30);
+
+// 批量查询多个股票
+const symbols = ['AAPL', 'MSFT', 'GOOGL'];
+const data = await Promise.all(
+  symbols.map(symbol => historyManager.getSymbolHistory(symbol, 90))
+);
+```
+
+### 4. 自定义分析器
+
+创建自定义分析模块：
+
+```typescript
+import { BaseAnalyzer } from './analyzers/base';
+
+export class CustomAnalyzer extends BaseAnalyzer {
+  async analyze(data: any) {
+    // 实现您的分析逻辑
+    return {
+      // 返回分析结果
+    };
+  }
+}
+```
+
+### 5. 定时任务
+
+使用 cron 定时运行（Linux/macOS）：
+
+```bash
+# 编辑 crontab
+crontab -e
+
+# 每天早上 6:00 运行（美股收盘后）
+0 6 * * * cd /path/to/finance-briefing-agent && npm run collect && npm run analyze && npm run generate
+
+# 或使用绝对路径
+0 6 * * * /usr/local/bin/node /path/to/finance-briefing-agent/dist/scripts/collect.js
+```
+
+Windows Task Scheduler：
+
+```powershell
+# 创建每日任务
+$action = New-ScheduledTaskAction -Execute 'npm' -Argument 'run collect && npm run analyze && npm run generate' -WorkingDirectory 'C:\path\to\finance-briefing-agent'
+$trigger = New-ScheduledTaskTrigger -Daily -At 6:00AM
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "Finance Briefing"
+```
+
+### 6. Webhook 通知
+
+发送简报到 Slack/Discord/企业微信：
+
+```typescript
+// 在 generate.ts 中添加
+async function sendToWebhook(briefing: string) {
+  await fetch(process.env.WEBHOOK_URL!, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: briefing }),
+  });
+}
+```
+
+---
+
+## 🔧 故障排查
+
+### Q1: Finnhub API 连接超时
+
+**问题**: `ConnectTimeoutError` 或 `fetch failed`
+
+**解决方案**:
+```bash
+# 方法 1: 检查 API Key
+cat .env | grep FINNHUB
+
+# 方法 2: 测试 API 连接
+curl "https://finnhub.io/api/v1/news?category=general&token=YOUR_API_KEY"
+
+# 方法 3: 使用代理（如需要）
+export HTTPS_PROXY=http://proxy.example.com:8080
+```
+
+**已知问题**: Node.js fetch 在某些网络环境下可能超时，系统已使用 `https` 模块替代。
+
+---
+
+### Q2: 没有历史数据对比
+
+**问题**: 简报中"周涨跌"和"月涨跌"显示为 "-"
+
+**原因**: 历史数据不足，需要至少运行 7 天才有周对比数据，30 天才有月对比数据。
+
+**解决方案**:
+```bash
+# 检查历史数据
+ls -lh data/history/
+
+# 查看历史记录数量
+cat data/history/market-history.json | grep '"date":' | wc -l
+```
+
+---
+
+### Q3: 数据收集失败
+
+**问题**: `npm run collect` 失败
+
+**排查步骤**:
+```bash
+# 1. 检查网络连接
+curl https://www.google.com
+
+# 2. 单独测试各个收集器
+npm run collect:yahoo   # 应该总是成功（无需 API）
+npm run collect:finnhub # 需要 API Key
+npm run collect:fred    # 需要 API Key
+
+# 3. 查看详细错误日志
+npm run collect 2>&1 | tee collect.log
+
+# 4. 检查 API Key 配置
+cat .env
+```
+
+---
+
+### Q4: 简报生成不完整
+
+**问题**: HTML 报告内容少于 Markdown
+
+**解决方案**: 已在最新版本修复。更新代码：
+```bash
+git pull origin main
+npm run build
+npm run generate
+```
+
+---
+
+### Q5: TypeScript 编译错误
+
+**问题**: `npm run build` 报错
+
+**解决方案**:
+```bash
+# 清理并重新构建
+rm -rf dist/ node_modules/
+npm install
+npm run build
+```
+
+---
+
+## ⚡ 性能优化
+
+### 数据收集优化
+
+**批量请求**: Yahoo Finance 收集器使用批量请求，每批 10 个股票：
+
+```typescript
+// 自动分批，避免 API 限流
+const BATCH_SIZE = 10;
+const BATCH_DELAY = 3000; // 3秒延迟
+```
+
+**并发控制**: 使用 Promise.all 并发获取多个数据源：
+
+```typescript
+// 并发收集三个数据源
+await Promise.all([
+  yahooCollector.collect(),
+  finnhubCollector.collect(),
+  fredCollector.collect(),
+]);
+```
+
+### 数据存储优化
+
+**历史数据维护**: 自动清理 90 天前的旧数据：
+
+```typescript
+// 保持数据文件大小在合理范围
+const MAX_HISTORY_DAYS = 90;
+```
+
+**增量更新**: 只更新当天的数据，不重复处理：
+
+```typescript
+// 检查是否已有当天数据
+const today = getToday();
+if (existingData.find(d => d.date === today)) {
+  // 更新而非追加
+}
+```
+
+---
+
+## 🧪 开发指南
+
+### 本地开发
+
+```bash
+# 安装依赖
+npm install
+
+# 开发模式（监听文件变化）
+npm run dev
+
+# 构建项目
+npm run build
+
+# 运行测试（如有）
+npm test
+```
+
+### 代码结构
+
+```
+src/
+├── collectors/      # 数据收集模块
+│   ├── base.ts      # 基类（通用功能）
+│   ├── yahoo-finance.ts
+│   ├── finnhub.ts
+│   ├── fred.ts
+│   ├── history.ts   # 历史数据管理
+│   └── types.ts     # 类型定义
+│
+├── analyzers/       # 数据分析模块
+│   ├── base.ts
+│   ├── market.ts    # 市场分析
+│   ├── news.ts      # 新闻分析
+│   ├── economic.ts  # 经济分析
+│   ├── unified.ts   # 综合分析
+│   └── types.ts
+│
+├── generators/      # 简报生成模块
+│   ├── base.ts
+│   ├── markdown.ts  # Markdown 生成器
+│   ├── html.ts      # HTML 生成器
+│   ├── unified.ts   # 统一生成器
+│   └── types.ts
+│
+├── config/          # 配置管理
+│   └── index.ts     # 环境变量和配置
+│
+└── scripts/         # 运行脚本
+    ├── collect.ts   # 数据收集入口
+    ├── analyze.ts   # 数据分析入口
+    └── generate.ts  # 简报生成入口
+```
+
+### 添加新的数据源
+
+1. 创建收集器类：
+
+```typescript
+// src/collectors/new-source.ts
+import { BaseCollector } from './base';
+
+export class NewSourceCollector extends BaseCollector {
+  async collect(): Promise<CollectedData> {
+    // 实现数据收集逻辑
+  }
+}
+```
+
+2. 注册到统一收集器：
+
+```typescript
+// src/scripts/collect.ts
+import { NewSourceCollector } from '../collectors/new-source';
+
+const newCollector = new NewSourceCollector(config);
+await newCollector.collect();
+```
+
+3. 添加类型定义：
+
+```typescript
+// src/collectors/types.ts
+export interface NewSourceConfig {
+  apiKey: string;
+  endpoint: string;
+}
+```
+
+---
+
+## 📦 部署建议
+
+### Docker 部署
+
+创建 `Dockerfile`:
+
+```dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+RUN npm run build
+
+CMD ["npm", "run", "collect"]
+```
+
+构建和运行：
+
+```bash
+docker build -t finance-briefing-agent .
+docker run -v $(pwd)/data:/app/data \
+           -v $(pwd)/output:/app/output \
+           -e FINNHUB_API_KEY=xxx \
+           -e FRED_API_KEY=xxx \
+           finance-briefing-agent
+```
+
+### 云函数部署
+
+适合部署到 AWS Lambda / Vercel / Netlify Functions：
+
+```typescript
+// api/briefing.ts
+import { collect, analyze, generate } from '../src';
+
+export default async function handler(req, res) {
+  await collect();
+  await analyze();
+  const briefing = await generate();
+  
+  res.status(200).json({ briefing });
+}
+```
+
+---
+
+## 🤝 贡献指南
+
+欢迎提交 Issue 和 Pull Request！
+
+### 提交 Bug
+
+请包含：
+- 完整的错误信息
+- 复现步骤
+- 运行环境（Node.js 版本、操作系统）
+
+### 功能建议
+
+请描述：
+- 功能的使用场景
+- 预期的行为
+- 可能的实现方案
+
+### Pull Request
+
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+---
+
+## 📜 更新日志
+
+查看 [CHANGELOG.md](./CHANGELOG.md) 了解详细的版本历史。
+
+### 最新版本特性 (v2.0.0)
+
+- ✅ 新增历史数据管理系统，支持日、周、月对比
+- ✅ 新增按 12 个行业分类的完整持仓视图
+- ✅ HTML 报告完整支持所有 51 只标的展示
+- ✅ 新增 52 周高低价显示
+- ✅ 修复 Finnhub API 网络连接问题
+- ✅ 优化数据收集性能和错误处理
+- ✅ 更新 API Keys 配置说明
+
+---
+
+## 📞 联系方式
+
+- **项目地址**: https://github.com/luoli523/finance-briefing-agent
+- **问题反馈**: https://github.com/luoli523/finance-briefing-agent/issues
+
+---
+
+## ⚖️ 免责声明
+
+本工具仅供学习和参考使用，生成的简报不构成任何投资建议。投资有风险，决策需谨慎。
+
+- ⚠️ 数据来源于第三方 API，不保证数据的准确性和实时性
+- ⚠️ 分析结果基于算法和规则，可能存在偏差
+- ⚠️ 使用者应该独立判断，自行承担投资风险
+
+---
+
+## 📄 License
+
+MIT License - 详见 [LICENSE](./LICENSE) 文件
+
+Copyright (c) 2026 Finance Briefing Agent Contributors
+
+---
+
+## 🌟 Star History
+
+如果这个项目对您有帮助，请考虑给一个 ⭐️ Star！
+
+[![Star History Chart](https://api.star-history.com/svg?repos=luoli523/finance-briefing-agent&type=Date)](https://star-history.com/#luoli523/finance-briefing-agent&Date)
+
+---
+
+**Happy Trading! 📈**

@@ -3,7 +3,7 @@
  */
 
 // 数据类型枚举
-export type DataType = 'news' | 'market' | 'economic';
+export type DataType = 'news' | 'market' | 'economic' | 'sec-filings' | 'government-news' | 'company-ir';
 
 // 市场类型
 export type MarketType = 'stock' | 'index' | 'forex' | 'crypto' | 'commodity';
@@ -133,4 +133,45 @@ export interface EconomicOverview {
 export interface FredConfig extends CollectorConfig {
   apiKey: string;            // FRED API Key
   seriesIds?: string[];      // 要获取的系列 ID 列表
+}
+
+// SEC EDGAR 配置
+export interface SECConfig extends CollectorConfig {
+  userAgent: string;          // SEC 要求的 User-Agent
+  symbols: string[];          // 要监控的股票代码
+  forms: string[];            // 要收集的 filing 类型 (8-K, 10-K, 10-Q, etc.)
+  daysBack: number;           // 回溯天数
+}
+
+// 政府机构新闻配置
+export interface GovernmentNewsConfig extends CollectorConfig {
+  sources: GovernmentSource[];  // 要监控的政府机构
+}
+
+// 政府机构来源
+export interface GovernmentSource {
+  name: string;
+  type: 'rss' | 'api' | 'html';
+  url: string;
+  enabled: boolean;
+}
+
+// 公司 IR 配置
+export interface CompanyIRConfig extends CollectorConfig {
+  companies: CompanyIRSource[];  // 要监控的公司
+}
+
+// 公司 IR 来源
+export interface CompanyIRSource {
+  symbol: string;
+  name: string;
+  irUrl: string;
+  rssUrl?: string;
+  enabled: boolean;
+}
+
+// Alpha Vantage 配置
+export interface AlphaVantageConfig extends CollectorConfig {
+  apiKey: string;
+  symbols: string[];
 }

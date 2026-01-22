@@ -5,6 +5,142 @@ import * as path from 'path';
 config({ path: path.resolve(process.cwd(), '.env') });
 
 /**
+ * 监控的股票和指数列表（全局唯一配置）
+ * 所有收集器（Yahoo Finance, SEC/EDGAR 等）都使用这个列表
+ * 
+ * 只需在这里修改，即可全局生效
+ */
+export const MONITORED_SYMBOLS = {
+  // 主要指数 (6)
+  indices: [
+    '^GSPC',   // S&P 500
+    '^DJI',    // Dow Jones Industrial Average
+    '^IXIC',   // NASDAQ Composite
+    '^RUT',    // Russell 2000
+    '^VIX',    // CBOE Volatility Index
+    '^SPX',    // S&P 500 Index
+  ],
+
+  // ETF (6)
+  etf: [
+    'SPY',     // SPDR S&P 500 ETF
+    'QQQ',     // Invesco QQQ (NASDAQ 100)
+    'VOO',     // Vanguard S&P 500 ETF
+    'SOXX',    // iShares Semiconductor ETF
+    'SMH',     // VanEck Semiconductor ETF
+    'GLD',     // SPDR Gold Trust
+  ],
+
+  // 科技巨头 (7)
+  techGiants: [
+    'AAPL',    // Apple Inc.
+    'MSFT',    // Microsoft Corporation
+    'GOOGL',   // Alphabet Inc.
+    'AMZN',    // Amazon.com, Inc.
+    'META',    // Meta Platforms, Inc.
+    'TSLA',    // Tesla, Inc.
+    'ORCL',    // Oracle Corporation
+  ],
+
+  // 半导体 (13)
+  semiconductor: [
+    'NVDA',    // NVIDIA Corporation
+    'AMD',     // Advanced Micro Devices
+    'INTC',    // Intel Corporation
+    'AVGO',    // Broadcom Inc.
+    'QCOM',    // QUALCOMM Incorporated
+    'TSM',     // Taiwan Semiconductor
+    'ASML',    // ASML Holding N.V.
+    'MU',      // Micron Technology
+    'MRVL',    // Marvell Technology
+    'ARM',     // Arm Holdings plc
+    'LRCX',    // Lam Research Corporation
+    'AMAT',    // Applied Materials
+    'KLAC',    // KLA Corporation
+  ],
+
+  // 存储 (5)
+  storage: [
+    'WDC',     // Western Digital Corporation
+    'STX',     // Seagate Technology Holdings
+    'PSTG',    // Pure Storage, Inc.
+    'VRT',     // Vertiv Holdings Co
+    'DELL',    // Dell Technologies Inc.
+  ],
+
+  // 数据中心 (4)
+  dataCenter: [
+    'ANET',    // Arista Networks, Inc.
+    'VST',     // Vistra Corp.
+    'CEG',     // Constellation Energy Corporation
+    'LEU',     // Centrus Energy Corp.
+  ],
+
+  // 能源 (3)
+  energy: [
+    'OKLO',    // Oklo Inc. (核能)
+    'BE',      // Bloom Energy Corporation
+    'RKLB',    // Rocket Lab USA, Inc.
+  ],
+
+  // 金融 (2)
+  finance: [
+    'BRK-B',   // Berkshire Hathaway Inc.
+    'JPM',     // JPMorgan Chase & Co.
+  ],
+
+  // 其他 (5)
+  others: [
+    'V',       // Visa Inc.
+    'LMND',    // Lemonade, Inc.
+    'LLY',     // Eli Lilly and Company
+    'CRWV',    // Crown Electrokinetics Corp.
+    'PLTR',    // Palantir Technologies Inc.
+  ],
+};
+
+/**
+ * 获取所有监控的股票代码（扁平化数组）
+ */
+export function getAllMonitoredSymbols(): string[] {
+  return [
+    ...MONITORED_SYMBOLS.indices,
+    ...MONITORED_SYMBOLS.etf,
+    ...MONITORED_SYMBOLS.techGiants,
+    ...MONITORED_SYMBOLS.semiconductor,
+    ...MONITORED_SYMBOLS.storage,
+    ...MONITORED_SYMBOLS.dataCenter,
+    ...MONITORED_SYMBOLS.energy,
+    ...MONITORED_SYMBOLS.finance,
+    ...MONITORED_SYMBOLS.others,
+  ];
+}
+
+/**
+ * 获取所有股票代码（不包括指数）
+ * 用于 SEC/EDGAR 等只支持股票的收集器
+ */
+export function getStockSymbols(): string[] {
+  return [
+    ...MONITORED_SYMBOLS.etf,
+    ...MONITORED_SYMBOLS.techGiants,
+    ...MONITORED_SYMBOLS.semiconductor,
+    ...MONITORED_SYMBOLS.storage,
+    ...MONITORED_SYMBOLS.dataCenter,
+    ...MONITORED_SYMBOLS.energy,
+    ...MONITORED_SYMBOLS.finance,
+    ...MONITORED_SYMBOLS.others,
+  ];
+}
+
+/**
+ * 获取所有指数代码
+ */
+export function getIndexSymbols(): string[] {
+  return MONITORED_SYMBOLS.indices;
+}
+
+/**
  * 应用配置
  */
 export const appConfig = {
