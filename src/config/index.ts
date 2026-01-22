@@ -142,52 +142,59 @@ export function getIndexSymbols(): string[] {
 
 /**
  * RSS Feeds 配置
- * 使用 Nitter (开源 Twitter 前端) 将 Twitter 账号转换为 RSS
- * Nitter 实例: https://nitter.net
+ * 
+ * 注意: Twitter/X feeds 目前已禁用（Nitter 实例不可用）
+ * 如需启用，请申请 Twitter API 或使用其他方案
+ * 详见: docs/TWITTER_X_ALTERNATIVES.md
  */
 export const RSS_FEEDS = {
-  // Twitter/X 账号 (通过 Nitter)
+  // Twitter/X 账号 (目前已禁用 - Nitter 不可用)
+  // 如需使用，请申请 Twitter API 并实现 TwitterCollector
   twitter: [
+    // 已禁用，保留配置以备将来使用
     // 🌟 特别关注 - Elon Musk (Tesla CEO, 市场影响力极大)
-    'https://nitter.net/elonmusk/rss',
+    // 'https://nitter.net/elonmusk/rss',
     
     // 财经媒体官方
-    'https://nitter.net/Bloomberg/rss',           // 彭博
-    'https://nitter.net/Reuters/rss',             // 路透社
-    'https://nitter.net/WSJ/rss',                 // 华尔街日报
-    'https://nitter.net/CNBC/rss',                // CNBC
-    'https://nitter.net/FT/rss',                  // 金融时报
-    'https://nitter.net/MarketWatch/rss',         // MarketWatch
-    'https://nitter.net/YahooFinance/rss',        // Yahoo Finance
-    'https://nitter.net/business/rss',            // Bloomberg Business
+    // 'https://nitter.net/Bloomberg/rss',
+    // 'https://nitter.net/Reuters/rss',
+    // 'https://nitter.net/WSJ/rss',
+    // 'https://nitter.net/CNBC/rss',
+    // 'https://nitter.net/FT/rss',
+    // 'https://nitter.net/MarketWatch/rss',
+    // 'https://nitter.net/YahooFinance/rss',
+    // 'https://nitter.net/business/rss',
     
     // 政府/监管机构
-    'https://nitter.net/federalreserve/rss',      // 美联储
-    'https://nitter.net/USTreasury/rss',          // 美国财政部
-    'https://nitter.net/SEC_News/rss',            // SEC
-    'https://nitter.net/WhiteHouse/rss',          // 白宫
+    // 'https://nitter.net/federalreserve/rss',
+    // 'https://nitter.net/USTreasury/rss',
+    // 'https://nitter.net/SEC_News/rss',
+    // 'https://nitter.net/WhiteHouse/rss',
     
     // 科技公司官方
-    'https://nitter.net/Apple/rss',               // Apple (AAPL)
-    'https://nitter.net/Microsoft/rss',           // Microsoft (MSFT)
-    'https://nitter.net/Google/rss',              // Google (GOOGL)
-    'https://nitter.net/Amazon/rss',              // Amazon (AMZN)
-    'https://nitter.net/Meta/rss',                // Meta (META)
-    'https://nitter.net/Tesla/rss',               // Tesla (TSLA)
-    'https://nitter.net/nvidia/rss',              // NVIDIA (NVDA)
-    'https://nitter.net/AMD/rss',                 // AMD
-    'https://nitter.net/intel/rss',               // Intel (INTC)
+    // 'https://nitter.net/Apple/rss',
+    // 'https://nitter.net/Microsoft/rss',
+    // 'https://nitter.net/Google/rss',
+    // 'https://nitter.net/Amazon/rss',
+    // 'https://nitter.net/Meta/rss',
+    // 'https://nitter.net/Tesla/rss',
+    // 'https://nitter.net/nvidia/rss',
+    // 'https://nitter.net/AMD/rss',
+    // 'https://nitter.net/intel/rss',
     
     // 知名分析师/投资者
-    'https://nitter.net/CathieDWood/rss',         // ARK Invest CEO
-    'https://nitter.net/jimcramer/rss',           // CNBC Mad Money
-    'https://nitter.net/TheStalwart/rss',         // Bloomberg 专栏作家
-    'https://nitter.net/markets/rss',             // Bloomberg Markets
+    // 'https://nitter.net/CathieDWood/rss',
+    // 'https://nitter.net/jimcramer/rss',
+    // 'https://nitter.net/TheStalwart/rss',
+    // 'https://nitter.net/markets/rss',
   ],
   
   // 其他 RSS 源（新闻网站、博客等）
+  // 可以添加任何支持 RSS 的网站
   others: [
-    // 可以在这里添加其他 RSS feeds
+    // 示例: 添加其他财经新闻 RSS
+    // 'https://www.cnbc.com/id/100003114/device/rss/rss.html',
+    // 'https://feeds.bloomberg.com/markets/news.rss',
   ],
 };
 
@@ -228,7 +235,7 @@ export const appConfig = {
   // RSS 配置
   rss: {
     feeds: getAllRSSFeeds(),
-    enabled: true,
+    enabled: false, // 暂时禁用 (Twitter feeds 不可用)
   },
 
   // 数据目录
