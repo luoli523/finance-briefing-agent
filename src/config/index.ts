@@ -18,6 +18,11 @@ export const appConfig = {
     apiKey: process.env.FRED_API_KEY || '',
   },
 
+  // Alpha Vantage 配置（备用数据源）
+  alphaVantage: {
+    apiKey: process.env.ALPHA_VANTAGE_API_KEY || '',
+  },
+
   // 数据目录
   paths: {
     data: path.resolve(process.cwd(), 'data'),

@@ -13,6 +13,9 @@ export interface HistoricalDataPoint {
   changePercent: number;
   volume?: number;
   marketCap?: number;
+  // 52周高低点
+  fiftyTwoWeekHigh?: number;
+  fiftyTwoWeekLow?: number;
 }
 
 /**
@@ -22,6 +25,28 @@ export interface HistoricalRecord {
   date: string;           // YYYY-MM-DD
   timestamp: Date;
   quotes: HistoricalDataPoint[];
+}
+
+/**
+ * 多周期对比结果
+ */
+export interface MultiPeriodComparison {
+  symbol: string;
+  currentPrice: number;
+  // 日涨跌
+  dayChange?: number;
+  dayChangePercent?: number;
+  // 周涨跌
+  weekChange?: number;
+  weekChangePercent?: number;
+  weekPrice?: number;
+  // 月涨跌
+  monthChange?: number;
+  monthChangePercent?: number;
+  monthPrice?: number;
+  // 52周高低点
+  fiftyTwoWeekHigh?: number;
+  fiftyTwoWeekLow?: number;
 }
 
 /**
@@ -51,6 +76,8 @@ export class HistoryManager {
       changePercent: q.changePercent,
       volume: q.volume,
       marketCap: q.marketCap,
+      fiftyTwoWeekHigh: q.fiftyTwoWeekHigh,
+      fiftyTwoWeekLow: q.fiftyTwoWeekLow,
     }));
 
     const record: HistoricalRecord = {
@@ -182,6 +209,98 @@ export class HistoryManager {
         result.set(current.symbol, { current });
       }
     });
+
+    return result;
+  }
+
+  /**
+   * 获取指定天数前最近的历史记录
+   * 如果精确的那一天没有数据，会返回最近的一条
+   */
+  async getDataAroundDaysAgo(daysAgo: number): Promise<HistoricalRecord | null> {
+    const history = await this.loadHistory();
+    if (history.length === 0) return null;
+
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - daysAgo);
+    const targetDateStr = targetDate.toISOString().slice(0, 10);
+
+    // 按日期排序（降序）
+    const sorted = history.sort((a, b) => b.date.localeCompare(a.date));
+
+    // 找到目标日期或之前最近的记录
+    for (const record of sorted) {
+      if (record.date <= targetDateStr) {
+        return record;
+      }
+    }
+
+    // 如果没有找到，返回最早的记录
+    return sorted[sorted.length - 1] || null;
+  }
+
+  /**
+   * 获取一周前的数据（约 5-7 个交易日）
+   */
+  async getWeekAgoData(): Promise<HistoricalRecord | null> {
+    return this.getDataAroundDaysAgo(7);
+  }
+
+  /**
+   * 获取一个月前的数据（约 20-22 个交易日）
+   */
+  async getMonthAgoData(): Promise<HistoricalRecord | null> {
+    return this.getDataAroundDaysAgo(30);
+  }
+
+  /**
+   * 获取多周期对比数据（日、周、月）
+   */
+  async getMultiPeriodComparison(
+    currentQuotes: QuoteData[]
+  ): Promise<Map<string, MultiPeriodComparison>> {
+    const result = new Map();
+
+    // 获取各周期历史数据
+    const [prevDay, weekAgo, monthAgo] = await Promise.all([
+      this.getPreviousTradingDay(),
+      this.getWeekAgoData(),
+      this.getMonthAgoData(),
+    ]);
+
+    // 构建历史数据映射
+    const prevDayMap = new Map(prevDay?.quotes.map(q => [q.symbol, q]) || []);
+    const weekAgoMap = new Map(weekAgo?.quotes.map(q => [q.symbol, q]) || []);
+    const monthAgoMap = new Map(monthAgo?.quotes.map(q => [q.symbol, q]) || []);
+
+    for (const current of currentQuotes) {
+      const comparison: any = {
+        symbol: current.symbol,
+        currentPrice: current.price,
+        dayChange: current.change,
+        dayChangePercent: current.changePercent,
+        fiftyTwoWeekHigh: current.fiftyTwoWeekHigh,
+        fiftyTwoWeekLow: current.fiftyTwoWeekLow,
+      };
+
+      // 周对比
+      const weekData = weekAgoMap.get(current.symbol);
+      if (weekData) {
+        comparison.weekPrice = weekData.price;
+        comparison.weekChange = current.price - weekData.price;
+        comparison.weekChangePercent = (comparison.weekChange / weekData.price) * 100;
+      }
+
+      // 月对比
+      const monthData = monthAgoMap.get(current.symbol);
+      if (monthData) {
+        comparison.monthPrice = monthData.price;
+        comparison.monthChange = current.price - monthData.price;
+        comparison.monthChangePercent = (comparison.monthChange / monthData.price) * 100;
+      }
+
+      result.set(current.symbol, comparison);
+    }
 
     return result;
   }

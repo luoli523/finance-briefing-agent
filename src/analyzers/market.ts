@@ -103,6 +103,8 @@ export class MarketAnalyzer extends BaseAnalyzer<MarketAnalysis> {
       changePercent: quote.changePercent,
       trend: this.getTrend(quote.changePercent),
       strength: this.getStrength(quote.changePercent),
+      fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
+      fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
     };
   }
 
