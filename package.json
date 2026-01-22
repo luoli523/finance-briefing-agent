@@ -14,7 +14,8 @@
     "collect:fred": "tsx src/scripts/collect-fred.ts",
     "collect:sec": "tsx src/scripts/collect-sec.ts",
     "analyze": "tsx src/scripts/analyze.ts",
-    "generate": "tsx src/scripts/generate.ts"
+    "generate": "tsx src/scripts/generate.ts",
+    "verify:config": "tsx src/scripts/verify-config.ts"
   },
   "keywords": [
     "finance",
