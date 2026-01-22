@@ -34,12 +34,15 @@ LLM 深度分析（增强层，可选）
 
 ## 支持的 LLM 提供商
 
-| 提供商 | 模型 | 成本 | 速度 | 质量 |
-|-------|------|------|------|------|
-| **OpenAI** | GPT-4 Turbo | $0.01-0.03/1K tokens | 中 | ⭐⭐⭐⭐⭐ |
-| **Anthropic** | Claude 3.5 Sonnet | $0.003-0.015/1K tokens | 快 | ⭐⭐⭐⭐⭐ |
-| **DeepSeek** | DeepSeek Chat | $0.00014/1K tokens | 快 | ⭐⭐⭐⭐ |
-| **Ollama** | Qwen2.5/Llama3.1 | 免费（本地） | 慢 | ⭐⭐⭐ |
+| 提供商 | 推荐模型 | 成本 | 速度 | 质量 | 特点 |
+|-------|---------|------|------|------|------|
+| **Google** | Gemini 2.0 Flash | **免费**（实验版） | ⚡ 极快 | ⭐⭐⭐⭐⭐ | 🔥 最新！免费！ |
+| **OpenAI** | GPT-4o-mini | $0.00015-0.0006/1K tokens | 快 | ⭐⭐⭐⭐⭐ | 性价比极高 |
+| **OpenAI** | GPT-4o | $0.0025-0.01/1K tokens | 快 | ⭐⭐⭐⭐⭐ | 旗舰模型 |
+| **Anthropic** | Claude 3.5 Sonnet | $0.003-0.015/1K tokens | 快 | ⭐⭐⭐⭐⭐ | 推理能力强 |
+| **DeepSeek** | DeepSeek Chat | $0.00014/1K tokens | 快 | ⭐⭐⭐⭐ | 超便宜 |
+| **DeepSeek** | DeepSeek R1 | $0.00014/1K tokens | 中 | ⭐⭐⭐⭐⭐ | 推理专家 |
+| **Ollama** | Qwen2.5/DeepSeek-R1 | 免费（本地） | 慢 | ⭐⭐⭐ | 完全离线 |
 
 ---
 
@@ -75,16 +78,42 @@ npm run analyze:enhanced
 
 ## 详细配置
 
+### Google Gemini（🔥 推荐：免费且强大！）
+
+```bash
+LLM_ENABLED=true
+LLM_PROVIDER=google
+LLM_MODEL=gemini-2.0-flash-exp  # 最新实验版，完全免费！
+# 或: gemini-1.5-flash          # 超便宜 $0.000075/1K tokens
+# 或: gemini-1.5-pro            # 高级版 $0.00125/1K tokens
+LLM_API_KEY=...                 # 从 https://aistudio.google.com/apikey 获取
+```
+
+**成本估算**:
+- Gemini 2.0 Flash (实验版): **完全免费**！
+- Gemini 1.5 Flash: $0.0001-0.0005/次分析（每月 $0.003-0.015）
+- Gemini 1.5 Pro: $0.002-0.01/次分析
+
+**优势**: 免费/超低价 + 速度快 + 质量高 + Google 生态
+
+---
+
 ### OpenAI
 
 ```bash
 LLM_ENABLED=true
 LLM_PROVIDER=openai
-LLM_MODEL=gpt-4-turbo           # 或 gpt-4, gpt-3.5-turbo
+LLM_MODEL=gpt-4o-mini           # 性价比之王（推荐）
+# 或: gpt-4o                    # 最新旗舰模型
+# 或: gpt-4-turbo               # GPT-4 Turbo
+# 或: o1-preview                # 推理专家（适合复杂分析）
 LLM_API_KEY=sk-...              # 从 https://platform.openai.com/api-keys 获取
 ```
 
-**成本估算**: $0.02-0.05/次分析
+**成本估算**:
+- GPT-4o-mini: $0.0003-0.001/次分析（每月 $0.009-0.03）← 推荐！
+- GPT-4o: $0.005-0.02/次分析
+- o1-preview: $0.03-0.10/次分析
 
 ### Anthropic Claude
 
@@ -97,16 +126,19 @@ LLM_API_KEY=sk-ant-...          # 从 https://console.anthropic.com/ 获取
 
 **成本估算**: $0.01-0.03/次分析
 
-### DeepSeek（推荐：性价比最高）
+### DeepSeek（推荐：超便宜且强大）
 
 ```bash
 LLM_ENABLED=true
 LLM_PROVIDER=deepseek
-LLM_MODEL=deepseek-chat
+LLM_MODEL=deepseek-chat         # 通用模型
+# 或: deepseek-reasoner         # R1 推理模型（适合复杂分析）
 LLM_API_KEY=sk-...              # 从 https://platform.deepseek.com/ 获取
 ```
 
-**成本估算**: $0.001-0.003/次分析（非常便宜！）
+**成本估算**: $0.001-0.003/次分析（每月不到 $0.10！）
+
+**优势**: 价格极低 + 中文友好 + 推理能力强（R1 模型）
 
 ### Ollama（本地模型，完全免费）
 
@@ -206,17 +238,30 @@ LLM 会提供以下深度分析：
 
 ### 每日运行成本（假设每天1次分析）
 
-| 提供商 | 每次成本 | 每月成本 | 每年成本 |
-|-------|---------|---------|---------|
-| OpenAI GPT-4 Turbo | $0.03 | $0.90 | $10.95 |
-| Anthropic Claude 3.5 | $0.02 | $0.60 | $7.30 |
-| DeepSeek | $0.002 | $0.06 | $0.73 |
-| Ollama (本地) | $0 | $0 | $0 |
+| 提供商 | 模型 | 每次成本 | 每月成本 | 每年成本 | 性价比 |
+|-------|------|---------|---------|---------|--------|
+| 🔥 **Google** | Gemini 2.0 Flash (实验) | **$0** | **$0** | **$0** | ⭐⭐⭐⭐⭐ |
+| 🔥 **Google** | Gemini 1.5 Flash | $0.0002 | $0.006 | $0.07 | ⭐⭐⭐⭐⭐ |
+| **Google** | Gemini 1.5 Pro | $0.005 | $0.15 | $1.80 | ⭐⭐⭐⭐⭐ |
+| **OpenAI** | GPT-4o-mini | $0.0005 | $0.015 | $0.18 | ⭐⭐⭐⭐⭐ |
+| **DeepSeek** | DeepSeek Chat/R1 | $0.002 | $0.06 | $0.73 | ⭐⭐⭐⭐⭐ |
+| **OpenAI** | GPT-4o | $0.008 | $0.24 | $2.92 | ⭐⭐⭐⭐ |
+| **Anthropic** | Claude 3.5 Sonnet | $0.02 | $0.60 | $7.30 | ⭐⭐⭐⭐ |
+| **OpenAI** | GPT-4 Turbo | $0.03 | $0.90 | $10.95 | ⭐⭐⭐ |
+| **Ollama** | Qwen2.5/DeepSeek-R1 | $0 | $0 | $0 | ⭐⭐⭐⭐ |
 
-**推荐**:
-- **预算有限**: Ollama（免费）或 DeepSeek（超便宜）
-- **追求质量**: Claude 3.5 Sonnet 或 GPT-4 Turbo
-- **平衡性价比**: DeepSeek（质量好 + 成本低）
+**推荐排名**（2026年1月）:
+1. **🏆 Gemini 2.0 Flash**: 完全免费 + 速度极快 + 质量顶级！
+2. **🥈 Gemini 1.5 Flash**: 超低价（$0.07/年）+ 质量优秀
+3. **🥉 GPT-4o-mini**: 性价比极高（$0.18/年）+ OpenAI 生态
+4. **DeepSeek Chat/R1**: 超便宜（$0.73/年）+ 中文友好 + 推理强
+5. **Ollama**: 完全免费 + 本地部署 + 隐私保护
+
+**场景推荐**:
+- **日常监控**: Gemini 2.0 Flash（免费！）或 Gemini 1.5 Flash
+- **重要决策**: GPT-4o、Claude 3.5 Sonnet 或 Gemini 1.5 Pro
+- **隐私优先**: Ollama（本地运行）
+- **中文分析**: DeepSeek R1 或 Qwen2.5
 
 ---
 

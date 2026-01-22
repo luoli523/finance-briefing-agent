@@ -5,19 +5,36 @@
 import { IntelligentAnalysis } from '../intelligent';
 
 // LLM 提供商
-export type LLMProvider = 'openai' | 'anthropic' | 'ollama' | 'deepseek';
+export type LLMProvider = 'openai' | 'anthropic' | 'ollama' | 'deepseek' | 'google';
 
 // LLM 模型
 export type LLMModel = 
-  | 'gpt-4' 
-  | 'gpt-4-turbo' 
-  | 'gpt-3.5-turbo'
-  | 'claude-3-5-sonnet-20241022'
-  | 'claude-3-opus-20240229'
-  | 'claude-3-sonnet-20240229'
-  | 'deepseek-chat'
-  | 'qwen2.5:7b'
-  | 'llama3.1:8b';
+  // OpenAI (2024-2026)
+  | 'gpt-4o'                    // 最新旗舰模型 (2024)
+  | 'gpt-4o-mini'               // 轻量级高性价比模型
+  | 'gpt-4-turbo'               // GPT-4 Turbo
+  | 'gpt-4'                     // GPT-4
+  | 'gpt-3.5-turbo'             // GPT-3.5 Turbo
+  | 'o1-preview'                // OpenAI o1 预览版 (推理模型)
+  | 'o1-mini'                   // OpenAI o1 mini
+  // Anthropic Claude
+  | 'claude-3-5-sonnet-20241022' // Claude 3.5 Sonnet (最新)
+  | 'claude-3-opus-20240229'     // Claude 3 Opus
+  | 'claude-3-sonnet-20240229'   // Claude 3 Sonnet
+  | 'claude-3-haiku-20240307'    // Claude 3 Haiku
+  // DeepSeek
+  | 'deepseek-chat'              // DeepSeek Chat
+  | 'deepseek-reasoner'          // DeepSeek 推理模型 (R1)
+  // Google Gemini
+  | 'gemini-2.0-flash-exp'       // Gemini 2.0 Flash (最新实验版)
+  | 'gemini-1.5-pro'             // Gemini 1.5 Pro
+  | 'gemini-1.5-flash'           // Gemini 1.5 Flash
+  | 'gemini-1.0-pro'             // Gemini 1.0 Pro
+  // Ollama (本地模型)
+  | 'qwen2.5:7b'                 // 通义千问 2.5
+  | 'llama3.1:8b'                // Llama 3.1
+  | 'deepseek-r1:7b'             // DeepSeek R1 本地版
+  | 'gemma2:9b';                 // Google Gemma 2
 
 // LLM 配置
 export interface LLMConfig {

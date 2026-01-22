@@ -2,6 +2,58 @@
 
 ## [未发布] - 2026-01-22
 
+### 🆕 新增 LLM 提供商与模型（最新！）
+
+#### ✨ Google Gemini 支持
+- **新增提供商**: Google (`LLM_PROVIDER=google`)
+- **支持模型**:
+  - `gemini-2.0-flash-exp` - 🔥 实验版，完全免费！
+  - `gemini-1.5-flash` - 超低价 ($0.07/年)
+  - `gemini-1.5-pro` - 高级版
+  - `gemini-1.0-pro` - 基础版
+- **成本**: Gemini 2.0 Flash 完全免费，1.5 Flash 仅 $0.07/年
+- **优势**: 速度极快 + 质量优秀 + 成本最低/免费
+
+#### ✨ OpenAI 最新模型支持
+- **GPT-4o** (`gpt-4o`) - 🔥 2024最新旗舰模型
+- **GPT-4o-mini** (`gpt-4o-mini`) - 性价比之王 ($0.18/年)
+- **o1-preview** (`o1-preview`) - 推理专家
+- **o1-mini** (`o1-mini`) - 轻量推理模型
+
+#### ✨ DeepSeek 推理模型
+- **DeepSeek R1** (`deepseek-reasoner`) - 🔥 推理专家，媲美 o1-preview
+- **成本**: $0.73/年（比 o1-preview 便宜 25 倍）
+- **优势**: 推理能力顶级 + 中文原生 + 超低价
+
+#### ✨ Ollama 新增模型
+- **DeepSeek-R1:7b** (`deepseek-r1:7b`) - 推理强
+- **Gemma2:9b** (`gemma2:9b`) - Google 开源
+
+#### 📁 新增文件
+```
+src/analyzers/llm/providers/google.ts     # Google Gemini 提供商
+docs/LLM_PROVIDER_COMPARISON.md           # 详细对比指南
+```
+
+#### 📝 文档更新
+- **`docs/LLM_ENHANCEMENT.md`**: 新增 Gemini 配置说明，更新成本对比
+- **`docs/LLM_PROVIDER_COMPARISON.md`**: 新增详细对比指南
+  - 综合对比表
+  - 使用场景推荐
+  - 混合使用策略
+  - 快速配置参考
+  - 模型特点详解
+- **`README.md`**: 更新 LLM 提供商列表和推荐模型
+
+#### 💡 最佳实践推荐
+1. **日常监控**: Gemini 2.0 Flash（免费！）
+2. **重要决策**: Claude 3.5 Sonnet 或 GPT-4o
+3. **复杂推理**: DeepSeek R1 或 o1-preview
+4. **预算有限**: Gemini 1.5 Flash ($0.07/年)
+5. **隐私优先**: Ollama + DeepSeek-R1:7b（本地）
+
+---
+
 ### 🤖 LLM 深度增强（混合模式）
 
 #### 新增功能 ✨

@@ -97,14 +97,18 @@ export class OpenAIProvider extends BaseLLMProvider {
   }
 
   protected estimateCost(promptTokens: number, completionTokens: number): number {
-    // OpenAI GPT-4 Turbo 定价 (2024)
+    // OpenAI 定价 (2024-2026)
     const pricing: Record<string, { input: number; output: number }> = {
-      'gpt-4-turbo': { input: 0.01, output: 0.03 },      // per 1K tokens
+      'gpt-4o': { input: 0.0025, output: 0.01 },          // per 1K tokens - 最新旗舰
+      'gpt-4o-mini': { input: 0.00015, output: 0.0006 },  // 性价比之王！
+      'gpt-4-turbo': { input: 0.01, output: 0.03 },
       'gpt-4': { input: 0.03, output: 0.06 },
       'gpt-3.5-turbo': { input: 0.0005, output: 0.0015 },
+      'o1-preview': { input: 0.015, output: 0.06 },       // 推理模型
+      'o1-mini': { input: 0.003, output: 0.012 },
     };
 
-    const modelPricing = pricing[this.config.model] || pricing['gpt-4-turbo'];
+    const modelPricing = pricing[this.config.model] || pricing['gpt-4o'];
     return (
       (promptTokens / 1000) * modelPricing.input +
       (completionTokens / 1000) * modelPricing.output

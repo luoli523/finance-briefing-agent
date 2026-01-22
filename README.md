@@ -27,9 +27,10 @@
 
 ### 🤖 LLM 深度增强（可选，最新！）
 - **混合模式** - 规则引擎（快速、免费）+ LLM（深度洞察）
-- **多提供商支持** - OpenAI、Claude、DeepSeek、Ollama（本地）
+- **多提供商支持** - Google Gemini、OpenAI (GPT-4o)、Claude、DeepSeek、Ollama（本地）
+- **🔥 推荐模型** - Gemini 2.0 Flash（免费！）、GPT-4o-mini、DeepSeek R1
 - **深度分析** - 情景分析、投资策略、黑天鹅风险识别
-- **成本可控** - 按需启用，DeepSeek 仅 $0.002/次，Ollama 完全免费
+- **成本极低** - Gemini 2.0 Flash 完全免费，Gemini 1.5 Flash 仅 $0.07/年
 - **详细文档** - 查看 `docs/LLM_ENHANCEMENT.md`
 
 ### 📈 历史数据追踪
