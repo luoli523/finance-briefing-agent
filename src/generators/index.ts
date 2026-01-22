@@ -13,3 +13,5 @@ export { MarkdownGenerator } from './markdown';
 export { HtmlGenerator } from './html';
 export { UnifiedGenerator, unifiedGenerator } from './unified';
 export { IntelligentMarkdownGenerator, createIntelligentMarkdownGenerator } from './intelligent-markdown';
+
+export { DecisionOrientedGenerator } from "./decision-oriented";
