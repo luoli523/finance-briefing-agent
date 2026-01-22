@@ -6,21 +6,11 @@
  */
 
 import { createSECCollector } from '../collectors';
+import { getStockSymbols } from '../config';
 
-// 默认监控的股票列表（可以在 .env 中配置）
-const DEFAULT_SYMBOLS = [
-  // 科技巨头
-  'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA',
-  
-  // 半导体
-  'NVDA', 'AMD', 'INTC', 'AVGO', 'QCOM', 'TSM',
-  
-  // 金融
-  'JPM', 'BRK-B', 'V',
-  
-  // 其他重要公司
-  'ORCL', 'PLTR', 'LLY',
-];
+// 使用中央配置的股票列表（不包括指数，因为指数不在 SEC 中）
+// 所有监控的股票都在 src/config/index.ts 的 MONITORED_SYMBOLS 中定义
+const DEFAULT_SYMBOLS = getStockSymbols();
 
 // 要监控的 filing 类型
 const IMPORTANT_FORMS = [

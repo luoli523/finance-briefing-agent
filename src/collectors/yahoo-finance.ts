@@ -8,6 +8,7 @@ import {
   DataItem,
 } from './types';
 import { historyManager } from './history';
+import { getAllMonitoredSymbols, getIndexSymbols, getStockSymbols } from '../config';
 
 // 工具函数：延迟
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -44,89 +45,17 @@ async function createYahooFinanceClient(): Promise<InstanceType<typeof YahooFina
   return new YahooFinance(options);
 }
 
-// 默认配置：美股主要指数和热门股票
+// 默认配置：使用中央配置的股票列表
+// 所有监控的股票都在 src/config/index.ts 的 MONITORED_SYMBOLS 中定义
 const DEFAULT_CONFIG: YahooFinanceConfig = {
   enabled: true,
   saveRaw: true,
   timeout: 30000,
   retries: 3,
-  // 主要指数和 ETF
-  indices: [
-    '^GSPC',    // S&P 500
-    '^DJI',     // Dow Jones
-    '^IXIC',    // NASDAQ
-    '^RUT',     // Russell 2000
-    '^VIX',     // VIX 恐慌指数
-    '^SPX',     // S&P 500 Index
-  ],
-  symbols: [
-    // ===== 主要 ETF =====
-    'SPY',      // SPDR S&P 500 ETF
-    'QQQ',      // Invesco QQQ (NASDAQ 100)
-    'VOO',      // Vanguard S&P 500 ETF
-    'SOXX',     // iShares Semiconductor ETF
-    'SMH',      // VanEck Semiconductor ETF
-    'GLD',      // SPDR Gold Trust
-
-    // ===== 科技巨头 =====
-    'AAPL',     // Apple
-    'MSFT',     // Microsoft
-    'GOOGL',    // Google
-    'AMZN',     // Amazon
-    'META',     // Meta
-    'TSLA',     // Tesla
-    'ORCL',     // Oracle
-    'PLTR',     // Palantir
-
-    // ===== 半导体 =====
-    'NVDA',     // NVIDIA
-    'AMD',      // AMD
-    'INTC',     // Intel
-    'AVGO',     // Broadcom
-    'QCOM',     // Qualcomm
-    'TSM',      // Taiwan Semiconductor (TSMC)
-    'ASML',     // ASML
-    'MU',       // Micron
-    'MRVL',     // Marvell
-    'ARM',      // ARM Holdings
-    'LRCX',     // Lam Research
-    'AMAT',     // Applied Materials
-    'KLAC',     // KLA Corp
-
-    // ===== 存储 =====
-    'WDC',      // Western Digital
-    'STX',      // Seagate
-    'PSTG',     // Pure Storage
-
-    // ===== 数据中心/基础设施 =====
-    'VRT',      // Vertiv
-    'DELL',     // Dell
-    'ANET',     // Arista Networks
-
-    // ===== 能源/核电 =====
-    'VST',      // Vistra
-    'CEG',      // Constellation Energy
-    'LEU',      // Centrus Energy
-    'OKLO',     // Oklo (核能)
-    'BE',       // Bloom Energy
-
-    // ===== 航天 =====
-    'RKLB',     // Rocket Lab
-
-    // ===== 金融 =====
-    'BRK-B',    // Berkshire Hathaway
-    'JPM',      // JP Morgan
-    'V',        // Visa
-
-    // ===== 保险科技 =====
-    'LMND',     // Lemonade
-
-    // ===== 医疗 =====
-    'LLY',      // Eli Lilly
-
-    // ===== 其他 =====
-    'CRWV',     // CoreWeave (if listed)
-  ],
+  // 从中央配置获取指数列表
+  indices: getIndexSymbols(),
+  // 从中央配置获取股票列表
+  symbols: getStockSymbols(),
 };
 
 /**
