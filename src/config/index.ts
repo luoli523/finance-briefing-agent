@@ -141,6 +141,88 @@ export function getIndexSymbols(): string[] {
 }
 
 /**
+ * RSS Feeds 配置
+ * 
+ * 注意: Twitter/X feeds 目前已禁用（Nitter 实例不可用）
+ * 如需启用，请申请 Twitter API 或使用其他方案
+ * 详见: docs/TWITTER_X_ALTERNATIVES.md
+ */
+export const RSS_FEEDS = {
+  // Twitter/X 账号 (目前已禁用 - Nitter 不可用)
+  // 如需使用，请申请 Twitter API 并实现 TwitterCollector
+  twitter: [
+    // 已禁用，保留配置以备将来使用
+    // 🌟 特别关注 - Elon Musk (Tesla CEO, 市场影响力极大)
+    // 'https://nitter.net/elonmusk/rss',
+    
+    // 财经媒体官方
+    // 'https://nitter.net/Bloomberg/rss',
+    // 'https://nitter.net/Reuters/rss',
+    // 'https://nitter.net/WSJ/rss',
+    // 'https://nitter.net/CNBC/rss',
+    // 'https://nitter.net/FT/rss',
+    // 'https://nitter.net/MarketWatch/rss',
+    // 'https://nitter.net/YahooFinance/rss',
+    // 'https://nitter.net/business/rss',
+    
+    // 政府/监管机构
+    // 'https://nitter.net/federalreserve/rss',
+    // 'https://nitter.net/USTreasury/rss',
+    // 'https://nitter.net/SEC_News/rss',
+    // 'https://nitter.net/WhiteHouse/rss',
+    
+    // 科技公司官方
+    // 'https://nitter.net/Apple/rss',
+    // 'https://nitter.net/Microsoft/rss',
+    // 'https://nitter.net/Google/rss',
+    // 'https://nitter.net/Amazon/rss',
+    // 'https://nitter.net/Meta/rss',
+    // 'https://nitter.net/Tesla/rss',
+    // 'https://nitter.net/nvidia/rss',
+    // 'https://nitter.net/AMD/rss',
+    // 'https://nitter.net/intel/rss',
+    
+    // 知名分析师/投资者
+    // 'https://nitter.net/CathieDWood/rss',
+    // 'https://nitter.net/jimcramer/rss',
+    // 'https://nitter.net/TheStalwart/rss',
+    // 'https://nitter.net/markets/rss',
+  ],
+  
+  // 政府机构官方 RSS (✅ 已测试可用)
+  government: [
+    // 美联储 (Federal Reserve)
+    'https://www.federalreserve.gov/feeds/press_all.xml',      // 美联储新闻稿
+    'https://www.federalreserve.gov/feeds/speeches.xml',       // 美联储官员讲话
+    
+    // SEC (证券交易委员会)
+    'https://www.sec.gov/news/pressreleases.rss',              // SEC 新闻稿
+    
+    // Federal Register (联邦公报)
+    'https://www.federalregister.gov/api/v1/documents.rss',   // 联邦政府公告
+  ],
+  
+  // 其他 RSS 源（新闻网站、博客等）
+  // 可以添加任何支持 RSS 的网站
+  others: [
+    // 示例: 添加其他财经新闻 RSS
+    // 'https://www.cnbc.com/id/100003114/device/rss/rss.html',
+    // 'https://feeds.bloomberg.com/markets/news.rss',
+  ],
+};
+
+/**
+ * 获取所有 RSS feeds
+ */
+export function getAllRSSFeeds(): string[] {
+  return [
+    ...RSS_FEEDS.twitter,      // Twitter feeds (目前已禁用)
+    ...RSS_FEEDS.government,   // 政府机构 RSS
+    ...RSS_FEEDS.others,       // 其他 RSS
+  ];
+}
+
+/**
  * 应用配置
  */
 export const appConfig = {
@@ -157,6 +239,29 @@ export const appConfig = {
   // Alpha Vantage 配置（备用数据源）
   alphaVantage: {
     apiKey: process.env.ALPHA_VANTAGE_API_KEY || '',
+  },
+
+  // SEC EDGAR 配置
+  sec: {
+    userAgent: process.env.SEC_USER_AGENT || 'FinanceBriefingAgent/1.0 (contact@example.com)',
+  },
+
+  // RSS 配置
+  rss: {
+    feeds: getAllRSSFeeds(),
+    enabled: true, // 已启用 (政府机构 RSS 可用)
+  },
+
+  // LLM 增强分析配置
+  llm: {
+    enabled: process.env.LLM_ENABLED === 'true' || false,
+    provider: (process.env.LLM_PROVIDER as any) || 'openai',
+    model: process.env.LLM_MODEL || 'gpt-4-turbo',
+    apiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || '',
+    baseURL: process.env.LLM_BASE_URL,
+    temperature: parseFloat(process.env.LLM_TEMPERATURE || '0.7'),
+    maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '4096'),
+    timeout: parseInt(process.env.LLM_TIMEOUT || '60000'),
   },
 
   // 数据目录

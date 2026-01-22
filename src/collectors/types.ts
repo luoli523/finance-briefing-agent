@@ -3,7 +3,7 @@
  */
 
 // 数据类型枚举
-export type DataType = 'news' | 'market' | 'economic' | 'sec-filings' | 'government-news' | 'company-ir';
+export type DataType = 'news' | 'market' | 'economic' | 'sec-filings' | 'government-news' | 'company-ir' | 'rss';
 
 // 市场类型
 export type MarketType = 'stock' | 'index' | 'forex' | 'crypto' | 'commodity';
@@ -56,6 +56,7 @@ export interface CollectedData {
   items: DataItem[];         // 通用数据项
   market?: MarketOverview;   // 市场数据（可选）
   raw?: any;                 // 原始数据（调试用）
+  metadata?: Record<string, any>; // 额外的元数据（可选）
 }
 
 // 收集器配置
@@ -174,4 +175,10 @@ export interface CompanyIRSource {
 export interface AlphaVantageConfig extends CollectorConfig {
   apiKey: string;
   symbols: string[];
+}
+
+// RSS Feed 配置
+export interface RSSConfig extends CollectorConfig {
+  feeds: string[];           // RSS feed URLs
+  maxItemsPerFeed?: number;  // 每个 feed 最多获取的条目数
 }

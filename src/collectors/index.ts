@@ -24,3 +24,6 @@ export type { HistoricalDataPoint, HistoricalRecord, MultiPeriodComparison } fro
 
 // SEC EDGAR 收集器
 export { SECCollector, createSECCollector } from './sec-edgar';
+
+// RSS 收集器
+export { RSSCollector, createRSSCollector } from './rss';
