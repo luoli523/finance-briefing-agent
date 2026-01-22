@@ -26,6 +26,9 @@ export interface AssetAnalysis {
   trend: TrendDirection;
   strength: SignalStrength;
   notes?: string;
+  // 52周高低点
+  fiftyTwoWeekHigh?: number;
+  fiftyTwoWeekLow?: number;
 }
 
 // 板块分析

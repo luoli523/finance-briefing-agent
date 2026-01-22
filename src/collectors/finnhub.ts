@@ -6,6 +6,7 @@ import {
   NewsCategory,
   DataItem,
 } from './types';
+import * as https from 'https';
 
 // Finnhub API 基础 URL
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
@@ -100,25 +101,49 @@ export class FinnhubCollector extends BaseCollector<FinnhubConfig> {
 
     this.log(`Fetching ${category} news...`);
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    return this.httpsRequest(url);
+  }
+
+  /**
+   * 使用 https 模块发送请求（解决 fetch 连接超时问题）
+   */
+  private httpsRequest(url: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const req = https.get(url, {
+        timeout: this.config.timeout || 30000,
+      }, (res) => {
+        let data = '';
+
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            try {
+              resolve(JSON.parse(data));
+            } catch (e) {
+              reject(new Error('Failed to parse JSON response'));
+            }
+          } else if (res.statusCode === 401) {
+            reject(new Error('Invalid Finnhub API key'));
+          } else if (res.statusCode === 429) {
+            reject(new Error('Finnhub API rate limit exceeded'));
+          } else {
+            reject(new Error(`Finnhub API error: ${res.statusCode} ${res.statusMessage}`));
+          }
+        });
+      });
+
+      req.on('error', (error) => {
+        reject(error);
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error(`Request timeout after ${this.config.timeout || 30000}ms`));
+      });
     });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Invalid Finnhub API key');
-      }
-      if (response.status === 429) {
-        throw new Error('Finnhub API rate limit exceeded');
-      }
-      throw new Error(`Finnhub API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data as FinnhubNewsItem[];
   }
 
   /**
@@ -129,13 +154,7 @@ export class FinnhubCollector extends BaseCollector<FinnhubConfig> {
 
     this.log(`Fetching news for ${symbol}...`);
 
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch company news: ${response.status}`);
-    }
-
-    const data = await response.json() as FinnhubNewsItem[];
+    const data = await this.httpsRequest(url) as FinnhubNewsItem[];
     return data.map(item => this.transformNews(item));
   }
 

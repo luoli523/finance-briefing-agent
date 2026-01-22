@@ -9,11 +9,40 @@ import {
 } from './types';
 import { historyManager } from './history';
 
-// 创建 yahoo-finance2 v3 实例
-const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
-
 // 工具函数：延迟
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 动态导入代理模块（可选依赖）
+async function getProxyAgent(): Promise<unknown> {
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.ALL_PROXY;
+  if (!proxyUrl) return undefined;
+
+  try {
+    // 使用字符串拼接避免 TypeScript 编译时检查
+    const moduleName = 'https-proxy-' + 'agent';
+    const proxyModule = await import(/* webpackIgnore: true */ moduleName).catch(() => null);
+    if (proxyModule && proxyModule.HttpsProxyAgent) {
+      console.log(`[yahoo-finance] Using proxy: ${proxyUrl}`);
+      return new proxyModule.HttpsProxyAgent(proxyUrl);
+    }
+  } catch {
+    // 忽略错误
+  }
+  console.log('[yahoo-finance] https-proxy-agent not available, proxy disabled');
+  return undefined;
+}
+
+// 创建 yahoo-finance2 实例（支持代理）
+async function createYahooFinanceClient(): Promise<InstanceType<typeof YahooFinance>> {
+  const agent = await getProxyAgent();
+  const options: Record<string, unknown> = { suppressNotices: ['yahooSurvey'] };
+
+  if (agent) {
+    options.fetchOptions = { agent };
+  }
+
+  return new YahooFinance(options);
+}
 
 // 默认配置：美股主要指数和热门股票
 const DEFAULT_CONFIG: YahooFinanceConfig = {
@@ -180,42 +209,75 @@ export class YahooFinanceCollector extends BaseCollector<YahooFinanceConfig> {
 
   /**
    * 批量获取股票报价（带速率限制和重试）
+   * 优先使用批量接口，失败后降级为单个请求
    */
   private async fetchQuotes(symbols: string[]): Promise<QuoteData[]> {
     this.log(`Fetching quotes for ${symbols.length} symbols...`);
 
+    // 创建客户端（支持代理）
+    const yahooFinance = await createYahooFinanceClient();
+
+    // 首先尝试批量获取（分批，每批最多 10 个）
+    const batchSize = 10;
     const results: QuoteData[] = [];
-    const retries = this.config.retries || 3;
-    const delayMs = 500; // 每个请求间隔 500ms
+    const failedSymbols: string[] = [];
 
-    for (const symbol of symbols) {
-      let lastError: Error | null = null;
+    for (let i = 0; i < symbols.length; i += batchSize) {
+      const batch = symbols.slice(i, i + batchSize);
 
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          // 请求前延迟，避免速率限制
-          if (results.length > 0 || attempt > 1) {
-            await delay(delayMs * attempt); // 重试时增加延迟
-          }
-
-          const quote = await yahooFinance.quote(symbol);
-
-          if (quote) {
-            results.push(this.transformQuote(quote));
-            this.log(`✓ ${symbol} fetched successfully`);
-          }
-          break; // 成功则跳出重试循环
-
-        } catch (error) {
-          lastError = error as Error;
-          if (attempt < retries) {
-            this.log(`⚠ ${symbol} failed (attempt ${attempt}/${retries}), retrying...`);
-          }
-        }
+      // 批次间延迟 3 秒
+      if (i > 0) {
+        this.log(`Waiting 3 seconds before next batch...`);
+        await delay(3000);
       }
 
-      if (lastError && !results.find(r => r.symbol === symbol)) {
-        this.logError(`Failed to fetch ${symbol} after ${retries} attempts`);
+      try {
+        // 尝试批量获取
+        this.log(`Fetching batch ${Math.floor(i / batchSize) + 1}: ${batch.join(', ')}`);
+        const quotes = await yahooFinance.quote(batch);
+
+        if (Array.isArray(quotes)) {
+          for (const quote of quotes) {
+            if (quote) {
+              results.push(this.transformQuote(quote));
+              this.log(`✓ ${quote.symbol} fetched`);
+            }
+          }
+        } else if (quotes) {
+          results.push(this.transformQuote(quotes));
+          this.log(`✓ ${(quotes as any).symbol} fetched`);
+        }
+
+        // 检查哪些股票没有获取到
+        const fetchedSymbols = new Set(results.map(r => r.symbol));
+        for (const symbol of batch) {
+          if (!fetchedSymbols.has(symbol)) {
+            failedSymbols.push(symbol);
+          }
+        }
+
+      } catch (error) {
+        this.log(`⚠ Batch fetch failed, will retry individually: ${(error as Error).message}`);
+        failedSymbols.push(...batch);
+      }
+    }
+
+    // 对失败的股票进行单个重试
+    if (failedSymbols.length > 0) {
+      this.log(`Retrying ${failedSymbols.length} failed symbols individually...`);
+
+      for (const symbol of failedSymbols) {
+        await delay(2000); // 单个请求间隔 2 秒
+
+        try {
+          const quote = await yahooFinance.quote(symbol);
+          if (quote) {
+            results.push(this.transformQuote(quote));
+            this.log(`✓ ${symbol} fetched (retry)`);
+          }
+        } catch (error) {
+          this.logError(`Failed to fetch ${symbol}: ${(error as Error).message}`);
+        }
       }
     }
 
@@ -238,6 +300,13 @@ export class YahooFinanceCollector extends BaseCollector<YahooFinanceConfig> {
       volume: quote.regularMarketVolume,
       marketCap: quote.marketCap,
       previousClose: quote.regularMarketPreviousClose,
+      // 52周高低点
+      fiftyTwoWeekHigh: quote.fiftyTwoWeekHigh,
+      fiftyTwoWeekLow: quote.fiftyTwoWeekLow,
+      fiftyTwoWeekHighChange: quote.fiftyTwoWeekHighChange,
+      fiftyTwoWeekHighChangePercent: quote.fiftyTwoWeekHighChangePercent,
+      fiftyTwoWeekLowChange: quote.fiftyTwoWeekLowChange,
+      fiftyTwoWeekLowChangePercent: quote.fiftyTwoWeekLowChangePercent,
       timestamp: new Date(quote.regularMarketTime * 1000),
     };
   }

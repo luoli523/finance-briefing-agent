@@ -26,6 +26,7 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^17.2.3",
+    "https-proxy-agent": "^7.0.6",
     "yahoo-finance2": "^3.11.2"
   },
   "devDependencies": {

@@ -10,9 +10,14 @@ export { BaseCollector } from './base';
 
 // 收集器导出
 export { YahooFinanceCollector, yahooFinanceCollector } from './yahoo-finance';
+export { AlphaVantageCollector, alphaVantageCollector } from './alpha-vantage';
 export { FinnhubCollector, createFinnhubCollector } from './finnhub';
 export { FredCollector, createFredCollector, ECONOMIC_SERIES, DEFAULT_SERIES } from './fred';
 
+// 统一市场数据收集器（支持多数据源和自动故障转移）
+export { MarketCollector, marketCollector } from './market-collector';
+export type { DataSource, MarketCollectorConfig } from './market-collector';
+
 // 历史数据管理
 export { HistoryManager, historyManager } from './history';
-export type { HistoricalDataPoint, HistoricalRecord } from './history';
+export type { HistoricalDataPoint, HistoricalRecord, MultiPeriodComparison } from './history';

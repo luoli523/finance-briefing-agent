@@ -30,6 +30,13 @@ export interface QuoteData {
   volume?: number;
   marketCap?: number;
   previousClose?: number;
+  // 52周高低点
+  fiftyTwoWeekHigh?: number;
+  fiftyTwoWeekLow?: number;
+  fiftyTwoWeekHighChange?: number;       // 距52周高点变化
+  fiftyTwoWeekHighChangePercent?: number;
+  fiftyTwoWeekLowChange?: number;        // 距52周低点变化
+  fiftyTwoWeekLowChangePercent?: number;
   timestamp: Date;
 }
 

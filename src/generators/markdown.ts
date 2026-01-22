@@ -1,7 +1,8 @@
 import { ComprehensiveAnalysis, MarketAnalysis, NewsAnalysis, EconomicAnalysis } from '../analyzers/types';
 import { BaseGenerator } from './base';
 import { GeneratedBriefing, BriefingSection, GeneratorConfig, OutputFormat } from './types';
-import { historyManager } from '../collectors/history';
+import { historyManager, MultiPeriodComparison, HistoricalRecord } from '../collectors/history';
+import { QuoteData } from '../collectors/types';
 
 /**
  * Markdown 简报生成器
@@ -239,6 +240,7 @@ export class MarkdownGenerator extends BaseGenerator {
 
   /**
    * 生成全部持仓明细（按行业分类）
+   * 包含日涨跌、周涨跌、月涨跌和 52 周高低点
    */
   private async generateAllStocksSection(market: MarketAnalysis): Promise<string> {
     const lines: string[] = [];
@@ -249,13 +251,27 @@ export class MarkdownGenerator extends BaseGenerator {
     const losers = market.sectors.reduce((sum, s) => sum + s.stocks.filter(st => st.changePercent < 0).length, 0);
     const unchanged = totalStocks - gainers - losers;
 
-    // 尝试获取历史数据对比
-    const previousDay = await historyManager.getPreviousTradingDay();
-    const hasPreviousData = previousDay !== null;
+    // 获取历史数据对比
+    const [weekAgo, monthAgo] = await Promise.all([
+      historyManager.getWeekAgoData(),
+      historyManager.getMonthAgoData(),
+    ]);
+
+    // 构建历史数据映射
+    const weekAgoMap = new Map(weekAgo?.quotes.map(q => [q.symbol, q]) || []);
+    const monthAgoMap = new Map(monthAgo?.quotes.map(q => [q.symbol, q]) || []);
+
+    const hasWeekData = weekAgo !== null && weekAgo.quotes.length > 0;
+    const hasMonthData = monthAgo !== null && monthAgo.quotes.length > 0;
 
     lines.push(`> 📊 **统计**: 共 ${totalStocks} 只标的 | 🟢 上涨 ${gainers} | 🔴 下跌 ${losers} | ⚪ 持平 ${unchanged}`);
-    if (hasPreviousData) {
-      lines.push(`> 📅 **对比日期**: ${previousDay.date}`);
+
+    // 显示历史数据日期
+    const dateInfo: string[] = [];
+    if (hasWeekData) dateInfo.push(`周对比: ${weekAgo!.date}`);
+    if (hasMonthData) dateInfo.push(`月对比: ${monthAgo!.date}`);
+    if (dateInfo.length > 0) {
+      lines.push(`> 📅 **历史数据**: ${dateInfo.join(' | ')}`);
     }
     lines.push('');
 
@@ -273,45 +289,55 @@ export class MarkdownGenerator extends BaseGenerator {
       lines.push(`*${sector.stocks.length} 只标的 | 🟢 上涨 ${sectorGainers} | 🔴 下跌 ${sectorLosers}*`);
       lines.push('');
 
-      // 表格表头（根据是否有历史数据决定列）
-      if (hasPreviousData) {
-        lines.push('| 代码 | 名称 | 当前价 | 日涨跌 | 日涨跌幅 | 前收盘 | 对比前日 |');
-        lines.push('|:-----|:-----|-------:|-------:|---------:|-------:|---------:|');
-      } else {
-        lines.push('| 代码 | 名称 | 当前价 | 日涨跌 | 日涨跌幅 |');
-        lines.push('|:-----|:-----|-------:|-------:|---------:|');
-      }
+      // 表格表头：代码 | 名称 | 现价 | 日涨跌 | 周涨跌 | 月涨跌 | 52周高 | 52周低
+      lines.push('| 代码 | 名称 | 现价 | 日涨跌 | 周涨跌 | 月涨跌 | 52周高 | 52周低 |');
+      lines.push('|:-----|:-----|-------:|---------:|---------:|---------:|-------:|-------:|');
 
       // 按涨跌幅排序
       const sortedStocks = [...sector.stocks].sort((a, b) => b.changePercent - a.changePercent);
 
       for (const stock of sortedStocks) {
         const emoji = stock.changePercent > 0 ? '🟢' : stock.changePercent < 0 ? '🔴' : '⚪';
-        const changeSign = stock.change >= 0 ? '+' : '';
 
-        if (hasPreviousData && previousDay) {
-          // 查找历史数据
-          const prevQuote = previousDay.quotes.find(q => q.symbol === stock.symbol);
-          if (prevQuote) {
-            const prevClose = prevQuote.price;
-            const periodChange = stock.price - prevClose;
-            const periodChangePercent = (periodChange / prevClose) * 100;
-            const periodEmoji = periodChange > 0 ? '🟢' : periodChange < 0 ? '🔴' : '⚪';
-            const periodSign = periodChange >= 0 ? '+' : '';
+        // 日涨跌
+        const dayChangeStr = this.formatChangePercent(stock.changePercent);
 
-            lines.push(`| ${emoji} ${stock.symbol} | ${stock.name.slice(0, 15)} | $${stock.price.toFixed(2)} | ${changeSign}${stock.change.toFixed(2)} | ${this.formatPercent(stock.changePercent)} | $${prevClose.toFixed(2)} | ${periodEmoji} ${periodSign}${periodChangePercent.toFixed(2)}% |`);
-          } else {
-            lines.push(`| ${emoji} ${stock.symbol} | ${stock.name.slice(0, 15)} | $${stock.price.toFixed(2)} | ${changeSign}${stock.change.toFixed(2)} | ${this.formatPercent(stock.changePercent)} | - | - |`);
-          }
-        } else {
-          lines.push(`| ${emoji} ${stock.symbol} | ${stock.name.slice(0, 15)} | $${stock.price.toFixed(2)} | ${changeSign}${stock.change.toFixed(2)} | ${this.formatPercent(stock.changePercent)} |`);
+        // 周涨跌
+        let weekChangeStr = '-';
+        const weekData = weekAgoMap.get(stock.symbol);
+        if (weekData) {
+          const weekChangePercent = ((stock.price - weekData.price) / weekData.price) * 100;
+          weekChangeStr = this.formatChangePercent(weekChangePercent);
         }
+
+        // 月涨跌
+        let monthChangeStr = '-';
+        const monthData = monthAgoMap.get(stock.symbol);
+        if (monthData) {
+          const monthChangePercent = ((stock.price - monthData.price) / monthData.price) * 100;
+          monthChangeStr = this.formatChangePercent(monthChangePercent);
+        }
+
+        // 52周高低点
+        const high52w = stock.fiftyTwoWeekHigh ? `$${stock.fiftyTwoWeekHigh.toFixed(2)}` : '-';
+        const low52w = stock.fiftyTwoWeekLow ? `$${stock.fiftyTwoWeekLow.toFixed(2)}` : '-';
+
+        lines.push(`| ${emoji} ${stock.symbol} | ${stock.name.slice(0, 12)} | $${stock.price.toFixed(2)} | ${dayChangeStr} | ${weekChangeStr} | ${monthChangeStr} | ${high52w} | ${low52w} |`);
       }
 
       lines.push('');
     }
 
     return lines.join('\n');
+  }
+
+  /**
+   * 格式化涨跌幅（带颜色标记）
+   */
+  private formatChangePercent(percent: number): string {
+    const sign = percent >= 0 ? '+' : '';
+    const emoji = percent > 0 ? '🟢' : percent < 0 ? '🔴' : '⚪';
+    return `${emoji}${sign}${percent.toFixed(2)}%`;
   }
 
   /**

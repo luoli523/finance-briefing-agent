@@ -1,6 +1,7 @@
-import { ComprehensiveAnalysis } from '../analyzers/types';
+import { ComprehensiveAnalysis, MarketAnalysis } from '../analyzers/types';
 import { BaseGenerator } from './base';
 import { GeneratedBriefing, BriefingSection, GeneratorConfig, OutputFormat } from './types';
+import { historyManager } from '../collectors/history';
 
 /**
  * HTML 简报生成器
@@ -31,6 +32,16 @@ export class HtmlGenerator extends BaseGenerator {
       content: this.generateSummaryCard(analysis),
       order: order++,
     });
+
+    // 全部持仓明细（按行业分类）
+    if (analysis.market) {
+      sections.push({
+        id: 'all-stocks',
+        title: '全部持仓明细（按行业分类）',
+        content: await this.generateAllStocksCard(analysis.market),
+        order: order++,
+      });
+    }
 
     // 市场概览
     if (analysis.market) {
@@ -252,6 +263,127 @@ export class HtmlGenerator extends BaseGenerator {
     `;
   }
 
+  /**
+   * 生成全部持仓明细（按行业分类）
+   */
+  private async generateAllStocksCard(market: MarketAnalysis): Promise<string> {
+    // 统计信息
+    const totalStocks = market.sectors.reduce((sum, s) => sum + s.stocks.length, 0);
+    const gainers = market.sectors.reduce((sum, s) => sum + s.stocks.filter(st => st.changePercent > 0).length, 0);
+    const losers = market.sectors.reduce((sum, s) => sum + s.stocks.filter(st => st.changePercent < 0).length, 0);
+    const unchanged = totalStocks - gainers - losers;
+
+    // 获取历史数据对比
+    const [weekAgo, monthAgo] = await Promise.all([
+      historyManager.getWeekAgoData(),
+      historyManager.getMonthAgoData(),
+    ]);
+
+    // 构建历史数据映射
+    const weekAgoMap = new Map(weekAgo?.quotes.map(q => [q.symbol, q]) || []);
+    const monthAgoMap = new Map(monthAgo?.quotes.map(q => [q.symbol, q]) || []);
+
+    const hasWeekData = weekAgo !== null && weekAgo.quotes.length > 0;
+    const hasMonthData = monthAgo !== null && monthAgo.quotes.length > 0;
+
+    // 统计信息
+    let statsHtml = `
+      <div class="stats-summary">
+        <p>📊 <strong>统计</strong>: 共 ${totalStocks} 只标的 | 🟢 上涨 ${gainers} | 🔴 下跌 ${losers} | ⚪ 持平 ${unchanged}</p>
+    `;
+
+    // 显示历史数据日期
+    const dateInfo: string[] = [];
+    if (hasWeekData) dateInfo.push(`周对比: ${weekAgo!.date}`);
+    if (hasMonthData) dateInfo.push(`月对比: ${monthAgo!.date}`);
+    if (dateInfo.length > 0) {
+      statsHtml += `<p>📅 <strong>历史数据</strong>: ${dateInfo.join(' | ')}</p>`;
+    }
+    statsHtml += '</div>';
+
+    // 按行业分类生成表格
+    let sectorsHtml = '';
+    for (const sector of market.sectors) {
+      if (sector.stocks.length === 0) continue;
+
+      const sectorGainers = sector.stocks.filter(s => s.changePercent > 0).length;
+      const sectorLosers = sector.stocks.filter(s => s.changePercent < 0).length;
+      const sectorEmoji = sector.performance >= 0 ? '🟢' : '🔴';
+
+      sectorsHtml += `
+        <div class="sector-section">
+          <h4>${sectorEmoji} ${sector.name} (平均: ${this.formatPercent(sector.performance)})</h4>
+          <p class="sector-stats">${sector.stocks.length} 只标的 | 🟢 上涨 ${sectorGainers} | 🔴 下跌 ${sectorLosers}</p>
+          
+          <table class="stocks-table">
+            <thead>
+              <tr>
+                <th>代码</th>
+                <th>名称</th>
+                <th>现价</th>
+                <th>日涨跌</th>
+                <th>周涨跌</th>
+                <th>月涨跌</th>
+                <th>52周高</th>
+                <th>52周低</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      // 按涨跌幅排序
+      const sortedStocks = [...sector.stocks].sort((a, b) => b.changePercent - a.changePercent);
+
+      for (const stock of sortedStocks) {
+        const emoji = stock.changePercent > 0 ? '🟢' : stock.changePercent < 0 ? '🔴' : '⚪';
+        const dayChangeClass = stock.changePercent >= 0 ? 'positive' : 'negative';
+
+        // 周涨跌
+        let weekChangeHtml = '<td class="neutral">-</td>';
+        const weekData = weekAgoMap.get(stock.symbol);
+        if (weekData) {
+          const weekChangePercent = ((stock.price - weekData.price) / weekData.price) * 100;
+          const weekChangeClass = weekChangePercent >= 0 ? 'positive' : 'negative';
+          weekChangeHtml = `<td class="${weekChangeClass}">${this.formatPercent(weekChangePercent)}</td>`;
+        }
+
+        // 月涨跌
+        let monthChangeHtml = '<td class="neutral">-</td>';
+        const monthData = monthAgoMap.get(stock.symbol);
+        if (monthData) {
+          const monthChangePercent = ((stock.price - monthData.price) / monthData.price) * 100;
+          const monthChangeClass = monthChangePercent >= 0 ? 'positive' : 'negative';
+          monthChangeHtml = `<td class="${monthChangeClass}">${this.formatPercent(monthChangePercent)}</td>`;
+        }
+
+        // 52周高低点
+        const high52w = stock.fiftyTwoWeekHigh ? `$${stock.fiftyTwoWeekHigh.toFixed(2)}` : '-';
+        const low52w = stock.fiftyTwoWeekLow ? `$${stock.fiftyTwoWeekLow.toFixed(2)}` : '-';
+
+        sectorsHtml += `
+          <tr>
+            <td><strong>${emoji} ${stock.symbol}</strong></td>
+            <td>${stock.name.slice(0, 12)}</td>
+            <td>$${stock.price.toFixed(2)}</td>
+            <td class="${dayChangeClass}">${this.formatPercent(stock.changePercent)}</td>
+            ${weekChangeHtml}
+            ${monthChangeHtml}
+            <td class="neutral">${high52w}</td>
+            <td class="neutral">${low52w}</td>
+          </tr>
+        `;
+      }
+
+      sectorsHtml += `
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    return statsHtml + sectorsHtml;
+  }
+
   private assembleHtml(title: string, sections: BriefingSection[], analysis: ComprehensiveAnalysis): string {
     const sectionsHtml = sections
       .sort((a, b) => a.order - b.order)
@@ -278,7 +410,7 @@ export class HtmlGenerator extends BaseGenerator {
       line-height: 1.6;
       padding: 20px;
     }
-    .container { max-width: 800px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; }
     header {
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       color: white;
@@ -301,6 +433,47 @@ export class HtmlGenerator extends BaseGenerator {
     th { background: #f8f9fa; font-weight: 600; }
     .positive { color: #22c55e; }
     .negative { color: #ef4444; }
+    .neutral { color: #888; }
+    .stats-summary { 
+      background: #f8f9fa; 
+      padding: 15px; 
+      border-radius: 8px; 
+      margin-bottom: 20px;
+      border-left: 4px solid #3730a3;
+    }
+    .stats-summary p { margin: 5px 0; }
+    .sector-section { margin-bottom: 30px; }
+    .sector-section h4 { 
+      color: #1a1a2e; 
+      margin-bottom: 5px;
+      font-size: 1.1em;
+    }
+    .sector-stats { 
+      color: #666; 
+      font-size: 0.9em; 
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+    .stocks-table { 
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+    .stocks-table th {
+      font-size: 0.85em;
+      text-align: right;
+    }
+    .stocks-table th:first-child,
+    .stocks-table th:nth-child(2) {
+      text-align: left;
+    }
+    .stocks-table td {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .stocks-table td:first-child,
+    .stocks-table td:nth-child(2) {
+      text-align: left;
+    }
     .badge {
       display: inline-block;
       padding: 5px 12px;
