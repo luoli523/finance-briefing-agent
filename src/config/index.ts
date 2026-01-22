@@ -141,6 +141,67 @@ export function getIndexSymbols(): string[] {
 }
 
 /**
+ * RSS Feeds 配置
+ * 使用 Nitter (开源 Twitter 前端) 将 Twitter 账号转换为 RSS
+ * Nitter 实例: https://nitter.net
+ */
+export const RSS_FEEDS = {
+  // Twitter/X 账号 (通过 Nitter)
+  twitter: [
+    // 🌟 特别关注 - Elon Musk (Tesla CEO, 市场影响力极大)
+    'https://nitter.net/elonmusk/rss',
+    
+    // 财经媒体官方
+    'https://nitter.net/Bloomberg/rss',           // 彭博
+    'https://nitter.net/Reuters/rss',             // 路透社
+    'https://nitter.net/WSJ/rss',                 // 华尔街日报
+    'https://nitter.net/CNBC/rss',                // CNBC
+    'https://nitter.net/FT/rss',                  // 金融时报
+    'https://nitter.net/MarketWatch/rss',         // MarketWatch
+    'https://nitter.net/YahooFinance/rss',        // Yahoo Finance
+    'https://nitter.net/business/rss',            // Bloomberg Business
+    
+    // 政府/监管机构
+    'https://nitter.net/federalreserve/rss',      // 美联储
+    'https://nitter.net/USTreasury/rss',          // 美国财政部
+    'https://nitter.net/SEC_News/rss',            // SEC
+    'https://nitter.net/WhiteHouse/rss',          // 白宫
+    
+    // 科技公司官方
+    'https://nitter.net/Apple/rss',               // Apple (AAPL)
+    'https://nitter.net/Microsoft/rss',           // Microsoft (MSFT)
+    'https://nitter.net/Google/rss',              // Google (GOOGL)
+    'https://nitter.net/Amazon/rss',              // Amazon (AMZN)
+    'https://nitter.net/Meta/rss',                // Meta (META)
+    'https://nitter.net/Tesla/rss',               // Tesla (TSLA)
+    'https://nitter.net/nvidia/rss',              // NVIDIA (NVDA)
+    'https://nitter.net/AMD/rss',                 // AMD
+    'https://nitter.net/intel/rss',               // Intel (INTC)
+    
+    // 知名分析师/投资者
+    'https://nitter.net/CathieDWood/rss',         // ARK Invest CEO
+    'https://nitter.net/jimcramer/rss',           // CNBC Mad Money
+    'https://nitter.net/TheStalwart/rss',         // Bloomberg 专栏作家
+    'https://nitter.net/markets/rss',             // Bloomberg Markets
+  ],
+  
+  // 其他 RSS 源（新闻网站、博客等）
+  others: [
+    // 可以在这里添加其他 RSS feeds
+  ],
+};
+
+/**
+ * 获取所有 RSS feeds
+ */
+export function getAllRSSFeeds(): string[] {
+  return [
+    ...RSS_FEEDS.twitter,
+    ...RSS_FEEDS.others,
+  ];
+}
+
+/**
  * 应用配置
  */
 export const appConfig = {
@@ -157,6 +218,17 @@ export const appConfig = {
   // Alpha Vantage 配置（备用数据源）
   alphaVantage: {
     apiKey: process.env.ALPHA_VANTAGE_API_KEY || '',
+  },
+
+  // SEC EDGAR 配置
+  sec: {
+    userAgent: process.env.SEC_USER_AGENT || 'FinanceBriefingAgent/1.0 (contact@example.com)',
+  },
+
+  // RSS 配置
+  rss: {
+    feeds: getAllRSSFeeds(),
+    enabled: true,
   },
 
   // 数据目录

@@ -13,6 +13,7 @@
     "collect:finnhub": "tsx src/scripts/collect-finnhub.ts",
     "collect:fred": "tsx src/scripts/collect-fred.ts",
     "collect:sec": "tsx src/scripts/collect-sec.ts",
+    "collect:rss": "tsx src/scripts/collect-rss.ts",
     "analyze": "tsx src/scripts/analyze.ts",
     "generate": "tsx src/scripts/generate.ts",
     "verify:config": "tsx src/scripts/verify-config.ts"
@@ -29,6 +30,7 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "https-proxy-agent": "^7.0.6",
+    "rss-parser": "^3.13.0",
     "yahoo-finance2": "^3.11.2"
   },
   "devDependencies": {
