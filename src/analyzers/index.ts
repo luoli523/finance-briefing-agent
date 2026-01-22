@@ -13,3 +13,5 @@ export { MarketAnalyzer } from './market';
 export { NewsAnalyzer } from './news';
 export { EconomicAnalyzer } from './economic';
 export { UnifiedAnalyzer, unifiedAnalyzer } from './unified';
+export { IntelligentAnalyzer, createIntelligentAnalyzer } from './intelligent';
+export type { IntelligentAnalysis } from './intelligent';

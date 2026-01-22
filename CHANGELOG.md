@@ -1,6 +1,165 @@
 # 更新日志 (Changelog)
 
-## [未发布] - 2026-01-21
+## [未发布] - 2026-01-22
+
+### 🌟 重大更新：智能综合分析器
+
+#### 新增功能 ✨
+
+##### 1. 智能综合分析器 (Intelligent Analyzer)
+- **5 大维度深度分析**
+  - 🌍 宏观经济：GDP、通胀、就业健康度分析
+  - 🏦 财政货币政策：Fed 立场（鹰派/鸽派）、利率预期、收益率曲线
+  - 🌐 地缘政治：重大事件、受影响板块、风险等级
+  - ⚖️ 政策监管：SEC 动态、政策变化、受影响公司
+  - 🏭 行业深度分析：AI、半导体、数据中心、能源
+
+- **4 大重点行业深度分析**
+  - 🤖 AI 人工智能：关键进展、领先股票、投资建议
+  - 💾 半导体：供应链状态、需求趋势、关键玩家
+  - 🏢 数据中心：产能扩张、电力需求、关键标的
+  - ⚡ 能源：传统能源、可再生能源、核能复兴
+
+- **跨领域关联分析**
+  - 识别关键关联（如 AI 需求 → 半导体景气度）
+  - 发现新兴趋势（如 AI 算力竞赛 → 电力基础设施投资）
+  - 揭示隐藏风险（如利率上升 → 高估值科技股压力）
+
+- **智能投资建议**
+  - ✅ 投资机会识别
+  - ⚠️ 投资风险警示
+  - 🔄 板块轮动建议
+  - ⏰ 时机考量分析
+
+- **关键催化剂识别**
+  - 📅 即将到来的重要事件（FOMC 会议、CPI 发布等）
+  - 👀 需要持续监控的项目（财报季、政策进展等）
+
+##### 2. 新增数据源
+- **政府 RSS 收集器**
+  - Federal Reserve (美联储新闻稿和官员讲话)
+  - SEC (证券监管动态)
+  - Federal Register (联邦法规)
+  - 100% 成功率，110+ 条实时政府动态
+
+- **SEC EDGAR 收集器**
+  - 公司监管文件（8-K, 10-K, 10-Q, Form 4）
+  - XBRL 财务数据
+  - 支持自定义监控公司和文件类型
+
+##### 3. 智能简报生成器
+- **新的智能简报格式** (`intelligent-briefing-YYYY-MM-DD.md`)
+  - 📋 今日要点和市场展望
+  - 🧠 多维度分析详情
+  - 🏭 重点行业深度分析
+  - 🔗 跨领域关联洞察
+  - 💡 投资建议
+  - 🎯 关键催化剂
+  - 📊 完整持仓明细
+  - 📰 新闻要闻
+  - 🏦 经济数据详情
+
+##### 4. 一键智能工作流
+- **新命令**：`npm run workflow:intelligent`
+  - 自动收集所有数据源
+  - 执行智能综合分析
+  - 生成智能简报
+  - 全程自动化，约 40 秒完成
+
+### 新增命令 📝
+
+```bash
+# 智能分析
+npm run analyze:intelligent      # 执行智能综合分析
+npm run generate:intelligent     # 生成智能简报
+npm run workflow:intelligent     # 一键智能工作流（推荐）
+
+# 数据收集
+npm run collect:sec             # 收集 SEC 监管数据
+npm run collect:rss             # 收集政府 RSS 数据
+```
+
+### 新增文件 📁
+
+```
+src/analyzers/intelligent.ts              # 智能分析器核心
+src/scripts/analyze-intelligent.ts        # 智能分析脚本
+src/generators/intelligent-markdown.ts    # 智能简报生成器
+src/scripts/generate-intelligent.ts       # 智能简报生成脚本
+src/scripts/run-intelligent-workflow.ts   # 智能工作流脚本
+src/collectors/sec-edgar.ts               # SEC 收集器
+src/collectors/rss.ts                     # RSS 收集器
+docs/INTELLIGENT_ANALYZER.md              # 智能分析器文档
+docs/NEWS_SOURCES_IMPLEMENTATION.md       # 新闻源实施指南
+docs/NEWS_SOURCES_QUICKSTART.md           # 新闻源快速开始
+docs/SYMBOLS_CONFIGURATION.md             # 符号配置文档
+docs/CONFIG_TEST_REPORT.md                # 配置测试报告
+docs/COLLECTORS_OVERVIEW.md               # 收集器概览
+```
+
+### 改进 🔧
+
+#### 数据整合
+- 整合 6 个数据源（Yahoo Finance、Finnhub、FRED、SEC、政府 RSS、历史数据）
+- 跨数据源关联分析
+- 多维度情绪综合判断
+
+#### 分析深度
+- 从单维度分析升级到 5 大维度综合分析
+- 新增 4 大重点行业深度分析
+- 识别跨领域关联和新兴趋势
+
+#### 投资价值
+- 从基础市场分析升级到可操作的投资建议
+- 提供机会、风险、板块轮动、时机考量
+- 识别关键催化剂，提前布局
+
+### 技术架构 🏗️
+
+```
+IntelligentAnalyzer
+├── performBaseAnalysis()              # 基础分析
+├── analyzeDimensions()                 # 多维度分析
+│   ├── analyzeMacroEconomic()         # 宏观经济
+│   ├── analyzeMonetaryPolicy()        # 货币政策
+│   ├── analyzeGeopolitical()          # 地缘政治
+│   ├── analyzeRegulatory()            # 政策监管
+│   └── sectorDeepDive                 # 行业深度
+│       ├── analyzeAISector()
+│       ├── analyzeSemiconductorSector()
+│       ├── analyzeDataCenterSector()
+│       └── analyzeEnergySector()
+├── analyzeCrossDomainConnections()    # 跨领域关联
+├── generateInvestmentImplications()   # 投资建议
+├── identifyCatalysts()                # 关键催化剂
+└── generateEnhancedSummary()          # 综合摘要
+```
+
+### 使用方法 📖
+
+#### 快速开始（推荐）
+
+```bash
+npm run workflow:intelligent
+```
+
+#### 分步执行
+
+```bash
+npm run collect                # 收集所有数据
+npm run analyze:intelligent    # 智能分析
+npm run generate:intelligent   # 生成智能简报
+```
+
+### 文档 📚
+
+- 详细文档：`docs/INTELLIGENT_ANALYZER.md`
+- 收集器概览：`docs/COLLECTORS_OVERVIEW.md`
+- 配置管理：`docs/SYMBOLS_CONFIGURATION.md`
+
+---
+
+## [1.1.0] - 2026-01-21
 
 ### 新增功能 ✨
 
