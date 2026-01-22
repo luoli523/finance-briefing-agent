@@ -252,6 +252,18 @@ export const appConfig = {
     enabled: true, // 已启用 (政府机构 RSS 可用)
   },
 
+  // LLM 增强分析配置
+  llm: {
+    enabled: process.env.LLM_ENABLED === 'true' || false,
+    provider: (process.env.LLM_PROVIDER as any) || 'openai',
+    model: process.env.LLM_MODEL || 'gpt-4-turbo',
+    apiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || '',
+    baseURL: process.env.LLM_BASE_URL,
+    temperature: parseFloat(process.env.LLM_TEMPERATURE || '0.7'),
+    maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '4096'),
+    timeout: parseInt(process.env.LLM_TIMEOUT || '60000'),
+  },
+
   // 数据目录
   paths: {
     data: path.resolve(process.cwd(), 'data'),

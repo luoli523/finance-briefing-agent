@@ -15,3 +15,6 @@ export { EconomicAnalyzer } from './economic';
 export { UnifiedAnalyzer, unifiedAnalyzer } from './unified';
 export { IntelligentAnalyzer, createIntelligentAnalyzer } from './intelligent';
 export type { IntelligentAnalysis } from './intelligent';
+
+// LLM 增强分析器
+export * from './llm';

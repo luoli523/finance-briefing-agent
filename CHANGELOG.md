@@ -2,6 +2,93 @@
 
 ## [未发布] - 2026-01-22
 
+### 🤖 LLM 深度增强（混合模式）
+
+#### 新增功能 ✨
+
+##### LLM 增强分析器
+- **混合模式架构**: 规则引擎（基础层）+ LLM（深度层）
+- **多提供商支持**: OpenAI、Anthropic (Claude)、DeepSeek、Ollama (本地)
+- **深度洞察分析**:
+  - 宏观经济深度解读
+  - Fed 政策深度分析
+  - 地缘政治深度解读
+  - 行业趋势深度分析（AI、半导体、数据中心、能源）
+  - 跨领域深度洞察
+  - 投资策略建议（短/中/长期）
+  - 情景分析（牛市/基准/熊市情景）
+  - 关键问题和行动项
+- **成本可控**: 
+  - 默认关闭，按需启用
+  - DeepSeek 仅 $0.002/次分析
+  - Ollama 完全免费（本地模型）
+- **完善的错误处理**: LLM 失败自动降级到规则引擎
+
+##### 新增命令
+```bash
+npm run analyze:enhanced    # 混合分析（规则引擎 + LLM）
+```
+
+##### 新增文件
+```
+src/analyzers/llm/
+├── types.ts                # LLM 类型定义
+├── prompts.ts              # 精心设计的提示词模板
+├── enhancer.ts             # LLM 增强器核心
+├── providers/
+│   ├── base.ts             # 提供商基类
+│   ├── openai.ts           # OpenAI 提供商
+│   ├── anthropic.ts        # Anthropic Claude 提供商
+│   ├── deepseek.ts         # DeepSeek 提供商
+│   └── ollama.ts           # Ollama 本地模型提供商
+└── index.ts
+
+src/scripts/analyze-enhanced.ts   # 混合分析脚本
+docs/LLM_ENHANCEMENT.md            # 详细使用文档
+```
+
+##### 配置更新
+- 新增 LLM 相关配置项到 `.env.example`
+- 更新 `src/config/index.ts` 支持 LLM 配置
+
+#### 技术亮点
+
+- **零外部依赖**: 直接使用 Node.js `https`/`http` 模块
+- **类型安全**: 完整的 TypeScript 类型定义
+- **灵活架构**: 易于扩展新的 LLM 提供商
+- **成本透明**: 实时显示 tokens 使用和成本估算
+
+#### 使用示例
+
+```bash
+# 1. 启用 LLM 增强（.env）
+LLM_ENABLED=true
+LLM_PROVIDER=deepseek           # 或 openai, anthropic, ollama
+LLM_MODEL=deepseek-chat
+LLM_API_KEY=your-api-key
+
+# 2. 运行混合分析
+npm run analyze:enhanced
+```
+
+#### 成本对比
+
+| 提供商 | 模型 | 成本/次 | 质量 |
+|-------|------|---------|------|
+| DeepSeek | deepseek-chat | ~$0.002 | ⭐⭐⭐⭐ |
+| Anthropic | Claude 3.5 Sonnet | ~$0.02 | ⭐⭐⭐⭐⭐ |
+| OpenAI | GPT-4 Turbo | ~$0.03 | ⭐⭐⭐⭐⭐ |
+| Ollama | Qwen2.5/Llama3.1 | 免费 | ⭐⭐⭐ |
+
+#### 文档
+- 详细使用指南: `docs/LLM_ENHANCEMENT.md`
+- 配置示例: `.env.example`
+- README 已更新
+
+---
+
+## [1.2.0] - 2026-01-22
+
 ### 🌟 重大更新：智能综合分析器
 
 #### 新增功能 ✨

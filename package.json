@@ -16,6 +16,7 @@
     "collect:rss": "tsx src/scripts/collect-rss.ts",
     "analyze": "tsx src/scripts/analyze.ts",
     "analyze:intelligent": "tsx src/scripts/analyze-intelligent.ts",
+    "analyze:enhanced": "tsx src/scripts/analyze-enhanced.ts",
     "generate": "tsx src/scripts/generate.ts",
     "generate:intelligent": "tsx src/scripts/generate-intelligent.ts",
     "workflow:intelligent": "tsx src/scripts/run-intelligent-workflow.ts",
