@@ -21,3 +21,6 @@ export type { DataSource, MarketCollectorConfig } from './market-collector';
 // 历史数据管理
 export { HistoryManager, historyManager } from './history';
 export type { HistoricalDataPoint, HistoricalRecord, MultiPeriodComparison } from './history';
+
+// SEC EDGAR 收集器
+export { SECCollector, createSECCollector } from './sec-edgar';
