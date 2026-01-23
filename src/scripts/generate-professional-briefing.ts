@@ -117,6 +117,7 @@ async function main() {
         // 解析LLM响应
         try {
           const content = response.content;
+          
           // 移除可能的markdown代码块标记
           const jsonContent = content
             .replace(/^```json\s*/i, '')
@@ -217,14 +218,42 @@ function buildDataSummary(analysis: ComprehensiveAnalysis): string {
   }
   
   // 新闻摘要
+  summary += `## 重要新闻\n`;
+  summary += `总计新闻: ${analysis.news?.totalArticles || 0}条\n`;
+  summary += `整体情绪: ${analysis.news?.sentiment || 'N/A'}\n\n`;
+  
+  // 关键新闻 (keyHeadlines)
+  if (analysis.news?.keyHeadlines && analysis.news.keyHeadlines.length > 0) {
+    summary += `### 关键新闻\n`;
+    analysis.news.keyHeadlines.forEach((item: any, i: number) => {
+      summary += `${i + 1}. [${item.importance || 'medium'}] ${item.headline}\n`;
+      summary += `   来源: ${item.source || 'N/A'} | 情绪: ${item.sentiment || 'N/A'}\n`;
+    });
+    summary += `\n`;
+  }
+  
+  // 热门话题 (topTopics)
+  if (analysis.news?.topTopics && analysis.news.topTopics.length > 0) {
+    summary += `### 热门话题\n`;
+    analysis.news.topTopics.forEach((topic: any) => {
+      summary += `**${topic.topic}** (${topic.count}条, ${topic.sentiment})\n`;
+      if (topic.headlines && topic.headlines.length > 0) {
+        topic.headlines.slice(0, 3).forEach((h: string) => {
+          summary += `  - ${h}\n`;
+        });
+      }
+    });
+    summary += `\n`;
+  }
+  
+  // 兜底：尝试读取 topHeadlines
   if (analysis.news?.topHeadlines && analysis.news.topHeadlines.length > 0) {
-    summary += `## 重要新闻\n`;
-    analysis.news.topHeadlines.slice(0, 15).forEach((headline: any, i: number) => {
+    summary += `### 其他新闻\n`;
+    analysis.news.topHeadlines.slice(0, 10).forEach((headline: any, i: number) => {
       if (typeof headline === 'string') {
         summary += `${i + 1}. ${headline}\n`;
       } else {
         summary += `${i + 1}. ${headline.title || headline}\n`;
-        if (headline.source) summary += `   来源: ${headline.source}\n`;
       }
     });
     summary += `\n`;

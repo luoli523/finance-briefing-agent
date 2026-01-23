@@ -402,15 +402,23 @@ AI Industry 每日简报与投资建议｜${this.date}
 
     const linkage = this.llmInsights?.industryLinkageAnalysis;
 
+    // 辅助函数：安全处理数组或字符串字段
+    const formatField = (field: string[] | string | undefined): string => {
+      if (!field) return 'N/A';
+      if (typeof field === 'string') return field;
+      if (Array.isArray(field)) return field.join('、') || 'N/A';
+      return 'N/A';
+    };
+
     // GPU供给链
     content += `### 1. GPU/加速卡供给与价格链\n\n`;
     if (linkage?.gpuSupplyChain) {
       const gpu = linkage.gpuSupplyChain;
       content += `**事件**: ${gpu.event}\n\n`;
       content += `**传导机制**: ${gpu.mechanism}\n\n`;
-      content += `**受益环节**: ${gpu.beneficiaries.join('、') || 'N/A'}\n\n`;
-      content += `**受损环节**: ${gpu.losers.join('、') || 'N/A'}\n\n`;
-      content += `**跟踪指标**: ${gpu.trackingMetrics.join('、') || 'N/A'}\n\n`;
+      content += `**受益环节**: ${formatField(gpu.beneficiaries)}\n\n`;
+      content += `**受损环节**: ${formatField(gpu.losers)}\n\n`;
+      content += `**跟踪指标**: ${formatField(gpu.trackingMetrics)}\n\n`;
     } else {
       content += `GPU供给 → 训练/推理成本 → 云厂商与模型公司毛利/CapEx\n\n`;
       content += `- **受益方**: NVDA（供给方）、云厂商（规模效应）\n`;
@@ -423,9 +431,9 @@ AI Industry 每日简报与投资建议｜${this.date}
       const dc = linkage.dataCenterExpansion;
       content += `**事件**: ${dc.event}\n\n`;
       content += `**传导机制**: ${dc.mechanism}\n\n`;
-      content += `**受益环节**: ${dc.beneficiaries.join('、') || 'N/A'}\n\n`;
-      content += `**受损环节**: ${dc.losers.join('、') || 'N/A'}\n\n`;
-      content += `**跟踪指标**: ${dc.trackingMetrics.join('、') || 'N/A'}\n\n`;
+      content += `**受益环节**: ${formatField(dc.beneficiaries)}\n\n`;
+      content += `**受损环节**: ${formatField(dc.losers)}\n\n`;
+      content += `**跟踪指标**: ${formatField(dc.trackingMetrics)}\n\n`;
     } else {
       content += `数据中心扩张 → 服务器/网络/电力与冷却需求增长\n\n`;
       content += `- **受益方**: VRT（电源散热）、ETN（电气设备）、ANET（网络）、SMCI（服务器）\n`;
@@ -438,9 +446,9 @@ AI Industry 每日简报与投资建议｜${this.date}
       const capex = linkage.semiconCapex;
       content += `**事件**: ${capex.event}\n\n`;
       content += `**传导机制**: ${capex.mechanism}\n\n`;
-      content += `**受益环节**: ${capex.beneficiaries.join('、') || 'N/A'}\n\n`;
-      content += `**受损环节**: ${capex.losers.join('、') || 'N/A'}\n\n`;
-      content += `**跟踪指标**: ${capex.trackingMetrics.join('、') || 'N/A'}\n\n`;
+      content += `**受益环节**: ${formatField(capex.beneficiaries)}\n\n`;
+      content += `**受损环节**: ${formatField(capex.losers)}\n\n`;
+      content += `**跟踪指标**: ${formatField(capex.trackingMetrics)}\n\n`;
     } else {
       content += `半导体资本开支 → 设备/EDA订单 → 行业能见度\n\n`;
       content += `- **受益方**: AMAT、LRCX、KLAC（设备）、SNPS、CDNS（EDA）\n`;

@@ -18,11 +18,19 @@ export class OpenAIProvider extends BaseLLMProvider {
   }
 
   async chat(messages: { role: string; content: string }[]): Promise<LLMResponse> {
+    // GPT-5 和 o1 系列使用 max_completion_tokens，其他模型使用 max_tokens
+    const isNewModel = this.config.model.startsWith('gpt-5') || 
+                       this.config.model.startsWith('o1') ||
+                       this.config.model.startsWith('o3');
+    
     const requestBody = JSON.stringify({
       model: this.config.model,
       messages,
       temperature: this.config.temperature || 0.7,
-      max_tokens: this.config.maxTokens || 4096,
+      ...(isNewModel 
+        ? { max_completion_tokens: this.config.maxTokens || 4096 }
+        : { max_tokens: this.config.maxTokens || 4096 }
+      ),
     });
 
     const response = await this.makeRequest('/chat/completions', requestBody);
@@ -35,7 +43,7 @@ export class OpenAIProvider extends BaseLLMProvider {
     const usage = response.usage;
 
     return {
-      content: choice.message.content,
+      content: choice.message.content || '',
       usage: usage ? {
         promptTokens: usage.prompt_tokens,
         completionTokens: usage.completion_tokens,
