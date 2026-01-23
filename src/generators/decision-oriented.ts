@@ -1195,11 +1195,15 @@ ${marketPhase.explanation}
       .filter(q => q.changePercent > -1 && q.changePercent < 1)
       .slice(0, 2);
 
-    watchList.forEach(q => {
-      plan += `- ⏳ 关注 **${q.symbol}**，等待突破或回调\n`;
-      plan += `  └─ 突破信号: 放量突破 $${(q.price * 1.03).toFixed(2)}\n`;
-      plan += `  └─ 回调机会: 跌至 $${(q.price * 0.97).toFixed(2)} 附近\n\n`;
-    });
+    if (watchList.length > 0) {
+      watchList.forEach(q => {
+        plan += `- ⏳ 关注 **${q.symbol}**，等待突破或回调\n`;
+        plan += `  └─ 突破信号: 放量突破 $${(q.price * 1.03).toFixed(2)}\n`;
+        plan += `  └─ 回调机会: 跌至 $${(q.price * 0.97).toFixed(2)} 附近\n\n`;
+      });
+    } else {
+      plan += `- ⏳ 当前无明显观望标的，保持现有配置\n\n`;
+    }
 
     return plan;
   }
@@ -1319,12 +1323,20 @@ ${marketPhase.explanation}
       const emoji = avgChange >= 0 ? '🟢' : '🔴';
 
       section += `### ${emoji} ${sector} (平均: ${avgChange >= 0 ? '+' : ''}${avgChange.toFixed(2)}%)\n\n`;
-      section += `| 代码 | 名称 | 现价 | 日涨跌 | 52周高 | 52周低 |\n`;
-      section += `|------|------|------:|--------:|-------:|-------:|\n`;
+      section += `| 状态 | 代码 | 公司名称 | 现价 | 日涨跌 | 52周高 | 52周低 | 距高点 |\n`;
+      section += `|:----:|:----:|:--------|-----:|-------:|-------:|-------:|-------:|\n`;
 
-      sectorQuotes.forEach(q => {
+      // 按涨跌幅排序
+      const sortedQuotes = sectorQuotes.sort((a: any, b: any) => b.changePercent - a.changePercent);
+      
+      sortedQuotes.forEach(q => {
         const icon = q.changePercent >= 0 ? '🟢' : '🔴';
-        section += `| ${icon} ${q.symbol} | ${q.name.substring(0, 12)} | $${q.price.toFixed(2)} | ${q.changePercent >= 0 ? '+' : ''}${q.changePercent.toFixed(2)}% | $${q.fiftyTwoWeekHigh?.toFixed(2) || 'N/A'} | $${q.fiftyTwoWeekLow?.toFixed(2) || 'N/A'} |\n`;
+        const companyName = q.name.length > 20 ? q.name.substring(0, 17) + '...' : q.name;
+        const distanceToHigh = q.fiftyTwoWeekHigh ? 
+          ((q.price - q.fiftyTwoWeekHigh) / q.fiftyTwoWeekHigh * 100).toFixed(1) + '%' : 
+          'N/A';
+        
+        section += `| ${icon} | **${q.symbol}** | ${companyName} | $${q.price.toFixed(2)} | ${q.changePercent >= 0 ? '+' : ''}${q.changePercent.toFixed(2)}% | $${q.fiftyTwoWeekHigh?.toFixed(2) || 'N/A'} | $${q.fiftyTwoWeekLow?.toFixed(2) || 'N/A'} | ${distanceToHigh} |\n`;
       });
 
       section += `\n`;

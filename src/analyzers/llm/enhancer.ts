@@ -92,12 +92,18 @@ export class LLMEnhancer {
 
       const parsed = JSON.parse(jsonContent);
       
-      // 验证必要字段
-      if (!parsed.macroEconomicInsights || !parsed.strategicRecommendations) {
-        throw new Error('Missing required fields in LLM response');
+      // 支持新旧两种格式
+      // 新格式：investmentThemes, keyEventsDeepDive, quantitativeRecommendations, etc.
+      // 旧格式：macroEconomicInsights, strategicRecommendations, etc.
+      const hasNewFormat = parsed.investmentThemes || parsed.keyEventsDeepDive || parsed.quantitativeRecommendations;
+      const hasOldFormat = parsed.macroEconomicInsights || parsed.strategicRecommendations;
+      
+      if (!hasNewFormat && !hasOldFormat) {
+        console.warn('[llm-enhancer] Response does not match expected format, but will try to use it');
       }
 
-      return parsed as LLMDeepInsights;
+      // 直接返回解析后的对象，让调用方决定如何使用
+      return parsed;
     } catch (error: any) {
       console.error(`[llm-enhancer] Failed to parse LLM response: ${error.message}`);
       

@@ -1,0 +1,150 @@
+## 分析任务
+
+基于提供的市场数据和新闻，生成以下6个部分的深度分析内容。
+
+## 输出格式要求
+
+你必须输出纯净的JSON格式，不要包含任何markdown代码块标记（如```json）。直接输出JSON对象。
+
+## JSON结构
+
+{
+  "marketMacroNews": {
+    "summary": "市场整体情绪的一句话总结",
+    "keyNews": [
+      {
+        "title": "新闻标题",
+        "fact": "事实摘要（≤2句）",
+        "impact": "影响解读：对产业链哪一环（上游制造/中游芯片/下游应用）的短期与中期影响",
+        "category": "政策与监管|供应链与地缘|资本市场情绪",
+        "importance": "high|medium|low"
+      }
+    ]
+  },
+  
+  "companyDeepDive": [
+    {
+      "ticker": "股票代码",
+      "company": "公司名称",
+      "event": "事件摘要（具体数字优先）",
+      "investmentLogic": "投资逻辑解读（≤3句）",
+      "priceTarget": {
+        "current": 当前价格,
+        "target": 目标价,
+        "stopLoss": 止损价,
+        "timeframe": "short|medium|long"
+      },
+      "catalysts": ["催化剂1", "催化剂2"],
+      "risks": ["风险1", "风险2"]
+    }
+  ],
+  
+  "industryLinkageAnalysis": {
+    "gpuSupplyChain": {
+      "event": "事件描述",
+      "mechanism": "传导机制",
+      "beneficiaries": ["受益股票"],
+      "losers": ["受损股票"],
+      "trackingMetrics": ["跟踪指标"]
+    },
+    "dataCenterExpansion": {
+      "event": "事件描述",
+      "mechanism": "传导机制",
+      "beneficiaries": ["受益股票"],
+      "losers": ["受损股票"],
+      "trackingMetrics": ["跟踪指标"]
+    },
+    "semiconCapex": {
+      "event": "事件描述",
+      "mechanism": "传导机制",
+      "beneficiaries": ["受益股票"],
+      "losers": ["受损股票"],
+      "trackingMetrics": ["跟踪指标"]
+    }
+  },
+  
+  "capitalMovements": [
+    {
+      "action": "动作描述（含金额/规模/时间表）",
+      "strategicIntent": "战略意图",
+      "marketReaction": "市场反应（股价/分析师观点）",
+      "riskPoints": ["风险点1", "风险点2"]
+    }
+  ],
+  
+  "investmentStrategy": {
+    "overallJudgment": {
+      "valuation": "估值判断（高估/合理/低估）",
+      "earnings": "业绩趋势（上修/持平/下修）",
+      "rates": "利率环境（紧缩/中性/宽松）",
+      "policy": "政策风向（利好/中性/利空）",
+      "fundFlow": "资金偏好描述"
+    },
+    "shortTerm": {
+      "timeframe": "1个月内",
+      "stance": "defensive|neutral|aggressive",
+      "cashPosition": "建议现金比例%",
+      "hedgeStrategy": "对冲思路",
+      "actionItems": ["具体操作1", "具体操作2"]
+    },
+    "mediumTerm": {
+      "timeframe": "3-6个月",
+      "focus": "聚焦主题",
+      "keyCatalysts": ["催化剂1", "催化剂2"],
+      "verificationMetrics": ["验证指标1", "验证指标2"],
+      "stockPicks": [
+        {
+          "ticker": "代码",
+          "logic": "核心逻辑",
+          "entry": 买入价位,
+          "target": 目标价,
+          "position": "建议仓位%"
+        }
+      ]
+    },
+    "longTerm": {
+      "timeframe": "6-12个月以上",
+      "themes": ["结构性成长主题1", "主题2"],
+      "beneficiarySubsectors": ["受益子行业1", "子行业2"],
+      "representativeStocks": ["代表标的1", "标的2"]
+    },
+    "portfolioSuggestion": {
+      "stocks": [
+        {
+          "ticker": "代码",
+          "name": "名称",
+          "weight": "建议权重%",
+          "logic": "核心逻辑",
+          "mainRisk": "主要风险"
+        }
+      ],
+      "etfs": [
+        {
+          "ticker": "代码",
+          "name": "名称",
+          "useCase": "适用场景"
+        }
+      ]
+    },
+    "riskControl": {
+      "mainRisks": [
+        {
+          "risk": "风险描述",
+          "probability": "high|medium|low",
+          "hedge": "对冲建议"
+        }
+      ],
+      "hedgeInstruments": ["短债ETF", "美元", "黄金等"]
+    }
+  },
+  
+  "dailyBlessing": "温和、积极、让人开心的一句话祝福（不涉及投资，不含表情符号）"
+}
+
+## 重要提示
+
+1. 所有内容必须是中文
+2. 数字必须准确，无法确认的写 N/A
+3. 输出必须是有效的JSON格式，可直接被JSON.parse()解析
+4. 不要在JSON前后添加任何额外文字
+5. 不要使用markdown代码块标记

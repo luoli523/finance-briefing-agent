@@ -24,7 +24,15 @@
     "generate:decision": "tsx src/scripts/generate-decision-report.ts",
     "generate:decision-enhanced": "tsx src/scripts/generate-decision-enhanced.ts",
     "workflow:decision": "tsx src/scripts/collect.ts && tsx src/scripts/analyze.ts && tsx src/scripts/generate-decision-report.ts",
-    "workflow:decision-enhanced": "tsx src/scripts/collect.ts && tsx src/scripts/analyze-intelligent.ts && tsx src/scripts/analyze-enhanced.ts && tsx src/scripts/generate-decision-enhanced.ts"
+    "workflow:decision-enhanced": "tsx src/scripts/collect.ts && tsx src/scripts/analyze-intelligent.ts && tsx src/scripts/analyze-enhanced.ts && tsx src/scripts/generate-decision-enhanced.ts",
+    "generate:infographic": "tsx src/scripts/generate-infographic.ts",
+    "generate:infographic-enhanced": "tsx src/scripts/generate-infographic-enhanced.ts",
+    "generate:decision-v2": "tsx src/scripts/generate-decision-v2.ts",
+    "workflow:v2": "tsx src/scripts/collect.ts && tsx src/scripts/analyze.ts && tsx src/scripts/generate-decision-v2.ts",
+    "workflow:all": "npm run workflow:decision-enhanced && npm run generate:infographic-enhanced",
+    "generate:pro": "tsx src/scripts/generate-professional-briefing.ts",
+    "workflow:pro": "tsx src/scripts/collect.ts && tsx src/scripts/analyze.ts && tsx src/scripts/generate-professional-briefing.ts",
+    "daily": "npm run workflow:pro"
   },
   "keywords": [
     "finance",
