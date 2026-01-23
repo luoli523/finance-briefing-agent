@@ -12,22 +12,26 @@
   "marketMacroNews": {
     "summary": "市场整体情绪的一句话总结",
     "keyNews": [
+      // 【重要】必须返回5-10条新闻，覆盖：政策与监管、供应链与地缘、资本市场情绪
       {
-        "title": "新闻标题",
-        "fact": "事实摘要（≤2句）",
+        "title": "新闻标题（使用原始英文标题）",
+        "fact": "事实摘要（≤2句，中文）",
         "impact": "影响解读：对产业链哪一环（上游制造/中游芯片/下游应用）的短期与中期影响",
         "category": "政策与监管|供应链与地缘|资本市场情绪",
         "importance": "high|medium|low"
       }
+      // 至少5条，最多10条
     ]
   },
   
   "companyDeepDive": [
+    // 【重要】必须返回3-5家有重大新闻或股价异动（涨跌幅>3%）的公司
+    // 优先选择：涨幅最大的3只 + 跌幅最大的2只
     {
       "ticker": "股票代码",
       "company": "公司名称",
-      "event": "事件摘要（具体数字优先）",
-      "investmentLogic": "投资逻辑解读（≤3句）",
+      "event": "事件摘要（必须包含具体数字：涨跌幅、价格、成交量等）",
+      "investmentLogic": "投资逻辑解读（≤3句，说明为什么涨/跌，后续怎么看）",
       "priceTarget": {
         "current": 当前价格,
         "target": 目标价,
@@ -37,39 +41,44 @@
       "catalysts": ["催化剂1", "催化剂2"],
       "risks": ["风险1", "风险2"]
     }
+    // 至少3条，最多5条
   ],
   
   "industryLinkageAnalysis": {
+    // 【重要】每条链路分析必须详细，说明"事件 → 机制 → 受益/受损 → 跟踪指标"的完整逻辑
     "gpuSupplyChain": {
-      "event": "事件描述",
-      "mechanism": "传导机制",
-      "beneficiaries": ["受益股票"],
-      "losers": ["受损股票"],
-      "trackingMetrics": ["跟踪指标"]
+      "event": "具体事件描述（必须结合当日新闻/数据，说明发生了什么）",
+      "mechanism": "详细传导机制（2-3句话，说明：A发生 → 导致B变化 → 影响C的成本/毛利）",
+      "beneficiaries": ["受益股票代码（至少2只，说明为什么受益）"],
+      "losers": ["受损股票代码（如有，说明为什么受损；如无明显受损方写N/A）"],
+      "trackingMetrics": ["具体跟踪指标（至少2个，如：H100价格、云厂商CapEx指引、交货周期等）"]
     },
     "dataCenterExpansion": {
-      "event": "事件描述",
-      "mechanism": "传导机制",
-      "beneficiaries": ["受益股票"],
-      "losers": ["受损股票"],
-      "trackingMetrics": ["跟踪指标"]
+      "event": "具体事件描述（必须结合当日新闻/数据，说明哪家公司/哪个项目）",
+      "mechanism": "详细传导机制（2-3句话，说明：数据中心扩张 → 哪些设备需求增加 → 哪些公司订单增长）",
+      "beneficiaries": ["受益股票代码（至少2只：服务器、网络、电源、散热等）"],
+      "losers": ["受损股票代码（如有竞争替代关系；如无写N/A）"],
+      "trackingMetrics": ["具体跟踪指标（至少2个，如：云厂商新建数据中心数量、PUE指标、服务器出货量等）"]
     },
     "semiconCapex": {
-      "event": "事件描述",
-      "mechanism": "传导机制",
-      "beneficiaries": ["受益股票"],
-      "losers": ["受损股票"],
-      "trackingMetrics": ["跟踪指标"]
+      "event": "具体事件描述（必须结合当日新闻/数据，说明哪家晶圆厂的CapEx计划）",
+      "mechanism": "详细传导机制（2-3句话，说明：CapEx增加 → 设备订单增长 → EDA需求提升）",
+      "beneficiaries": ["受益股票代码（至少2只：设备厂AMAT/LRCX/KLAC，EDA厂SNPS/CDNS）"],
+      "losers": ["受损股票代码（如有周期性风险；如无写N/A）"],
+      "trackingMetrics": ["具体跟踪指标（至少2个，如：TSM/Intel/三星CapEx金额、设备订单backlog、EDA续约率等）"]
     }
   },
   
   "capitalMovements": [
+    // 【重要】必须返回3-5条资本动向，覆盖：CapEx、扩产、数据中心建设、并购/投资、资产重组
     {
-      "action": "动作描述（含金额/规模/时间表）",
-      "strategicIntent": "战略意图",
-      "marketReaction": "市场反应（股价/分析师观点）",
-      "riskPoints": ["风险点1", "风险点2"]
+      "action": "具体动作描述（必须包含：谁/什么公司 + 做什么 + 金额/规模 + 时间表）",
+      "strategicIntent": "战略意图分析（2句话：为什么这样做 + 对行业格局的影响）",
+      "marketReaction": "市场反应（具体说明：相关股票涨跌幅、分析师评级变化、融资成本变化）",
+      "riskPoints": ["风险点1（具体风险）", "风险点2（执行风险或市场风险）"]
     }
+    // 至少3条，覆盖不同类型（CapEx/扩产/并购/数据中心等）
+    // 如果当日无重大资本动向，可分析近期已公布但仍在执行中的重大项目
   ],
   
   "investmentStrategy": {
