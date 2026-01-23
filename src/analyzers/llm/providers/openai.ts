@@ -11,7 +11,9 @@ export class OpenAIProvider extends BaseLLMProvider {
 
   constructor(config: any) {
     super(config);
-    this.baseURL = config.baseURL || 'https://api.openai.com/v1';
+    // 确保 baseURL 末尾有斜杠，以便正确构建完整 URL
+    const base = config.baseURL || 'https://api.openai.com/v1';
+    this.baseURL = base.endsWith('/') ? base : base + '/';
     this.validateConfig();
   }
 
@@ -46,7 +48,9 @@ export class OpenAIProvider extends BaseLLMProvider {
 
   private makeRequest(endpoint: string, body: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      const url = new URL(endpoint, this.baseURL);
+      // 移除 endpoint 开头的斜杠（如果有）以正确拼接 URL
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+      const url = new URL(cleanEndpoint, this.baseURL);
       
       const options = {
         hostname: url.hostname,
@@ -72,11 +76,14 @@ export class OpenAIProvider extends BaseLLMProvider {
           try {
             const parsed = JSON.parse(data);
             if (res.statusCode && res.statusCode >= 400) {
-              reject(new Error(`OpenAI API error: ${parsed.error?.message || 'Unknown error'}`));
+              reject(new Error(`OpenAI API error (${res.statusCode}): ${parsed.error?.message || 'Unknown error'}`));
             } else {
               resolve(parsed);
             }
           } catch (error) {
+            console.error('[OpenAI] Failed to parse response');
+            console.error('[OpenAI] Status code:', res.statusCode);
+            console.error('[OpenAI] Response preview:', data.substring(0, 500));
             reject(new Error(`Failed to parse OpenAI response: ${error}`));
           }
         });

@@ -1,0 +1,287 @@
+/**
+ * 专业投资简报生成脚本
+ * 
+ * 按照用户要求的6大部分格式生成：
+ * 一、核心股票池表现
+ * 二、市场宏观动态与要闻
+ * 三、关键公司深度动态
+ * 四、行业影响与关联分析
+ * 五、产业链资本动向与资产交易
+ * 六、投资建议与策略展望
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import * as dotenv from 'dotenv';
+import { ProfessionalBriefingGenerator } from '../generators/professional-briefing';
+import { LLMEnhancer } from '../analyzers/llm/enhancer';
+import { appConfig } from '../config';
+import type { ComprehensiveAnalysis } from '../analyzers/types';
+
+// 加载环境变量
+dotenv.config();
+
+// 专业简报的prompt加载
+function loadProfessionalPrompts(): { systemPrompt: string; taskPrompt: string } {
+  const promptsDir = path.resolve(process.cwd(), 'prompts');
+  
+  let systemPrompt = '';
+  let taskPrompt = '';
+  
+  try {
+    systemPrompt = fs.readFileSync(path.join(promptsDir, 'professional-briefing-system.txt'), 'utf-8');
+  } catch {
+    console.warn('[professional-briefing] 未找到 professional-briefing-system.txt，使用默认');
+  }
+  
+  try {
+    taskPrompt = fs.readFileSync(path.join(promptsDir, 'professional-briefing-task.txt'), 'utf-8');
+  } catch {
+    console.warn('[professional-briefing] 未找到 professional-briefing-task.txt，使用默认');
+  }
+  
+  return { systemPrompt, taskPrompt };
+}
+
+async function main() {
+  console.log('\n╔══════════════════════════════════════════════════════════════════════╗');
+  console.log('║                                                                      ║');
+  console.log('║         📊 AI Industry 每日简报生成器                                ║');
+  console.log('║         专业 · 精炼 · 可操作                                         ║');
+  console.log('║                                                                      ║');
+  console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
+
+  // 1. 查找最新的分析文件
+  const processedDir = path.resolve(process.cwd(), 'data/processed');
+
+  if (!fs.existsSync(processedDir)) {
+    console.error('[professional-briefing] 错误: data/processed 目录不存在');
+    console.error('请先运行数据收集和分析: npm run collect && npm run analyze');
+    process.exit(1);
+  }
+
+  const files = fs.readdirSync(processedDir)
+    .filter(f => f.startsWith('analysis-') && f.endsWith('.json'))
+    .sort()
+    .reverse();
+
+  if (files.length === 0) {
+    console.error('[professional-briefing] 错误: 未找到分析数据文件');
+    console.error('请先运行分析: npm run analyze');
+    process.exit(1);
+  }
+
+  const latestFile = files[0];
+  const analysisPath = path.join(processedDir, latestFile);
+
+  console.log(`📂 读取分析数据: ${latestFile}`);
+
+  const analysisData = JSON.parse(fs.readFileSync(analysisPath, 'utf-8')) as ComprehensiveAnalysis;
+
+  // 2. 运行 LLM 深度分析（如果启用）
+  let llmInsights: any = null;
+
+  if (appConfig.llm.enabled) {
+    console.log('\n🤖 运行 LLM 深度分析...');
+    console.log(`   提供商: ${appConfig.llm.provider}`);
+    console.log(`   模型: ${appConfig.llm.model}`);
+
+    try {
+      // 加载专业简报的prompt
+      const { systemPrompt, taskPrompt } = loadProfessionalPrompts();
+      
+      // 构建分析数据摘要
+      const dataSummary = buildDataSummary(analysisData);
+      
+      // 创建LLM请求
+      const enhancer = new LLMEnhancer(appConfig.llm as any);
+      
+      // 直接调用provider进行分析
+      const provider = (enhancer as any).provider;
+      if (provider) {
+        const startTime = Date.now();
+        
+        const response = await provider.chat([
+          { role: 'system', content: systemPrompt || getDefaultSystemPrompt() },
+          { role: 'user', content: `${dataSummary}\n\n${taskPrompt || getDefaultTaskPrompt()}` }
+        ]);
+        
+        const completionTime = Date.now() - startTime;
+        
+        console.log(`\n✅ LLM 分析完成`);
+        console.log(`   耗时: ${(completionTime / 1000).toFixed(1)}秒`);
+        if (response.usage) {
+          console.log(`   Token使用: ${response.usage.totalTokens}`);
+        }
+        
+        // 解析LLM响应
+        try {
+          const content = response.content;
+          // 移除可能的markdown代码块标记
+          const jsonContent = content
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/\s*```$/i, '')
+            .trim();
+          
+          llmInsights = JSON.parse(jsonContent);
+          
+          // 保存LLM洞察
+          const insightsPath = path.join(processedDir, `professional-insights-${new Date().toISOString().split('T')[0]}.json`);
+          fs.writeFileSync(insightsPath, JSON.stringify(llmInsights, null, 2), 'utf-8');
+          console.log(`💾 LLM洞察已保存: ${path.basename(insightsPath)}`);
+          
+        } catch (parseError: any) {
+          console.warn(`\n⚠️ LLM响应解析失败: ${parseError.message}`);
+          console.log('将使用基础数据生成报告');
+        }
+      }
+      
+    } catch (error: any) {
+      console.error(`\n❌ LLM 分析失败: ${error.message}`);
+      console.log('将使用基础数据生成报告');
+    }
+  } else {
+    console.log('\n📝 LLM 未启用，将使用基础数据生成报告');
+    console.log('   提示: 设置 LLM_ENABLED=true 启用深度分析');
+  }
+
+  // 3. 生成专业简报
+  console.log('\n📝 生成专业投资简报...');
+
+  const generator = new ProfessionalBriefingGenerator(analysisData, llmInsights);
+  const report = await generator.generate();
+
+  // 4. 保存报告
+  const outputDir = path.resolve(process.cwd(), 'output');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const markdownPath = path.join(outputDir, `ai-briefing-${today}.md`);
+
+  fs.writeFileSync(markdownPath, report.markdown, 'utf-8');
+
+  console.log('\n╔══════════════════════════════════════════════════════════════════════╗');
+  console.log('║                                                                      ║');
+  console.log('║         ✅ AI Industry 每日简报生成完成！                            ║');
+  console.log('║                                                                      ║');
+  console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
+
+  console.log('📁 生成的文件:');
+  console.log(`   📄 ${markdownPath}`);
+  console.log(`      大小: ${(fs.statSync(markdownPath).size / 1024).toFixed(2)} KB`);
+
+  console.log('\n📋 报告内容:');
+  console.log('   一、核心股票池表现（按AI产业链分类）');
+  console.log('   二、市场宏观动态与要闻');
+  console.log('   三、关键公司深度动态');
+  console.log('   四、行业影响与关联分析');
+  console.log('   五、产业链资本动向与资产交易');
+  console.log('   六、投资建议与策略展望');
+
+  console.log('\n📄 查看报告:');
+  console.log(`   cat ${markdownPath}`);
+
+  console.log('\n');
+}
+
+/**
+ * 构建数据摘要供LLM分析
+ */
+function buildDataSummary(analysis: ComprehensiveAnalysis): string {
+  let summary = `# 市场数据摘要 (${new Date().toISOString().split('T')[0]})\n\n`;
+  
+  // 市场状态
+  summary += `## 市场状态\n`;
+  summary += `- 整体状态: ${analysis.market?.condition || 'N/A'}\n`;
+  summary += `- 市场情绪: ${analysis.market?.sentiment || 'N/A'}\n\n`;
+  
+  // 涨幅榜
+  if (analysis.market?.topGainers && analysis.market.topGainers.length > 0) {
+    summary += `## 涨幅榜 TOP 10\n`;
+    analysis.market.topGainers.slice(0, 10).forEach((stock: any) => {
+      summary += `- ${stock.symbol}: $${stock.price?.toFixed(2) || 'N/A'} (${stock.changePercent >= 0 ? '+' : ''}${stock.changePercent?.toFixed(2) || 'N/A'}%)\n`;
+    });
+    summary += `\n`;
+  }
+  
+  // 跌幅榜
+  if (analysis.market?.topLosers && analysis.market.topLosers.length > 0) {
+    summary += `## 跌幅榜 TOP 10\n`;
+    analysis.market.topLosers.slice(0, 10).forEach((stock: any) => {
+      summary += `- ${stock.symbol}: $${stock.price?.toFixed(2) || 'N/A'} (${stock.changePercent?.toFixed(2) || 'N/A'}%)\n`;
+    });
+    summary += `\n`;
+  }
+  
+  // 新闻摘要
+  if (analysis.news?.topHeadlines && analysis.news.topHeadlines.length > 0) {
+    summary += `## 重要新闻\n`;
+    analysis.news.topHeadlines.slice(0, 15).forEach((headline: any, i: number) => {
+      if (typeof headline === 'string') {
+        summary += `${i + 1}. ${headline}\n`;
+      } else {
+        summary += `${i + 1}. ${headline.title || headline}\n`;
+        if (headline.source) summary += `   来源: ${headline.source}\n`;
+      }
+    });
+    summary += `\n`;
+  }
+  
+  // 经济指标
+  if (analysis.economic) {
+    summary += `## 经济指标\n`;
+    summary += `- 经济展望: ${analysis.economic.outlook || 'N/A'}\n`;
+    if (analysis.economic.keyIndicators) {
+      summary += `- 关键指标:\n`;
+      for (const [key, value] of Object.entries(analysis.economic.keyIndicators)) {
+        summary += `  - ${key}: ${value}\n`;
+      }
+    }
+    summary += `\n`;
+  }
+  
+  return summary;
+}
+
+/**
+ * 默认系统prompt
+ */
+function getDefaultSystemPrompt(): string {
+  return `你是一位专业的全球科技与人工智能领域投资经理，正在为客户撰写"AI Industry 每日简报和投资建议"。
+
+## 核心要求
+1. 数据准确性：仅使用提供的数据，任何无法核验的数值写 N/A
+2. 专业中立：风格专业、精炼、符合投资报告标准
+3. 输出语言：中文
+4. 产业链视角：始终从AI产业链上下游视角分析
+
+## 输出格式
+直接输出纯净的JSON，不要使用markdown代码块。`;
+}
+
+/**
+ * 默认任务prompt
+ */
+function getDefaultTaskPrompt(): string {
+  return `基于以上市场数据，生成以下结构的JSON分析报告：
+
+{
+  "marketMacroNews": { "summary": "...", "keyNews": [...] },
+  "companyDeepDive": [...],
+  "industryLinkageAnalysis": { "gpuSupplyChain": {...}, "dataCenterExpansion": {...}, "semiconCapex": {...} },
+  "capitalMovements": [...],
+  "investmentStrategy": { "overallJudgment": {...}, "shortTerm": {...}, "mediumTerm": {...}, "longTerm": {...}, "portfolioSuggestion": {...}, "riskControl": {...} },
+  "dailyBlessing": "一句温和积极的祝福语"
+}
+
+请确保：
+1. 所有内容用中文
+2. 数字准确，不确定写N/A
+3. 输出有效JSON，可被JSON.parse()解析
+4. 不要添加markdown代码块标记`;
+}
+
+main().catch(console.error);
