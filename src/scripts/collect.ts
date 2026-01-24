@@ -13,7 +13,7 @@ import {
   FredCollector,
   CollectedData,
 } from '../collectors/index.js';
-import { appConfig } from '../config/index.js';
+import { appConfig, STOCK_INFO, AI_INDUSTRY_CATEGORIES } from '../config/index.js';
 
 // 收集结果汇总
 interface CollectionSummary {
@@ -36,6 +36,242 @@ interface AggregatedData {
   news?: CollectedData;
   economic?: CollectedData;
   summary: CollectionSummary;
+}
+
+/**
+ * 生成整合的 Markdown 文件
+ * 方便拷贝转发给其他应用（如 infographic 生成器、slides 等）
+ */
+function generateConsolidatedMarkdown(data: AggregatedData): string {
+  const dateStr = new Date().toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  });
+  const timeStr = new Date().toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const lines: string[] = [];
+
+  // 标题
+  lines.push(`# AI 产业链每日数据汇总`);
+  lines.push(`> 数据收集时间: ${dateStr} ${timeStr}`);
+  lines.push('');
+
+  // ==================== 市场数据 ====================
+  if (data.market?.items && data.market.items.length > 0) {
+    lines.push('---');
+    lines.push('## 一、市场行情数据');
+    lines.push('');
+
+    // 按分类组织股票数据
+    const marketItems = data.market.items;
+    const symbolDataMap = new Map<string, any>();
+
+    for (const item of marketItems) {
+      const symbol = item.metadata?.symbol || item.id;
+      symbolDataMap.set(symbol, item.metadata);
+    }
+
+    // 1. 主要指数
+    lines.push('### 1. 主要指数');
+    lines.push('| 指数 | 最新价 | 涨跌幅 | 成交量 |');
+    lines.push('|------|--------|--------|--------|');
+
+    const indices = ['^GSPC', '^DJI', '^IXIC', '^RUT', '^VIX'];
+    for (const symbol of indices) {
+      const d = symbolDataMap.get(symbol);
+      if (d) {
+        const sign = d.changePercent >= 0 ? '+' : '';
+        const emoji = d.changePercent >= 0 ? '🟢' : '🔴';
+        const volume = d.volume ? formatVolume(d.volume) : '-';
+        lines.push(`| ${emoji} ${d.name} | $${formatNumber(d.price)} | ${sign}${d.changePercent?.toFixed(2)}% | ${volume} |`);
+      }
+    }
+    lines.push('');
+
+    // 2. ETF
+    lines.push('### 2. ETF');
+    lines.push('| ETF | 最新价 | 涨跌幅 |');
+    lines.push('|-----|--------|--------|');
+
+    const etfs = ['SMH', 'SOXX', 'QQQ', 'ARKQ', 'BOTZ', 'GLD'];
+    for (const symbol of etfs) {
+      const d = symbolDataMap.get(symbol);
+      if (d) {
+        const sign = d.changePercent >= 0 ? '+' : '';
+        const emoji = d.changePercent >= 0 ? '🟢' : '🔴';
+        lines.push(`| ${emoji} ${d.name || symbol} | $${formatNumber(d.price)} | ${sign}${d.changePercent?.toFixed(2)}% |`);
+      }
+    }
+    lines.push('');
+
+    // 3. AI 产业链分类
+    lines.push('### 3. AI 产业链个股');
+    lines.push('');
+
+    const categories: Record<string, string[]> = {
+      'GPU/加速与半导体': ['NVDA', 'AMD', 'AVGO', 'QCOM', 'MU', 'ARM'],
+      '晶圆与制造': ['TSM', 'ASML'],
+      '设备/EDA': ['AMAT', 'LRCX', 'KLAC', 'SNPS', 'CDNS'],
+      '服务器与基础设施': ['SMCI', 'DELL', 'HPE', 'ANET', 'VRT', 'ETN'],
+      '云与平台': ['MSFT', 'AMZN', 'GOOGL', 'ORCL'],
+      '应用与软件': ['META', 'ADBE', 'CRM', 'NOW', 'SNOW', 'DDOG'],
+      '自动驾驶/机器人': ['TSLA', 'MBLY', 'ABB', 'FANUY'],
+      '数据中心能源': ['VST', 'CEG', 'OKLO', 'BE'],
+      '其他': ['AAPL', 'INTC', 'MRVL', 'PLTR', 'LLY', 'JPM'],
+    };
+
+    for (const [category, symbols] of Object.entries(categories)) {
+      lines.push(`#### ${category}`);
+      lines.push('| 公司 | 代码 | 最新价 | 涨跌幅 | 市值 |');
+      lines.push('|------|------|--------|--------|------|');
+
+      for (const symbol of symbols) {
+        const d = symbolDataMap.get(symbol);
+        if (d) {
+          const sign = d.changePercent >= 0 ? '+' : '';
+          const emoji = d.changePercent >= 0 ? '🟢' : '🔴';
+          const marketCap = d.marketCap ? formatMarketCap(d.marketCap) : '-';
+          const stockInfo = STOCK_INFO[symbol];
+          const name = stockInfo?.name || d.name || symbol;
+          lines.push(`| ${emoji} ${name} | ${symbol} | $${formatNumber(d.price)} | ${sign}${d.changePercent?.toFixed(2)}% | ${marketCap} |`);
+        }
+      }
+      lines.push('');
+    }
+
+    // 4. 涨跌幅排行
+    lines.push('### 4. 今日涨跌幅排行');
+    lines.push('');
+
+    const stockItems = marketItems
+      .filter(item => !item.id.startsWith('^') && !['SMH', 'SOXX', 'QQQ', 'ARKQ', 'BOTZ', 'GLD'].includes(item.id))
+      .map(item => item.metadata)
+      .filter(d => d && typeof d.changePercent === 'number');
+
+    const sorted = stockItems.sort((a, b) => (b.changePercent || 0) - (a.changePercent || 0));
+
+    lines.push('**🔥 涨幅前5**');
+    lines.push('| 公司 | 代码 | 涨幅 | 价格 |');
+    lines.push('|------|------|------|------|');
+    for (const d of sorted.slice(0, 5)) {
+      if (d.changePercent > 0) {
+        lines.push(`| ${d.name} | ${d.symbol} | +${d.changePercent?.toFixed(2)}% | $${formatNumber(d.price)} |`);
+      }
+    }
+    lines.push('');
+
+    lines.push('**📉 跌幅前5**');
+    lines.push('| 公司 | 代码 | 跌幅 | 价格 |');
+    lines.push('|------|------|------|------|');
+    for (const d of sorted.slice(-5).reverse()) {
+      if (d.changePercent < 0) {
+        lines.push(`| ${d.name} | ${d.symbol} | ${d.changePercent?.toFixed(2)}% | $${formatNumber(d.price)} |`);
+      }
+    }
+    lines.push('');
+  }
+
+  // ==================== 财经新闻 ====================
+  if (data.news?.items && data.news.items.length > 0) {
+    lines.push('---');
+    lines.push('## 二、财经新闻要点');
+    lines.push('');
+
+    const newsItems = data.news.items.slice(0, 20); // 取前20条
+
+    for (let i = 0; i < newsItems.length; i++) {
+      const news = newsItems[i];
+      const time = new Date(news.timestamp).toLocaleString('zh-CN', {
+        month: 'numeric',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const source = news.metadata?.source || 'Unknown';
+
+      lines.push(`### ${i + 1}. ${news.title}`);
+      lines.push(`> 来源: ${source} | 时间: ${time}`);
+      lines.push('');
+      if (news.content) {
+        lines.push(news.content);
+      }
+      if (news.metadata?.url) {
+        lines.push(`[阅读原文](${news.metadata.url})`);
+      }
+      lines.push('');
+    }
+  }
+
+  // ==================== 经济指标 ====================
+  if (data.economic?.items && data.economic.items.length > 0) {
+    lines.push('---');
+    lines.push('## 三、宏观经济指标');
+    lines.push('');
+    lines.push('| 指标 | 最新值 | 变化 | 数据日期 |');
+    lines.push('|------|--------|------|----------|');
+
+    for (const item of data.economic.items) {
+      const d = item.metadata;
+      if (d) {
+        const sign = (d.change || 0) >= 0 ? '+' : '';
+        const changeStr = d.change !== undefined ? `${sign}${d.change.toFixed(2)}` : '-';
+        const dateStr = d.date ? new Date(d.date).toLocaleDateString('zh-CN') : '-';
+        lines.push(`| ${d.name} | ${d.value?.toFixed(2)} ${d.unit} | ${changeStr} | ${dateStr} |`);
+      }
+    }
+    lines.push('');
+  }
+
+  // ==================== 数据统计 ====================
+  lines.push('---');
+  lines.push('## 四、数据收集统计');
+  lines.push('');
+  lines.push('| 数据源 | 状态 | 数据条数 | 耗时 |');
+  lines.push('|--------|------|----------|------|');
+
+  for (const collector of data.summary.collectors) {
+    const statusIcon = collector.status === 'success' ? '✅' :
+                       collector.status === 'skipped' ? '⏭️' : '❌';
+    const itemCount = collector.itemCount !== undefined ? `${collector.itemCount}` : '-';
+    const duration = collector.duration ? `${(collector.duration / 1000).toFixed(1)}s` : '-';
+    lines.push(`| ${statusIcon} ${collector.name} | ${collector.status} | ${itemCount} | ${duration} |`);
+  }
+  lines.push('');
+  lines.push(`**总计**: ${data.summary.totalItems} 条数据`);
+  lines.push('');
+
+  // 尾部
+  lines.push('---');
+  lines.push('*本数据由 Finance Briefing Agent 自动收集整理，仅供参考，不构成投资建议。*');
+
+  return lines.join('\n');
+}
+
+// 格式化数字
+function formatNumber(num: number): string {
+  if (num === undefined || num === null) return '-';
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// 格式化成交量
+function formatVolume(volume: number): string {
+  if (volume >= 1e9) return `${(volume / 1e9).toFixed(2)}B`;
+  if (volume >= 1e6) return `${(volume / 1e6).toFixed(2)}M`;
+  if (volume >= 1e3) return `${(volume / 1e3).toFixed(2)}K`;
+  return volume.toString();
+}
+
+// 格式化市值
+function formatMarketCap(cap: number): string {
+  if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
+  if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
+  if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
+  return `$${cap}`;
 }
 
 async function main() {
@@ -208,6 +444,23 @@ async function main() {
   console.log('╠════════════════════════════════════════════════════════════╣');
   console.log(`║  📁 Output: data/processed/aggregated-${timestamp}.json     ║`);
   console.log('╚════════════════════════════════════════════════════════════╝');
+
+  // 生成整合的 Markdown 文件
+  const dateOnly = new Date().toISOString().slice(0, 10);
+  const mdOutputDir = path.resolve(process.cwd(), 'output');
+  const mdOutputFile = path.join(mdOutputDir, `daily-data-${dateOnly}.md`);
+
+  await fs.promises.mkdir(mdOutputDir, { recursive: true });
+
+  const markdownContent = generateConsolidatedMarkdown(aggregatedData);
+  await fs.promises.writeFile(mdOutputFile, markdownContent, 'utf-8');
+
+  console.log('\n┌──────────────────────────────────────────────────────────────┐');
+  console.log('│ 📋 Consolidated Markdown Generated                           │');
+  console.log('└──────────────────────────────────────────────────────────────┘');
+  console.log(`   📄 File: output/daily-data-${dateOnly}.md`);
+  console.log('   💡 可直接拷贝此文件用于生成 infographic、slides 等');
+  console.log('');
 
   // 快速预览
   if (aggregatedData.market?.market) {
