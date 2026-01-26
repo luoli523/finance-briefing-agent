@@ -1,0 +1,108 @@
+name: Daily Finance Briefing
+
+on:
+  # 定时运行 (cron 使用 UTC 时间)
+  # 新加坡时间 09:30 = UTC 01:30
+  # 周二到周六（新加坡）= 美股周一到周五收盘后
+  schedule:
+    - cron: '30 1 * * 2-6'  # 周二到周六，UTC 01:30 (新加坡时间 09:30)
+
+  # 支持手动触发
+  workflow_dispatch:
+    inputs:
+      send_email:
+        description: '是否发送邮件'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  generate-briefing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env file
+        run: |
+          cat << EOF > .env
+          # Data Collection APIs
+          FINNHUB_API_KEY=${{ secrets.FINNHUB_API_KEY }}
+          FRED_API_KEY=${{ secrets.FRED_API_KEY }}
+          ALPHA_VANTAGE_API_KEY=${{ secrets.ALPHA_VANTAGE_API_KEY }}
+          SEC_USER_AGENT=${{ secrets.SEC_USER_AGENT }}
+          SEC_SYMBOLS=${{ secrets.SEC_SYMBOLS }}
+          SEC_FORMS=${{ secrets.SEC_FORMS }}
+          SEC_DAYS_BACK=${{ secrets.SEC_DAYS_BACK }}
+
+          # LLM Configuration
+          LLM_ENABLED=${{ secrets.LLM_ENABLED }}
+          LLM_PROVIDER=${{ secrets.LLM_PROVIDER }}
+          LLM_MODEL=${{ secrets.LLM_MODEL }}
+          LLM_API_KEY=${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL=${{ secrets.LLM_BASE_URL }}
+          LLM_TEMPERATURE=${{ secrets.LLM_TEMPERATURE }}
+          LLM_MAX_TOKENS=${{ secrets.LLM_MAX_TOKENS }}
+          LLM_TIMEOUT=${{ secrets.LLM_TIMEOUT }}
+
+          # Email Configuration
+          EMAIL_ENABLED=${{ secrets.EMAIL_ENABLED }}
+          EMAIL_TO=${{ secrets.EMAIL_TO }}
+          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+          EMAIL_SMTP_HOST=${{ secrets.EMAIL_SMTP_HOST }}
+          EMAIL_SMTP_PORT=${{ secrets.EMAIL_SMTP_PORT }}
+          EMAIL_SMTP_USER=${{ secrets.EMAIL_SMTP_USER }}
+          EMAIL_SMTP_PASS=${{ secrets.EMAIL_SMTP_PASS }}
+          EOF
+
+      - name: Collect market data
+        run: npm run collect
+        continue-on-error: false
+
+      - name: Analyze data
+        run: npm run analyze
+        continue-on-error: false
+
+      - name: Generate professional briefing
+        run: npm run generate:pro
+        continue-on-error: false
+
+      - name: Send email
+        if: ${{ github.event.inputs.send_email != 'false' && secrets.EMAIL_ENABLED == 'true' }}
+        run: npm run send-email
+
+      - name: Upload briefing as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: briefing-${{ github.run_id }}
+          path: output/
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          echo "## Daily Briefing Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u +%Y-%m-%d)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f output/ai-briefing-*.md ]; then
+            echo "### Briefing Preview (first 50 lines)" >> $GITHUB_STEP_SUMMARY
+            echo '```markdown' >> $GITHUB_STEP_SUMMARY
+            head -50 output/ai-briefing-*.md >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
