@@ -18,6 +18,14 @@ on:
         options:
           - 'true'
           - 'false'
+      send_telegram:
+        description: '是否发送Telegram'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 env:
   NODE_VERSION: '20'
@@ -69,6 +77,11 @@ jobs:
           EMAIL_SMTP_PORT=${{ secrets.EMAIL_SMTP_PORT }}
           EMAIL_SMTP_USER=${{ secrets.EMAIL_SMTP_USER }}
           EMAIL_SMTP_PASS=${{ secrets.EMAIL_SMTP_PASS }}
+
+          # Telegram Configuration
+          TELEGRAM_ENABLED=${{ secrets.TELEGRAM_ENABLED }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
           EOF
 
       - name: Collect market data
@@ -86,6 +99,10 @@ jobs:
       - name: Send email
         if: ${{ github.event.inputs.send_email != 'false' }}
         run: npm run send-email
+
+      - name: Send Telegram
+        if: ${{ github.event.inputs.send_telegram != 'false' }}
+        run: npm run send-telegram
 
       - name: Upload briefing as artifact
         uses: actions/upload-artifact@v4

@@ -366,6 +366,69 @@ npm run send-email 2026-01-25
 
 ---
 
+## 📱 Telegram 发送配置
+
+简报摘要可自动发送到 Telegram，使用 **Telegram Bot API**（免费、无限制）。
+
+### 配置步骤
+
+#### 1. 创建 Telegram Bot
+
+1. 在 Telegram 中搜索 **@BotFather**
+2. 发送 `/newbot` 命令
+3. 按提示设置 Bot 名称和用户名
+4. 获取 **Bot Token**（格式：`123456789:ABCdefGHI...`）
+
+#### 2. 获取 Chat ID
+
+**方法一：使用 @userinfobot**
+1. 在 Telegram 中搜索 **@userinfobot**
+2. 发送任意消息，Bot 会返回你的 Chat ID
+
+**方法二：通过 API 获取**
+1. 先向你的 Bot 发送任意消息
+2. 访问 `https://api.telegram.org/bot<TOKEN>/getUpdates`
+3. 在返回的 JSON 中找到 `chat.id`
+
+#### 3. 配置环境变量
+
+```env
+# Telegram 发送配置
+TELEGRAM_ENABLED=true
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+TELEGRAM_CHAT_ID=123456789
+```
+
+#### 4. 发送测试
+
+```bash
+# 发送当天简报
+npm run send-telegram
+
+# 发送指定日期简报
+npm run send-telegram 2026-01-25
+```
+
+### 消息内容
+
+系统会自动提取简报摘要发送到 Telegram：
+- 📈 涨幅榜 Top 5
+- 📉 跌幅榜 Top 5
+- 💡 市场情绪
+- 📰 今日要闻
+
+完整报告通过邮件发送。
+
+### 群组通知
+
+如需发送到群组：
+1. 将 Bot 添加到群组
+2. 设置 Bot 为群管理员（可选，用于发送消息）
+3. 获取群组 Chat ID（负数，如 `-123456789`）
+4. 更新 `TELEGRAM_CHAT_ID` 为群组 ID
+
+---
+
 ## 🤖 GitHub Actions 自动化
 
 项目已配置 GitHub Actions 工作流，可以实现每日自动生成简报并发送邮件。
@@ -408,19 +471,27 @@ npm run send-email 2026-01-25
 | `EMAIL_SMTP_USER` | SMTP 用户名 | `sender@gmail.com` |
 | `EMAIL_SMTP_PASS` | SMTP 密码/App密码 | `xxxx xxxx xxxx xxxx` |
 
+#### Telegram 配置
+| Secret 名称 | 说明 | 示例值 |
+|-------------|------|--------|
+| `TELEGRAM_ENABLED` | 是否发送Telegram | `true` |
+| `TELEGRAM_BOT_TOKEN` | Bot Token | `123456789:ABCdef...` |
+| `TELEGRAM_CHAT_ID` | Chat ID | `123456789` |
+
 ### 手动触发工作流
 
 1. 进入仓库的 **Actions** 页面
 2. 选择 **Daily Finance Briefing** 工作流
 3. 点击 **Run workflow**
-4. 选择是否发送邮件
+4. 选择是否发送邮件和 Telegram
 5. 点击 **Run workflow** 按钮
 
 ### 查看运行结果
 
 - 工作流完成后，简报会作为 **Artifact** 保存（保留 30 天）
 - 可在 Actions 运行详情页的 **Summary** 中预览简报前 50 行
-- 如配置了邮件，简报会自动发送到指定邮箱
+- 如配置了邮件，完整简报会自动发送到指定邮箱
+- 如配置了 WhatsApp，简报摘要会自动发送到指定手机
 
 ---
 

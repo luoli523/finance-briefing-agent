@@ -25,7 +25,8 @@
     "workflow:pro": "tsx src/scripts/collect.ts && tsx src/scripts/analyze.ts && tsx src/scripts/generate-professional-briefing.ts",
     "verify:config": "tsx src/scripts/verify-config.ts",
     "daily": "npm run workflow:pro",
-    "send-email": "tsx src/scripts/send-email.ts"
+    "send-email": "tsx src/scripts/send-email.ts",
+    "send-telegram": "tsx src/scripts/send-telegram.ts"
   },
   "keywords": [
     "finance",
