@@ -7,8 +7,8 @@
 ## ✨ 核心特性
 
 ### 📊 AI 产业链全覆盖
-- **48 只核心标的** - 覆盖 AI 产业链上中下游
-- **9 大产业分类** - GPU/半导体、晶圆制造、设备EDA、服务器、云平台、AI软件、自动驾驶、数据中心能源
+- **60 只核心标的** - 覆盖 AI 产业链上中下游
+- **9 大产业分类** - GPU/半导体、晶圆制造、设备EDA、服务器、云平台、AI软件、自动驾驶/航天、数据中心能源
 - **完整生态视图** - 从芯片设计到终端应用的完整投资图谱
 
 ### 🤖 LLM 深度分析
@@ -78,7 +78,7 @@ npm run daily
 生成的简报包含 **6 大核心板块**：
 
 ### 一、核心股票池表现
-按 AI 产业链分类展示 48 只标的的实时行情：
+按 AI 产业链分类展示 60 只标的的实时行情：
 
 | 分类 | 公司 | 股票代号 | 最新股价 | 涨跌幅 | 表现 |
 |------|------|----------|----------|--------|------|
@@ -107,16 +107,16 @@ npm run daily
 
 ---
 
-## 📊 监控标的 (48只)
+## 📊 监控标的 (60只)
 
 ### 主要指数 (5)
 `^GSPC` S&P 500 | `^DJI` 道琼斯 | `^IXIC` 纳斯达克 | `^RUT` Russell 2000 | `^VIX` 恐慌指数
 
-### ETF (6)
-`SMH` `SOXX` 半导体 | `QQQ` 纳斯达克100 | `ARKQ` `BOTZ` 机器人/AI | `GLD` 黄金对冲
+### ETF (8)
+`SMH` `SOXX` 半导体 | `QQQ` 纳斯达克100 | `VOO` 标普500 | `ARKQ` `BOTZ` `ROBT` 机器人/AI | `GLD` 黄金对冲
 
-### GPU/加速与半导体 (6)
-`NVDA` NVIDIA | `AMD` AMD | `AVGO` Broadcom | `QCOM` 高通 | `MU` 美光 | `ARM` Arm
+### GPU/加速与半导体 (8)
+`NVDA` NVIDIA | `AMD` AMD | `AVGO` Broadcom | `QCOM` 高通 | `MU` 美光 | `ARM` Arm | `WDC` 西部数据 | `STX` 希捷
 
 ### 晶圆与制造 (2)
 `TSM` 台积电 | `ASML` 阿斯麦
@@ -124,8 +124,8 @@ npm run daily
 ### 设备/EDA (5)
 `AMAT` 应用材料 | `LRCX` 泛林 | `KLAC` KLA | `SNPS` Synopsys | `CDNS` Cadence
 
-### 服务器与基础设施 (6)
-`SMCI` 超微 | `DELL` 戴尔 | `HPE` 惠普企业 | `ANET` Arista | `VRT` Vertiv | `ETN` 伊顿
+### 服务器与基础设施 (7)
+`SMCI` 超微 | `DELL` 戴尔 | `HPE` 惠普企业 | `ANET` Arista | `VRT` Vertiv | `ETN` 伊顿 | `CRWV` CoreWeave
 
 ### 云与平台 (4)
 `MSFT` 微软 | `AMZN` 亚马逊 | `GOOGL` 谷歌 | `ORCL` 甲骨文
@@ -133,8 +133,8 @@ npm run daily
 ### 应用与软件 (6)
 `META` Meta | `ADBE` Adobe | `CRM` Salesforce | `NOW` ServiceNow | `SNOW` Snowflake | `DDOG` Datadog
 
-### 自动驾驶/机器人 (4)
-`TSLA` 特斯拉 | `MBLY` Mobileye | `ABB` ABB | `FANUY` 发那科
+### 自动驾驶/机器人/航天 (5)
+`TSLA` 特斯拉 | `MBLY` Mobileye | `ABB` ABB | `FANUY` 发那科 | `RKLB` Rocket Lab
 
 ### 数据中心能源 (4)
 `VST` Vistra | `CEG` Constellation | `OKLO` Oklo | `BE` Bloom Energy
@@ -292,11 +292,16 @@ export const MONITORED_SYMBOLS = {
 
 ## 📚 详细文档
 
-- [`docs/LLM_ENHANCEMENT.md`](./docs/LLM_ENHANCEMENT.md) - LLM 配置详解
-- [`docs/COLLECTORS_OVERVIEW.md`](./docs/COLLECTORS_OVERVIEW.md) - 数据收集器
-- [`docs/SYMBOLS_CONFIGURATION.md`](./docs/SYMBOLS_CONFIGURATION.md) - 股票配置
-- [`docs/PROMPT_CUSTOMIZATION.md`](./docs/PROMPT_CUSTOMIZATION.md) - 提示词定制
-- [`config/README.md`](./config/README.md) - 配置管理
+| 文档 | 说明 |
+|------|------|
+| [`docs/LLM_ENHANCEMENT.md`](./docs/LLM_ENHANCEMENT.md) | LLM 配置详解 |
+| [`docs/LLM_PROVIDER_COMPARISON.md`](./docs/LLM_PROVIDER_COMPARISON.md) | LLM 提供商对比 |
+| [`docs/COLLECTORS_OVERVIEW.md`](./docs/COLLECTORS_OVERVIEW.md) | 数据收集器说明 |
+| [`docs/SYMBOLS_CONFIGURATION.md`](./docs/SYMBOLS_CONFIGURATION.md) | 股票配置指南 |
+| [`docs/PROMPT_CUSTOMIZATION.md`](./docs/PROMPT_CUSTOMIZATION.md) | 提示词定制 |
+| [`docs/INTELLIGENT_ANALYZER.md`](./docs/INTELLIGENT_ANALYZER.md) | 智能分析器 |
+| [`docs/INFOGRAPHIC_GUIDE.md`](./docs/INFOGRAPHIC_GUIDE.md) | 信息图表生成 |
+| [`config/README.md`](./config/README.md) | 配置管理 |
 
 ---
 
@@ -361,6 +366,64 @@ npm run send-email 2026-01-25
 
 ---
 
+## 🤖 GitHub Actions 自动化
+
+项目已配置 GitHub Actions 工作流，可以实现每日自动生成简报并发送邮件。
+
+### 自动运行时间
+
+- **定时运行**：每周二至周六，新加坡时间 09:30（UTC 01:30）
+- **对应美股**：周一至周五收盘后
+- **支持手动触发**：可随时在 GitHub Actions 页面手动运行
+
+### 配置 GitHub Secrets
+
+在 GitHub 仓库的 `Settings → Secrets and variables → Actions` 中添加以下 Secrets：
+
+#### 数据收集 API
+| Secret 名称 | 说明 | 必需 |
+|-------------|------|:----:|
+| `FINNHUB_API_KEY` | Finnhub 新闻 API | 推荐 |
+| `FRED_API_KEY` | FRED 经济数据 API | 推荐 |
+| `ALPHA_VANTAGE_API_KEY` | Alpha Vantage 备用 | 可选 |
+
+#### LLM 配置
+| Secret 名称 | 说明 | 示例值 |
+|-------------|------|--------|
+| `LLM_ENABLED` | 是否启用 LLM | `true` |
+| `LLM_PROVIDER` | LLM 提供商 | `openai` |
+| `LLM_MODEL` | 模型名称 | `gpt-5.2` |
+| `LLM_API_KEY` | API 密钥 | `sk-xxx` |
+| `LLM_MAX_TOKENS` | 最大 Token 数 | `16384` |
+| `LLM_TIMEOUT` | 超时时间(ms) | `300000` |
+
+#### 邮件配置
+| Secret 名称 | 说明 | 示例值 |
+|-------------|------|--------|
+| `EMAIL_ENABLED` | 是否发送邮件 | `true` |
+| `EMAIL_TO` | 收件人邮箱 | `you@example.com` |
+| `EMAIL_FROM` | 发件人邮箱 | `sender@gmail.com` |
+| `EMAIL_SMTP_HOST` | SMTP 服务器 | `smtp.gmail.com` |
+| `EMAIL_SMTP_PORT` | SMTP 端口 | `587` |
+| `EMAIL_SMTP_USER` | SMTP 用户名 | `sender@gmail.com` |
+| `EMAIL_SMTP_PASS` | SMTP 密码/App密码 | `xxxx xxxx xxxx xxxx` |
+
+### 手动触发工作流
+
+1. 进入仓库的 **Actions** 页面
+2. 选择 **Daily Finance Briefing** 工作流
+3. 点击 **Run workflow**
+4. 选择是否发送邮件
+5. 点击 **Run workflow** 按钮
+
+### 查看运行结果
+
+- 工作流完成后，简报会作为 **Artifact** 保存（保留 30 天）
+- 可在 Actions 运行详情页的 **Summary** 中预览简报前 50 行
+- 如配置了邮件，简报会自动发送到指定邮箱
+
+---
+
 ## ⚠️ 常见问题
 
 **Q: 没有 LLM API Key 能用吗？**  
@@ -370,10 +433,22 @@ A: 可以！系统会使用规则引擎生成基础报告。但推荐启用 LLM 
 A: GPT-5.2 质量最佳；Gemini 2.0 Flash 免费；GPT-4o-mini 性价比高。
 
 **Q: 数据多久更新？**  
-A: 手动运行命令时更新。建议美股收盘后（北京时间早上 5-6 点）运行。
+A: 手动运行命令时更新。建议美股收盘后（北京时间早上 5-6 点，新加坡时间早上 9-10 点）运行。
 
 **Q: LLM 分析超时怎么办？**  
 A: 增加 `LLM_TIMEOUT` 值（默认 300000 = 5分钟）。
+
+**Q: 如何添加新的监控标的？**  
+A: 编辑 `src/config/index.ts` 中的 `MONITORED_SYMBOLS` 对象，在对应分类中添加股票代码即可。
+
+**Q: GitHub Actions 没有自动运行怎么办？**  
+A: 检查 Secrets 是否正确配置，可以先手动触发测试。注意 cron 时间是 UTC 时区。
+
+**Q: 邮件发送失败怎么办？**  
+A: 确认 Gmail App Password 正确，确保已开启两步验证。检查 `EMAIL_SMTP_PASS` 是否去掉了空格。
+
+**Q: 报告中某些数据显示 N/A？**  
+A: 这通常是因为 LLM 无法从当日新闻中提取具体数值。这是正常现象，表示该数据暂无可靠来源。
 
 ---
 
