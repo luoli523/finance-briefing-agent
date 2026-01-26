@@ -185,6 +185,8 @@ npm run collect:rss      # 政府RSS
 npm run verify:config           # 验证配置
 npm run generate:infographic    # 生成信息图表
 npm run workflow:intelligent    # 智能分析工作流
+npm run send-email              # 发送当天简报邮件
+npm run send-email 2026-01-25   # 发送指定日期简报
 ```
 
 ---
@@ -295,6 +297,67 @@ export const MONITORED_SYMBOLS = {
 - [`docs/SYMBOLS_CONFIGURATION.md`](./docs/SYMBOLS_CONFIGURATION.md) - 股票配置
 - [`docs/PROMPT_CUSTOMIZATION.md`](./docs/PROMPT_CUSTOMIZATION.md) - 提示词定制
 - [`config/README.md`](./config/README.md) - 配置管理
+
+---
+
+## 📧 邮件发送配置
+
+简报生成后可自动发送到指定邮箱，支持两种方式：
+
+### 方式一：使用 Nodemailer（推荐 - 完全自动化）
+
+在 `.env` 文件中配置以下环境变量：
+
+```env
+# 邮件发送配置
+EMAIL_ENABLED=true
+EMAIL_TO=your-email@example.com
+EMAIL_FROM=your-gmail@gmail.com
+
+# Gmail SMTP 配置（推荐）
+EMAIL_SMTP_HOST=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USER=your-gmail@gmail.com
+EMAIL_SMTP_PASS=your-app-password
+```
+
+#### Gmail App Password 获取步骤：
+
+1. 登录 Google 账号，访问 [Google 账号安全设置](https://myaccount.google.com/security)
+2. 确保已启用**两步验证**
+3. 搜索或找到 **App passwords（应用专用密码）**
+4. 选择应用类型为 "Mail"，设备为 "Other"，输入名称如 "Finance Briefing"
+5. 点击生成，复制 16 位密码（格式：xxxx xxxx xxxx xxxx）
+6. 将此密码填入 `EMAIL_SMTP_PASS`（去掉空格）
+
+配置完成后，运行 `npm run daily` 将自动发送简报到指定邮箱。
+
+**单独发送邮件（不重新生成简报）：**
+
+```bash
+# 发送当天简报
+npm run send-email
+
+# 发送指定日期简报
+npm run send-email 2026-01-25
+```
+
+### 方式二：使用 Claude Code + Composio（交互式）
+
+如果你使用 Claude Code，可以通过 `connect-apps` skill 发送邮件：
+
+```bash
+# 1. 安装插件
+/plugin install composio-toolrouter
+
+# 2. 运行设置
+/composio-toolrouter:setup
+
+# 3. 重启 Claude Code 后，可以直接说：
+"把今天的简报发送到 my-email@example.com"
+```
+
+这种方式支持 Gmail OAuth 认证，无需配置 App Password，但需要手动触发。
 
 ---
 

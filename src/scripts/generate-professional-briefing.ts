@@ -17,6 +17,7 @@ import { ProfessionalBriefingGenerator } from '../generators/professional-briefi
 import { LLMEnhancer } from '../analyzers/llm/enhancer';
 import { appConfig } from '../config';
 import type { ComprehensiveAnalysis } from '../analyzers/types';
+import { sendBriefingEmail, getEmailConfig } from '../services/email';
 
 // 加载环境变量
 dotenv.config();
@@ -184,6 +185,13 @@ async function main() {
 
   console.log('\n📄 查看报告:');
   console.log(`   cat ${markdownPath}`);
+
+  // 5. 发送邮件（如果启用）
+  const emailConfig = getEmailConfig();
+  if (emailConfig.enabled) {
+    console.log('\n📧 正在发送简报邮件...');
+    await sendBriefingEmail(markdownPath);
+  }
 
   console.log('\n');
 }

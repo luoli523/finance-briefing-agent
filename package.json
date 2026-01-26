@@ -24,7 +24,8 @@
     "workflow:intelligent": "tsx src/scripts/run-intelligent-workflow.ts",
     "workflow:pro": "tsx src/scripts/collect.ts && tsx src/scripts/analyze.ts && tsx src/scripts/generate-professional-briefing.ts",
     "verify:config": "tsx src/scripts/verify-config.ts",
-    "daily": "npm run workflow:pro"
+    "daily": "npm run workflow:pro",
+    "send-email": "tsx src/scripts/send-email.ts"
   },
   "keywords": [
     "finance",
@@ -38,11 +39,14 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "https-proxy-agent": "^7.0.6",
+    "marked": "^17.0.1",
+    "nodemailer": "^7.0.12",
     "rss-parser": "^3.13.0",
     "yahoo-finance2": "^3.11.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "@types/nodemailer": "^7.0.5",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0"
   }
