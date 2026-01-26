@@ -20,19 +20,21 @@ export const MONITORED_SYMBOLS = {
     '^VIX',    // CBOE Volatility Index
   ],
 
-  // ETF (6) - 用于对冲和配置建议
+  // ETF (8) - 用于对冲和配置建议
   etf: [
     'SMH',     // VanEck Semiconductor ETF
     'SOXX',    // iShares Semiconductor ETF
     'QQQ',     // Invesco QQQ (NASDAQ 100)
+    'VOO',     // Vanguard S&P 500 ETF
     'ARKQ',    // ARK Autonomous Tech & Robotics ETF
     'BOTZ',    // Global X Robotics & AI ETF
+    'ROBT',    // First Trust Nasdaq AI & Robotics ETF
     'GLD',     // SPDR Gold Trust (对冲)
   ],
 
   // ===== AI 产业链分类 =====
 
-  // 1. GPU/加速与半导体 (6)
+  // 1. GPU/加速与半导体 (8)
   gpuAccelerator: [
     'NVDA',    // NVIDIA Corporation - AI芯片龙头
     'AMD',     // Advanced Micro Devices - GPU/CPU
@@ -40,6 +42,8 @@ export const MONITORED_SYMBOLS = {
     'QCOM',    // QUALCOMM - 移动AI芯片
     'MU',      // Micron Technology - HBM内存
     'ARM',     // Arm Holdings - 芯片架构
+    'WDC',     // Western Digital - 存储芯片/HDD/SSD
+    'STX',     // Seagate Technology - 存储/硬盘
   ],
 
   // 2. 晶圆与制造 (2)
@@ -57,7 +61,7 @@ export const MONITORED_SYMBOLS = {
     'CDNS',    // Cadence Design - EDA软件
   ],
 
-  // 4. 服务器与基础设施 (6)
+  // 4. 服务器与基础设施 (7)
   serverInfra: [
     'SMCI',    // Super Micro Computer - AI服务器
     'DELL',    // Dell Technologies - 企业服务器
@@ -65,6 +69,7 @@ export const MONITORED_SYMBOLS = {
     'ANET',    // Arista Networks - 数据中心网络
     'VRT',     // Vertiv Holdings - 电源/散热
     'ETN',     // Eaton Corporation - 电气设备
+    'CRWV',    // CoreWeave - 云GPU基础设施
   ],
 
   // 5. 云与平台 (4)
@@ -85,12 +90,13 @@ export const MONITORED_SYMBOLS = {
     'DDOG',    // Datadog - 监控/可观测性
   ],
 
-  // 7. 自动驾驶/机器人 (4)
+  // 7. 自动驾驶/机器人/航天 (5)
   autonomousRobotics: [
     'TSLA',    // Tesla - 自动驾驶/机器人
     'MBLY',    // Mobileye - 自动驾驶芯片
     'ABB',     // ABB Ltd - 工业机器人
     'FANUY',   // Fanuc - 工业自动化
+    'RKLB',    // Rocket Lab USA - 航天/火箭发射
   ],
 
   // 8. 数据中心能源 (4)
@@ -138,6 +144,8 @@ export const STOCK_INFO: Record<string, { name: string; category: string }> = {
   'QCOM': { name: 'QUALCOMM Incorporated', category: 'GPU/加速与半导体' },
   'MU': { name: 'Micron Technology', category: 'GPU/加速与半导体' },
   'ARM': { name: 'Arm Holdings plc', category: 'GPU/加速与半导体' },
+  'WDC': { name: 'Western Digital Corporation', category: 'GPU/加速与半导体' },
+  'STX': { name: 'Seagate Technology Holdings', category: 'GPU/加速与半导体' },
   // 晶圆与制造
   'TSM': { name: 'Taiwan Semiconductor', category: '晶圆与制造' },
   'ASML': { name: 'ASML Holding N.V.', category: '晶圆与制造' },
@@ -154,6 +162,7 @@ export const STOCK_INFO: Record<string, { name: string; category: string }> = {
   'ANET': { name: 'Arista Networks', category: '服务器与基础设施' },
   'VRT': { name: 'Vertiv Holdings', category: '服务器与基础设施' },
   'ETN': { name: 'Eaton Corporation', category: '服务器与基础设施' },
+  'CRWV': { name: 'CoreWeave Inc.', category: '服务器与基础设施' },
   // 云与平台
   'MSFT': { name: 'Microsoft Corporation', category: '云与平台' },
   'AMZN': { name: 'Amazon.com, Inc.', category: '云与平台' },
@@ -166,11 +175,12 @@ export const STOCK_INFO: Record<string, { name: string; category: string }> = {
   'NOW': { name: 'ServiceNow, Inc.', category: '应用与软件' },
   'SNOW': { name: 'Snowflake Inc.', category: '应用与软件' },
   'DDOG': { name: 'Datadog, Inc.', category: '应用与软件' },
-  // 自动驾驶/机器人
+  // 自动驾驶/机器人/航天
   'TSLA': { name: 'Tesla, Inc.', category: '自动驾驶/机器人' },
   'MBLY': { name: 'Mobileye Global Inc.', category: '自动驾驶/机器人' },
   'ABB': { name: 'ABB Ltd', category: '自动驾驶/机器人' },
   'FANUY': { name: 'Fanuc Corporation', category: '自动驾驶/机器人' },
+  'RKLB': { name: 'Rocket Lab USA, Inc.', category: '自动驾驶/机器人' },
   // 数据中心能源
   'VST': { name: 'Vistra Corp.', category: '数据中心能源' },
   'CEG': { name: 'Constellation Energy', category: '数据中心能源' },
@@ -187,8 +197,10 @@ export const STOCK_INFO: Record<string, { name: string; category: string }> = {
   'SMH': { name: 'VanEck Semiconductor ETF', category: 'ETF' },
   'SOXX': { name: 'iShares Semiconductor ETF', category: 'ETF' },
   'QQQ': { name: 'Invesco QQQ Trust', category: 'ETF' },
+  'VOO': { name: 'Vanguard S&P 500 ETF', category: 'ETF' },
   'ARKQ': { name: 'ARK Autonomous Tech ETF', category: 'ETF' },
   'BOTZ': { name: 'Global X Robotics & AI ETF', category: 'ETF' },
+  'ROBT': { name: 'First Trust Nasdaq AI & Robotics ETF', category: 'ETF' },
   'GLD': { name: 'SPDR Gold Trust', category: 'ETF' },
 };
 
