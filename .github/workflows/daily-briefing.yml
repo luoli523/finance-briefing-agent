@@ -9,23 +9,6 @@ on:
 
   # 支持手动触发
   workflow_dispatch:
-    inputs:
-      send_email:
-        description: '是否发送邮件'
-        required: false
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
-      send_telegram:
-        description: '是否发送Telegram'
-        required: false
-        default: 'true'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
 
 env:
   NODE_VERSION: '20'
@@ -117,17 +100,10 @@ jobs:
         run: npm run analyze
         continue-on-error: false
 
-      - name: Generate professional briefing
+      - name: Generate professional briefing and send notifications
         run: npm run generate:pro
         continue-on-error: false
-
-      - name: Send email
-        if: ${{ github.event.inputs.send_email != 'false' }}
-        run: npm run send-email
-
-      - name: Send Telegram
-        if: ${{ github.event.inputs.send_telegram != 'false' }}
-        run: npm run send-telegram
+        # Note: generate:pro already handles email and telegram sending with infographic attached
 
       - name: Upload briefing as artifact
         uses: actions/upload-artifact@v4
