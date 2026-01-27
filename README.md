@@ -638,6 +638,26 @@ npm run send-telegram 2026-01-25
 | `TELEGRAM_BOT_TOKEN` | Bot Token | `123456789:ABCdef...` |
 | `TELEGRAM_CHAT_ID` | Chat ID | `123456789` |
 
+#### NotebookLM 信息图配置（可选）
+| Secret 名称 | 说明 | 获取方式 |
+|-------------|------|----------|
+| `NOTEBOOKLM_STORAGE_STATE` | 认证信息（base64） | 见下方说明 |
+
+**导出 NotebookLM 认证信息：**
+
+```bash
+# 1. 确保本地已完成 NotebookLM 认证
+notebooklm login
+
+# 2. 运行导出脚本
+./scripts/export-notebooklm-auth.sh
+
+# 3. 复制输出的 base64 字符串
+# 4. 添加到 GitHub Secrets: NOTEBOOKLM_STORAGE_STATE
+```
+
+> **注意**：NotebookLM 认证可能会过期（通常几周到几个月），届时需要重新导出。如果 GitHub Actions 中信息图生成失败，请重新执行上述步骤。
+
 ### 手动触发工作流
 
 1. 进入仓库的 **Actions** 页面

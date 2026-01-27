@@ -47,6 +47,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Python (for NotebookLM CLI)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install NotebookLM CLI
+        run: pip install notebooklm-cli
+
+      - name: Setup NotebookLM authentication
+        if: ${{ secrets.NOTEBOOKLM_STORAGE_STATE != '' }}
+        run: |
+          mkdir -p ~/.notebooklm
+          echo "${{ secrets.NOTEBOOKLM_STORAGE_STATE }}" | base64 -d > ~/.notebooklm/storage_state.json
+          chmod 600 ~/.notebooklm/storage_state.json
+          echo "✅ NotebookLM authentication configured"
+
       - name: Create .env file
         run: |
           cat << EOF > .env
