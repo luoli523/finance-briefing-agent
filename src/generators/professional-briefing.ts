@@ -25,6 +25,18 @@ interface StockPerformance {
 }
 
 interface LLMInsights {
+  indexAnalysis?: {
+    marketOverview: string;
+    indexDetails: Array<{
+      symbol: string;
+      name: string;
+      dataAnalysis: string;
+      newsAnalysis: string;
+      underlyingLogic: string;
+      keyDrivers: string[];
+    }>;
+    crossIndexAnalysis: string;
+  };
   marketMacroNews?: {
     summary: string;
     keyNews: Array<{
@@ -226,10 +238,17 @@ export class ProfessionalBriefingGenerator {
    * 生成报告头部
    */
   private generateHeader(): string {
-    return `====================
-AI Industry 每日简报与投资建议｜${this.date}
-（基于过去24小时信息 & 美股上一交易日收盘）
-====================`;
+    return `
+╔════════════════════════════════════════════════════════════════════════╗
+║                                                                        ║
+║           鬼哥的 AI Industry 每日简报与投资建议                        ║
+║                                                                        ║
+║                         ${this.date}                                   ║
+║                                                                        ║
+║           基于过去24小时信息 & 美股上一交易日收盘                      ║
+║                                                                        ║
+╚════════════════════════════════════════════════════════════════════════╝
+`;
   }
 
   /**
@@ -249,16 +268,110 @@ AI Industry 每日简报与投资建议｜${this.date}
       return content;
     }
 
+    // === 主要指数 ===
+    content += `### 主要指数\n\n`;
+    content += `| 指数名称 | 代号 | 最新点位 | 涨跌幅 (%) | 表现 |\n`;
+    content += `|:---------|:----:|----------:|------------:|:----:|\n`;
+
+    const indexInfo: Record<string, string> = {
+      '^GSPC': 'S&P 500',
+      '^DJI': '道琼斯工业',
+      '^IXIC': '纳斯达克综合',
+      '^RUT': '罗素2000',
+      '^VIX': 'VIX恐慌指数',
+    };
+
+    for (const symbol of MONITORED_SYMBOLS.indices) {
+      const index = this.stockPerformance.get(symbol);
+      if (index) {
+        // VIX 指数涨跌含义相反：VIX 上涨代表市场恐慌（利空），用绿色；下跌代表市场平静（利好），用红色
+        // 其他指数：红涨绿跌（中国股市习惯）
+        const isVix = symbol === '^VIX';
+        const emoji = isVix
+          ? (index.changePercent > 0 ? '🟢' : index.changePercent < 0 ? '🔴' : '➡️')
+          : (index.changePercent > 0 ? '🔴' : index.changePercent < 0 ? '🟢' : '➡️');
+        const changeStr = index.changePercent !== 0
+          ? `${index.changePercent >= 0 ? '+' : ''}${index.changePercent.toFixed(2)}%`
+          : 'N/A';
+        const priceStr = symbol === '^VIX' ? index.price.toFixed(2) : index.price.toFixed(2);
+        content += `| ${indexInfo[symbol] || index.name} | ${symbol} | ${priceStr} | ${changeStr} | ${emoji} |\n`;
+      }
+    }
+
+    // === 指数深度分析 ===
+    content += `\n### 指数变化深度分析\n\n`;
+    const indexAnalysis = this.llmInsights?.indexAnalysis;
+    if (indexAnalysis) {
+      // 市场概况
+      if (indexAnalysis.marketOverview) {
+        content += `**市场整体格局**: ${indexAnalysis.marketOverview}\n\n`;
+      }
+      // 各指数分析
+      if (indexAnalysis.indexDetails && indexAnalysis.indexDetails.length > 0) {
+        for (const detail of indexAnalysis.indexDetails) {
+          const indexData = this.stockPerformance.get(detail.symbol);
+          const changeStr = indexData
+            ? `${indexData.changePercent >= 0 ? '+' : ''}${indexData.changePercent.toFixed(2)}%`
+            : '';
+          content += `#### ${detail.name}（${detail.symbol}）${changeStr}\n\n`;
+          content += `**数据面分析**: ${detail.dataAnalysis}\n\n`;
+          content += `**信息面分析**: ${detail.newsAnalysis}\n\n`;
+          content += `**底层逻辑**: ${detail.underlyingLogic}\n\n`;
+          if (detail.keyDrivers && detail.keyDrivers.length > 0) {
+            content += `**主要驱动因素**: ${detail.keyDrivers.join('、')}\n\n`;
+          }
+          content += `---\n\n`;
+        }
+      }
+      // 指数间联动分析
+      if (indexAnalysis.crossIndexAnalysis) {
+        content += `**指数间联动分析**: ${indexAnalysis.crossIndexAnalysis}\n\n`;
+      }
+    } else {
+      // 无 LLM 分析时的默认内容
+      content += this.generateDefaultIndexAnalysis();
+    }
+
+    // === ETF 表现 ===
+    content += `### ETF 表现\n\n`;
+    content += `| 分类 | ETF名称 | 代号 | 最新价格 (USD) | 涨跌幅 (%) | 表现 |\n`;
+    content += `|:-----|:--------|:----:|---------------:|------------:|:----:|\n`;
+
+    const etfCategory: Record<string, string> = {
+      'SMH': '半导体',
+      'SOXX': '半导体',
+      'QQQ': '科技龙头',
+      'VOO': '大盘指数',
+      'ARKQ': '自动化/机器人',
+      'BOTZ': 'AI/机器人',
+      'ROBT': 'AI/机器人',
+      'GLD': '黄金/对冲',
+    };
+
+    for (const symbol of MONITORED_SYMBOLS.etf) {
+      const etf = this.stockPerformance.get(symbol);
+      if (etf) {
+        // 红涨绿跌（中国股市习惯）
+        const emoji = etf.changePercent > 0 ? '🔴' : etf.changePercent < 0 ? '🟢' : '➡️';
+        const changeStr = etf.changePercent !== 0
+          ? `${etf.changePercent >= 0 ? '+' : ''}${etf.changePercent.toFixed(2)}%`
+          : 'N/A';
+        content += `| ${etfCategory[symbol] || 'ETF'} | ${etf.name} | ${symbol} | $${etf.price.toFixed(2)} | ${changeStr} | ${emoji} |\n`;
+      }
+    }
+
+    // === AI 产业链股票 ===
+    content += `\n### AI 产业链股票\n\n`;
     content += `| 分类 (Category) | 公司 (Company) | 股票代号 (Ticker) | 最新股价 (USD) | 涨跌幅 (%) | 表现 |\n`;
     content += `|:----------------|:---------------|:-----------------:|---------------:|------------:|:----:|\n`;
 
-    // 按产业链分类输出
+    // 按产业链分类输出（红涨绿跌）
     for (const [category, symbols] of Object.entries(AI_INDUSTRY_CATEGORIES)) {
       for (const symbol of symbols) {
         const stock = this.stockPerformance.get(symbol);
         if (stock) {
           const emoji = stock.changePercent > 0 ? '🔴' : stock.changePercent < 0 ? '🟢' : '➡️';
-          const changeStr = stock.changePercent !== 0 
+          const changeStr = stock.changePercent !== 0
             ? `${stock.changePercent >= 0 ? '+' : ''}${stock.changePercent.toFixed(2)}%`
             : 'N/A';
           content += `| ${category} | ${stock.name} | ${stock.ticker} | $${stock.price.toFixed(2)} | ${changeStr} | ${emoji} |\n`;
@@ -266,20 +379,99 @@ AI Industry 每日简报与投资建议｜${this.date}
       }
     }
 
-    // ETF
-    for (const symbol of MONITORED_SYMBOLS.etf) {
-      const stock = this.stockPerformance.get(symbol);
-      if (stock) {
-        const emoji = stock.changePercent > 0 ? '🔴' : stock.changePercent < 0 ? '🟢' : '➡️';
-        const changeStr = stock.changePercent !== 0 
-          ? `${stock.changePercent >= 0 ? '+' : ''}${stock.changePercent.toFixed(2)}%`
-          : 'N/A';
-        content += `| ETF | ${stock.name} | ${stock.ticker} | $${stock.price.toFixed(2)} | ${changeStr} | ${emoji} |\n`;
-      }
-    }
-
     // 未上市重要主体
     content += `\n**未上市重要主体**：OpenAI / Anthropic / xAI / Perplexity（仅列示，不填价格）\n`;
+
+    return content;
+  }
+
+  /**
+   * 生成默认的指数分析（无 LLM 时使用）
+   */
+  private generateDefaultIndexAnalysis(): string {
+    let content = '';
+
+    const spx = this.stockPerformance.get('^GSPC');
+    const dji = this.stockPerformance.get('^DJI');
+    const ixic = this.stockPerformance.get('^IXIC');
+    const rut = this.stockPerformance.get('^RUT');
+    const vix = this.stockPerformance.get('^VIX');
+
+    // 判断市场整体走势
+    const majorIndicesUp = [spx, dji, ixic].filter(i => i && i.changePercent > 0).length;
+    const marketTrend = majorIndicesUp >= 2 ? '偏多' : majorIndicesUp === 0 ? '偏空' : '分化';
+
+    content += `**市场整体格局**: 三大指数${marketTrend}，`;
+    if (vix) {
+      content += `VIX ${vix.changePercent > 0 ? '上升' : '下降'}${Math.abs(vix.changePercent).toFixed(1)}%，`;
+      content += vix.changePercent > 0 ? '市场避险情绪升温。' : '市场情绪相对平稳。';
+    }
+    content += '\n\n';
+
+    // S&P 500 分析
+    if (spx) {
+      content += `#### S&P 500（^GSPC）${spx.changePercent >= 0 ? '+' : ''}${spx.changePercent.toFixed(2)}%\n\n`;
+      content += `**数据面分析**: 收于 ${spx.price.toFixed(2)} 点，`;
+      content += spx.changePercent > 0 ? '延续上涨趋势。' : spx.changePercent < 0 ? '出现回调。' : '横盘整理。';
+      content += '\n\n';
+      content += `**底层逻辑**: 作为美股大盘风向标，S&P 500 走势反映市场对经济基本面和企业盈利预期的综合判断。\n\n`;
+      content += `---\n\n`;
+    }
+
+    // 纳斯达克分析
+    if (ixic) {
+      content += `#### 纳斯达克综合（^IXIC）${ixic.changePercent >= 0 ? '+' : ''}${ixic.changePercent.toFixed(2)}%\n\n`;
+      content += `**数据面分析**: 收于 ${ixic.price.toFixed(2)} 点，`;
+
+      // 与 S&P 500 对比
+      if (spx) {
+        const diff = ixic.changePercent - spx.changePercent;
+        if (Math.abs(diff) > 0.3) {
+          content += diff > 0 ? '跑赢大盘，科技股相对强势。' : '跑输大盘，科技股承压。';
+        } else {
+          content += '与大盘走势基本一致。';
+        }
+      }
+      content += '\n\n';
+      content += `**底层逻辑**: 纳指以科技股为主导，对利率变化和AI相关消息更为敏感，是科技板块风向标。\n\n`;
+      content += `---\n\n`;
+    }
+
+    // 罗素 2000 分析
+    if (rut) {
+      content += `#### 罗素 2000（^RUT）${rut.changePercent >= 0 ? '+' : ''}${rut.changePercent.toFixed(2)}%\n\n`;
+      content += `**数据面分析**: 收于 ${rut.price.toFixed(2)} 点，`;
+
+      // 与大盘对比
+      if (spx) {
+        const diff = rut.changePercent - spx.changePercent;
+        if (Math.abs(diff) > 0.5) {
+          content += diff > 0 ? '小盘股跑赢大盘，风险偏好回升。' : '小盘股跑输大盘，资金偏好大盘蓝筹。';
+        } else {
+          content += '与大盘走势趋同。';
+        }
+      }
+      content += '\n\n';
+      content += `**底层逻辑**: 罗素 2000 代表小盘股表现，通常在降息周期和经济复苏预期中表现较好，对流动性和风险偏好更敏感。\n\n`;
+      content += `---\n\n`;
+    }
+
+    // VIX 分析
+    if (vix) {
+      content += `#### VIX 恐慌指数（^VIX）${vix.changePercent >= 0 ? '+' : ''}${vix.changePercent.toFixed(2)}%\n\n`;
+      content += `**数据面分析**: 收于 ${vix.price.toFixed(2)}，`;
+      if (vix.price < 15) {
+        content += '处于低位，市场情绪乐观。';
+      } else if (vix.price < 20) {
+        content += '处于正常区间，市场情绪稳定。';
+      } else if (vix.price < 30) {
+        content += '处于偏高水平，市场存在一定担忧。';
+      } else {
+        content += '处于高位，市场恐慌情绪明显。';
+      }
+      content += '\n\n';
+      content += `**底层逻辑**: VIX 衡量市场对未来30天波动的预期，上升意味着市场不确定性增加，通常与股市走势负相关。\n\n`;
+    }
 
     return content;
   }
@@ -652,9 +844,29 @@ AI Industry 每日简报与投资建议｜${this.date}
    */
   private generateBlessing(): string {
     const blessing = this.llmInsights?.dailyBlessing || '愿您在投资的道路上，保持耐心与智慧，每一天都向目标更近一步';
-    return `---
 
-**【今日祝福】** ${blessing}`;
+    // 对鬼哥的谄媚夸赞列表
+    const praises = [
+      '鬼哥今天依然帅到令人窒息，智慧如海深不可测，投资眼光精准得让巴菲特都要自愧不如',
+      '鬼哥的颜值足以让好莱坞巨星黯然失色，智商更是碾压全球99.99%的人类，简直是上天派来拯救资本市场的天选之人',
+      '世间难得一见的绝世天才鬼哥，不仅长得比吴彦祖还帅三分，投资嗅觉更是灵敏到能预知市场未来，堪称当代股神',
+      '鬼哥的智慧光芒万丈，让爱因斯坦在天之灵都要点头称赞，那俊朗的外表更是让无数人为之倾倒，实乃人中龙凤',
+      '鬼哥您的存在本身就是对"完美"一词最好的诠释——才华横溢、英俊潇洒、眼光独到，简直是投资界的神话传说',
+      '据说华尔街大佬们每天早起第一件事就是祈祷能拥有鬼哥十分之一的智慧和颜值，可惜这是他们永远无法企及的高度',
+    ];
+
+    // 随机选择一条夸赞
+    const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+
+    return `
+---
+
+## 致鬼哥
+
+**【今日祝福】** ${blessing}
+
+**【鬼哥专属彩虹屁】** ${randomPraise}
+`;
   }
 
   /**
@@ -663,16 +875,23 @@ AI Industry 每日简报与投资建议｜${this.date}
   private generateFooter(): string {
     const now = new Date();
     const timeStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-    
+
     return `
-====================
-END OF BRIEFING
-====================
+╔════════════════════════════════════════════════════════════════════════╗
+║                                                                        ║
+║                        END OF BRIEFING                                 ║
+║                                                                        ║
+║                    鬼哥的专属 AI 投资简报                              ║
+║                                                                        ║
+╚════════════════════════════════════════════════════════════════════════╝
 
 ---
 
-**免责声明**: 本报告仅供参考，不构成投资建议。投资有风险，决策需谨慎。
+**免责声明**: 本报告仅供鬼哥参考，不构成投资建议。投资有风险，决策需谨慎。
+但以鬼哥的智慧，想亏钱都难。
 
-*报告生成时间: ${timeStr}*`;
+*报告生成时间: ${timeStr}*
+`;
   }
 }
+

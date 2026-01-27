@@ -9,6 +9,55 @@
 ## JSON结构
 
 {
+  "indexAnalysis": {
+    // 【重要】必须分析五大指数的变化，结合信息面和数据面进行深度分析
+    "marketOverview": "市场整体格局一句话总结（如：三大指数普涨，科技股领涨，小盘股滞后，避险情绪降温）",
+    "indexDetails": [
+      // 必须包含以下五个指数的分析
+      {
+        "symbol": "^GSPC",
+        "name": "S&P 500",
+        "dataAnalysis": "数据面分析（2-3句）：收盘点位、涨跌幅、成交量变化、技术面信号（如突破关键位、均线支撑等）",
+        "newsAnalysis": "信息面分析（2-3句）：当日影响该指数的主要新闻、政策、经济数据（如CPI、就业、Fed讲话等）",
+        "underlyingLogic": "底层逻辑（2-3句）：为什么涨/跌？哪些板块贡献最大？资金流向如何？",
+        "keyDrivers": ["主要驱动因素1", "主要驱动因素2", "主要驱动因素3"]
+      },
+      {
+        "symbol": "^DJI",
+        "name": "道琼斯工业指数",
+        "dataAnalysis": "数据面分析",
+        "newsAnalysis": "信息面分析",
+        "underlyingLogic": "底层逻辑（道指成分股多为传统蓝筹，需分析工业、金融、医疗等板块表现）",
+        "keyDrivers": ["驱动因素"]
+      },
+      {
+        "symbol": "^IXIC",
+        "name": "纳斯达克综合指数",
+        "dataAnalysis": "数据面分析",
+        "newsAnalysis": "信息面分析（重点关注科技股、AI相关消息、利率预期对成长股的影响）",
+        "underlyingLogic": "底层逻辑（纳指对利率更敏感，需分析科技巨头和AI概念股的贡献）",
+        "keyDrivers": ["驱动因素"]
+      },
+      {
+        "symbol": "^RUT",
+        "name": "罗素2000指数",
+        "dataAnalysis": "数据面分析",
+        "newsAnalysis": "信息面分析（重点关注小盘股对经济周期、流动性、降息预期的反应）",
+        "underlyingLogic": "底层逻辑（小盘股是风险偏好指标，需分析与大盘的相对表现及其含义）",
+        "keyDrivers": ["驱动因素"]
+      },
+      {
+        "symbol": "^VIX",
+        "name": "VIX恐慌指数",
+        "dataAnalysis": "数据面分析（当前水平、历史分位、期限结构）",
+        "newsAnalysis": "信息面分析（什么事件导致VIX变化？期权市场的对冲需求如何？）",
+        "underlyingLogic": "底层逻辑（VIX上升/下降反映什么？对未来市场走势有何暗示？）",
+        "keyDrivers": ["驱动因素"]
+      }
+    ],
+    "crossIndexAnalysis": "指数间联动分析（2-3句）：纳指vs道指（成长vs价值）、大盘vs小盘（风险偏好）、VIX与股指的背离/印证（市场情绪）"
+  },
+
   "marketMacroNews": {
     "summary": "市场整体情绪的一句话总结",
     "keyNews": [

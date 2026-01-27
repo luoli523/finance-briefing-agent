@@ -18,9 +18,15 @@ import { LLMEnhancer } from '../analyzers/llm/enhancer';
 import { appConfig } from '../config';
 import type { ComprehensiveAnalysis } from '../analyzers/types';
 import { sendBriefingEmail, getEmailConfig } from '../services/email';
+import { sendBriefingTelegram, getTelegramConfig } from '../services/telegram';
 
 // 加载环境变量
 dotenv.config();
+
+// 解析命令行参数
+const args = process.argv.slice(2);
+const skipLLM = args.includes('--skip-llm') || args.includes('-s');
+const sendOnly = args.includes('--send-only') || args.includes('-o');
 
 // 专业简报的prompt加载
 function loadProfessionalPrompts(): { systemPrompt: string; taskPrompt: string } {
@@ -52,8 +58,32 @@ async function main() {
   console.log('║                                                                      ║');
   console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
 
-  // 1. 查找最新的分析文件
+  // 显示运行模式
+  if (sendOnly) {
+    console.log('📤 模式: 仅发送已有报告 (--send-only)\n');
+  } else if (skipLLM) {
+    console.log('⚡ 模式: 跳过 LLM 分析，使用已有 insights (--skip-llm)\n');
+  }
+
+  const outputDir = path.resolve(process.cwd(), 'output');
   const processedDir = path.resolve(process.cwd(), 'data/processed');
+  const today = new Date().toISOString().split('T')[0];
+  const markdownPath = path.join(outputDir, `ai-briefing-${today}.md`);
+
+  // --send-only 模式：只发送已有的报告
+  if (sendOnly) {
+    if (!fs.existsSync(markdownPath)) {
+      console.error(`❌ 错误: 今日报告不存在: ${markdownPath}`);
+      console.error('请先生成报告: npm run generate:pro');
+      process.exit(1);
+    }
+
+    console.log(`📄 使用已有报告: ${markdownPath}`);
+    await sendReports(markdownPath);
+    return;
+  }
+
+  // 1. 查找最新的分析文件
 
   if (!fs.existsSync(processedDir)) {
     console.error('[professional-briefing] 错误: data/processed 目录不存在');
@@ -79,10 +109,33 @@ async function main() {
 
   const analysisData = JSON.parse(fs.readFileSync(analysisPath, 'utf-8')) as ComprehensiveAnalysis;
 
-  // 2. 运行 LLM 深度分析（如果启用）
+  // 2. 运行 LLM 深度分析（如果启用且未跳过）
   let llmInsights: any = null;
 
-  if (appConfig.llm.enabled) {
+  // 查找已有的 LLM insights 文件
+  const insightsFiles = fs.readdirSync(processedDir)
+    .filter(f => f.startsWith('professional-insights-') && f.endsWith('.json'))
+    .sort()
+    .reverse();
+
+  if (skipLLM) {
+    // 跳过 LLM，使用已有的 insights
+    if (insightsFiles.length > 0) {
+      const latestInsightsFile = insightsFiles[0];
+      const insightsPath = path.join(processedDir, latestInsightsFile);
+      console.log(`\n📂 加载已有 LLM 洞察: ${latestInsightsFile}`);
+      try {
+        llmInsights = JSON.parse(fs.readFileSync(insightsPath, 'utf-8'));
+        console.log('✅ LLM 洞察加载成功');
+      } catch (e: any) {
+        console.warn(`⚠️ 加载 LLM 洞察失败: ${e.message}`);
+        console.log('将使用基础数据生成报告');
+      }
+    } else {
+      console.log('\n⚠️ 未找到已有的 LLM 洞察文件');
+      console.log('将使用基础数据生成报告');
+    }
+  } else if (appConfig.llm.enabled) {
     console.log('\n🤖 运行 LLM 深度分析...');
     console.log(`   提供商: ${appConfig.llm.provider}`);
     console.log(`   模型: ${appConfig.llm.model}`);
@@ -155,13 +208,9 @@ async function main() {
   const report = await generator.generate();
 
   // 4. 保存报告
-  const outputDir = path.resolve(process.cwd(), 'output');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
-
-  const today = new Date().toISOString().split('T')[0];
-  const markdownPath = path.join(outputDir, `ai-briefing-${today}.md`);
 
   fs.writeFileSync(markdownPath, report.markdown, 'utf-8');
 
@@ -186,14 +235,36 @@ async function main() {
   console.log('\n📄 查看报告:');
   console.log(`   cat ${markdownPath}`);
 
-  // 5. 发送邮件（如果启用）
+  // 5. 发送报告（邮件和/或 Telegram）
+  await sendReports(markdownPath);
+
+  console.log('\n');
+}
+
+/**
+ * 发送报告（邮件和/或 Telegram）
+ */
+async function sendReports(markdownPath: string): Promise<void> {
   const emailConfig = getEmailConfig();
+  const telegramConfig = getTelegramConfig();
+
+  // 发送邮件
   if (emailConfig.enabled) {
     console.log('\n📧 正在发送简报邮件...');
     await sendBriefingEmail(markdownPath);
   }
 
-  console.log('\n');
+  // 发送 Telegram
+  if (telegramConfig.enabled) {
+    console.log('\n📱 正在发送 Telegram 消息...');
+    await sendBriefingTelegram(markdownPath);
+  }
+
+  if (!emailConfig.enabled && !telegramConfig.enabled) {
+    console.log('\n💡 提示: 邮件和 Telegram 都未启用');
+    console.log('   设置 EMAIL_ENABLED=true 启用邮件发送');
+    console.log('   设置 TELEGRAM_ENABLED=true 启用 Telegram 发送');
+  }
 }
 
 /**

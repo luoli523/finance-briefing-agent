@@ -8,7 +8,7 @@ import {
   DataItem,
 } from './types';
 import { historyManager } from './history';
-import { getAllMonitoredSymbols, getIndexSymbols, getStockSymbols } from '../config';
+import { getAllMonitoredSymbols, getIndexSymbols, getStockSymbols, getETFSymbols } from '../config';
 
 // 工具函数：延迟
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -54,8 +54,8 @@ const DEFAULT_CONFIG: YahooFinanceConfig = {
   retries: 3,
   // 从中央配置获取指数列表
   indices: getIndexSymbols(),
-  // 从中央配置获取股票列表
-  symbols: getStockSymbols(),
+  // 从中央配置获取股票和ETF列表（ETF在Yahoo Finance API中与股票处理方式相同）
+  symbols: [...getStockSymbols(), ...getETFSymbols()],
 };
 
 /**
