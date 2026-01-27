@@ -68,13 +68,14 @@ LLM_TIMEOUT=300000
 npm run daily
 ```
 
-这将自动执行：
+这将自动执行完整流程：
 1. **📊 收集数据** (~20秒) - 市场行情、新闻、经济指标
 2. **🧠 智能分析** (~2秒) - 多维度数据分析
 3. **🤖 LLM 深度分析** (~90秒) - GPT-5.2 产业链洞察
 4. **📄 生成简报** (~1秒) - 专业投资报告
 5. **🎨 生成信息图** (~60秒) - NotebookLM 中文可视化
-6. **📧 自动发送** - 邮件（含信息图）+ Telegram
+6. **📧 发送邮件** - 含信息图附件
+7. **📱 发送 Telegram** - 简报摘要
 
 生成的文件：
 - `output/ai-briefing-YYYY-MM-DD.md` - Markdown 简报
@@ -186,42 +187,32 @@ npm run daily
 ### 推荐工作流
 
 ```bash
-# 每日简报（完整流程）
+# 每日简报（完整流程：生成 + 发送）
 npm run daily
 
 # 等同于
-npm run workflow:pro
+npm run workflow:full
 ```
 
-### 快捷命令（开发调试用）
+### 核心命令
 
-修改报告格式或发送逻辑后，无需运行完整流程：
+| 命令 | 说明 | 包含步骤 |
+|------|------|----------|
+| `npm run daily` | 完整流程 | 收集 → 分析 → 生成 → 邮件 → Telegram |
+| `npm run workflow:full` | 同上 | 收集 → 分析 → 生成 → 邮件 → Telegram |
+| `npm run workflow:pro` | 只生成不发送 | 收集 → 分析 → 生成 |
 
-| 命令 | 说明 | 耗时 |
-|------|------|------|
-| `npm run generate:pro` | 完整流程：LLM + 信息图 + 发送 | ~3-4分钟 |
-| `npm run generate:quick` | 跳过 LLM，使用已有 insights | ~2秒 |
-| `npm run send` | 仅发送已有报告（含信息图） | ~1秒 |
-| `npm run generate:nlm-infographic` | 单独生成 NotebookLM 信息图 | ~60秒 |
+### 独立命令
 
-```bash
-# 快速重新生成（跳过 LLM 分析）
-npm run generate:quick
-
-# 仅发送已有报告（自动附加已有信息图）
-npm run send
-
-# 单独生成信息图
-npm run generate:nlm-infographic
-npm run generate:nlm-infographic 2026-01-25  # 指定日期
-
-# 命令行参数形式
-npm run generate:pro -- --skip-llm         # 跳过 LLM
-npm run generate:pro -- --skip-infographic # 跳过信息图生成
-npm run generate:pro -- --send-only        # 仅发送
-npm run generate:pro -- -s                 # 简写
-npm run generate:pro -- -o                 # 简写
-```
+| 命令 | 说明 |
+|------|------|
+| `npm run collect` | 收集市场数据 |
+| `npm run analyze` | 分析数据 |
+| `npm run generate:pro` | 生成简报 + 信息图（不发送） |
+| `npm run generate:quick` | 快速生成（跳过 LLM） |
+| `npm run send-email` | 发送邮件（自动含信息图） |
+| `npm run send-telegram` | 发送 Telegram |
+| `npm run generate:nlm-infographic` | 单独生成信息图 |
 
 ### 分步执行
 
@@ -232,11 +223,29 @@ npm run collect
 # 2. 数据分析
 npm run analyze
 
-# 3. 生成专业简报（含 LLM 分析）
+# 3. 生成简报和信息图
 npm run generate:pro
 
-# 3. 或快速生成（跳过 LLM）
+# 4. 发送邮件（自动附加信息图）
+npm run send-email
+
+# 5. 发送 Telegram
+npm run send-telegram
+```
+
+### 快捷命令（开发调试用）
+
+```bash
+# 快速重新生成（跳过 LLM 分析，使用已有 insights）
 npm run generate:quick
+
+# 单独生成信息图
+npm run generate:nlm-infographic
+npm run generate:nlm-infographic 2026-01-25  # 指定日期
+
+# 命令行参数
+npm run generate:pro -- --skip-llm         # 跳过 LLM
+npm run generate:pro -- --skip-infographic # 跳过信息图生成
 ```
 
 ### 单独收集器
@@ -252,10 +261,9 @@ npm run collect:rss      # 政府RSS
 ### 发送命令
 
 ```bash
-npm run send                    # 发送当天简报（邮件+Telegram）
-npm run send-email              # 仅发送邮件
+npm run send-email              # 发送邮件（自动含信息图）
 npm run send-email 2026-01-25   # 发送指定日期邮件
-npm run send-telegram           # 仅发送 Telegram
+npm run send-telegram           # 发送 Telegram
 npm run send-telegram 2026-01-25
 ```
 
@@ -415,7 +423,7 @@ export const MONITORED_SYMBOLS = {
 #### 1. 安装 NotebookLM CLI
 
 ```bash
-pip install notebooklm-cli
+pip install notebooklm-py
 ```
 
 #### 2. 认证登录
@@ -500,12 +508,14 @@ EMAIL_SMTP_PASS=your-app-password
 **单独发送邮件（不重新生成简报）：**
 
 ```bash
-# 发送当天简报
+# 发送当天简报（自动附加信息图，如果存在）
 npm run send-email
 
 # 发送指定日期简报
 npm run send-email 2026-01-25
 ```
+
+> 📷 如果对应日期的信息图文件 (`ai-briefing-YYYY-MM-DD-infographic.png`) 存在，会自动内嵌到邮件中。
 
 ### 方式二：使用 Claude Code + Composio（交互式）
 
