@@ -17,8 +17,6 @@ import { ProfessionalBriefingGenerator } from '../generators/professional-briefi
 import { LLMEnhancer } from '../analyzers/llm/enhancer';
 import { appConfig } from '../config';
 import type { ComprehensiveAnalysis } from '../analyzers/types';
-import { sendBriefingEmail, getEmailConfig } from '../services/email';
-import { sendBriefingTelegram, getTelegramConfig } from '../services/telegram';
 import { generateInfographic, checkNotebookLMCLI, checkNotebookLMAuth } from './generate-notebooklm-infographic';
 
 // 加载环境变量
@@ -82,15 +80,9 @@ async function main() {
     }
 
     console.log(`📄 使用已有报告: ${markdownPath}`);
-
-    // 检查是否有已生成的 infographic
-    const infographicPath = path.join(outputDir, `ai-briefing-${today}-infographic.png`);
-    const existingInfographic = fs.existsSync(infographicPath) ? infographicPath : undefined;
-    if (existingInfographic) {
-      console.log(`🖼️  使用已有 Infographic: ${path.basename(infographicPath)}`);
-    }
-
-    await sendReports(markdownPath, existingInfographic);
+    console.log('\n💡 提示: 使用以下命令发送报告:');
+    console.log('   npm run send-email    # 发送邮件');
+    console.log('   npm run send-telegram # 发送 Telegram');
     return;
   }
 
@@ -278,39 +270,11 @@ async function main() {
     }
   }
 
-  // 6. 发送报告（邮件和/或 Telegram）
-  await sendReports(markdownPath, infographicPath);
-
+  // 6. 提示发送命令
+  console.log('\n💡 发送报告:');
+  console.log('   npm run send-email    # 发送邮件（含 Infographic）');
+  console.log('   npm run send-telegram # 发送 Telegram');
   console.log('\n');
-}
-
-/**
- * 发送报告（邮件和/或 Telegram）
- */
-async function sendReports(markdownPath: string, infographicPath?: string): Promise<void> {
-  const emailConfig = getEmailConfig();
-  const telegramConfig = getTelegramConfig();
-
-  // 发送邮件
-  if (emailConfig.enabled) {
-    console.log('\n📧 正在发送简报邮件...');
-    if (infographicPath && fs.existsSync(infographicPath)) {
-      console.log(`   📷 附带 Infographic: ${path.basename(infographicPath)}`);
-    }
-    await sendBriefingEmail(markdownPath, infographicPath);
-  }
-
-  // 发送 Telegram
-  if (telegramConfig.enabled) {
-    console.log('\n📱 正在发送 Telegram 消息...');
-    await sendBriefingTelegram(markdownPath);
-  }
-
-  if (!emailConfig.enabled && !telegramConfig.enabled) {
-    console.log('\n💡 提示: 邮件和 Telegram 都未启用');
-    console.log('   设置 EMAIL_ENABLED=true 启用邮件发送');
-    console.log('   设置 TELEGRAM_ENABLED=true 启用 Telegram 发送');
-  }
 }
 
 /**

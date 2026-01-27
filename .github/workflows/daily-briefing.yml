@@ -100,10 +100,15 @@ jobs:
         run: npm run analyze
         continue-on-error: false
 
-      - name: Generate professional briefing and send notifications
+      - name: Generate professional briefing with infographic
         run: npm run generate:pro
         continue-on-error: false
-        # Note: generate:pro already handles email and telegram sending with infographic attached
+
+      - name: Send email (with infographic)
+        run: npm run send-email
+
+      - name: Send Telegram
+        run: npm run send-telegram
 
       - name: Upload briefing as artifact
         uses: actions/upload-artifact@v4

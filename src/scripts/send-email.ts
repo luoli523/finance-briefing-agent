@@ -63,10 +63,20 @@ async function main() {
 
   console.log(`📄 简报文件: ai-briefing-${targetDate}.md`);
   console.log(`📧 收件人: ${emailConfig.to}`);
+
+  // 查找对应的 infographic 文件
+  const infographicPath = path.join(outputDir, `ai-briefing-${targetDate}-infographic.png`);
+  const hasInfographic = fs.existsSync(infographicPath);
+
+  if (hasInfographic) {
+    console.log(`🖼️  Infographic: ai-briefing-${targetDate}-infographic.png`);
+  } else {
+    console.log(`ℹ️  无 Infographic 文件`);
+  }
   console.log('');
 
-  // 发送邮件
-  const success = await sendBriefingEmail(briefingPath);
+  // 发送邮件（带 infographic，如果存在）
+  const success = await sendBriefingEmail(briefingPath, hasInfographic ? infographicPath : undefined);
 
   if (!success) {
     process.exit(1);
