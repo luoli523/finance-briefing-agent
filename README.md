@@ -23,6 +23,11 @@
 - **FRED** - 美国宏观经济指标
 - **政府 RSS** - Fed 公告、SEC 新闻
 
+### 🎨 NotebookLM 智能信息图
+- **自动生成** - 基于每日简报自动生成中文信息图
+- **可视化摘要** - 指数表现、产业链股票、市场要闻一图尽览
+- **邮件集成** - 信息图自动附加到每日邮件
+
 ---
 
 ## 🚀 快速开始
@@ -68,8 +73,12 @@ npm run daily
 2. **🧠 智能分析** (~2秒) - 多维度数据分析
 3. **🤖 LLM 深度分析** (~90秒) - GPT-5.2 产业链洞察
 4. **📄 生成简报** (~1秒) - 专业投资报告
+5. **🎨 生成信息图** (~60秒) - NotebookLM 中文可视化
+6. **📧 自动发送** - 邮件（含信息图）+ Telegram
 
-生成的简报位于 `output/ai-briefing-YYYY-MM-DD.md`
+生成的文件：
+- `output/ai-briefing-YYYY-MM-DD.md` - Markdown 简报
+- `output/ai-briefing-YYYY-MM-DD-infographic.png` - 信息图
 
 ---
 
@@ -190,22 +199,28 @@ npm run workflow:pro
 
 | 命令 | 说明 | 耗时 |
 |------|------|------|
-| `npm run generate:pro` | 完整流程：LLM 分析 + 生成 + 发送 | ~2-3分钟 |
+| `npm run generate:pro` | 完整流程：LLM + 信息图 + 发送 | ~3-4分钟 |
 | `npm run generate:quick` | 跳过 LLM，使用已有 insights | ~2秒 |
-| `npm run send` | 仅发送已有报告（不重新生成） | ~1秒 |
+| `npm run send` | 仅发送已有报告（含信息图） | ~1秒 |
+| `npm run generate:nlm-infographic` | 单独生成 NotebookLM 信息图 | ~60秒 |
 
 ```bash
 # 快速重新生成（跳过 LLM 分析）
 npm run generate:quick
 
-# 仅发送已有报告
+# 仅发送已有报告（自动附加已有信息图）
 npm run send
 
+# 单独生成信息图
+npm run generate:nlm-infographic
+npm run generate:nlm-infographic 2026-01-25  # 指定日期
+
 # 命令行参数形式
-npm run generate:pro -- --skip-llm    # 跳过 LLM
-npm run generate:pro -- --send-only   # 仅发送
-npm run generate:pro -- -s            # 简写
-npm run generate:pro -- -o            # 简写
+npm run generate:pro -- --skip-llm         # 跳过 LLM
+npm run generate:pro -- --skip-infographic # 跳过信息图生成
+npm run generate:pro -- --send-only        # 仅发送
+npm run generate:pro -- -s                 # 简写
+npm run generate:pro -- -o                 # 简写
 ```
 
 ### 分步执行
@@ -244,11 +259,21 @@ npm run send-telegram           # 仅发送 Telegram
 npm run send-telegram 2026-01-25
 ```
 
+### 信息图生成
+
+```bash
+# NotebookLM 信息图（推荐）- 自动集成到 daily workflow
+npm run generate:nlm-infographic          # 当天简报
+npm run generate:nlm-infographic 2026-01-25  # 指定日期
+
+# 本地 HTML 信息图
+npm run generate:infographic    # 生成交互式 HTML 信息图
+```
+
 ### 其他命令
 
 ```bash
 npm run verify:config           # 验证配置
-npm run generate:infographic    # 生成信息图表
 npm run workflow:intelligent    # 智能分析工作流
 ```
 
@@ -308,10 +333,16 @@ finance-briefing-agent/
 │   ├── generators/          # 报告生成
 │   │   └── professional-briefing.ts  # 专业简报生成器
 │   │
+│   ├── services/            # 服务模块
+│   │   ├── email.ts         # 邮件发送（支持信息图附件）
+│   │   └── telegram.ts      # Telegram 发送
+│   │
 │   ├── config/              # 配置管理
 │   │   └── index.ts         # 全局配置
 │   │
 │   └── scripts/             # 运行脚本
+│       ├── generate-professional-briefing.ts  # 主工作流
+│       └── generate-notebooklm-infographic.ts # 信息图生成
 │
 ├── prompts/                 # LLM提示词
 │   ├── professional-briefing-system.txt
@@ -365,6 +396,72 @@ export const MONITORED_SYMBOLS = {
 | [`docs/INTELLIGENT_ANALYZER.md`](./docs/INTELLIGENT_ANALYZER.md) | 智能分析器 |
 | [`docs/INFOGRAPHIC_GUIDE.md`](./docs/INFOGRAPHIC_GUIDE.md) | 信息图表生成 |
 | [`config/README.md`](./config/README.md) | 配置管理 |
+
+---
+
+## 🎨 NotebookLM 信息图配置
+
+系统支持使用 Google NotebookLM 自动生成中文信息图，并附加到每日邮件中。
+
+### 功能特点
+
+- **自动化生成** - 每日简报生成后自动创建可视化信息图
+- **中文优化** - 使用简体中文生成，适合中文用户
+- **邮件集成** - 信息图自动内嵌到邮件正文并作为附件发送
+- **高质量输出** - Portrait 布局，详细模式，专业美观
+
+### 安装配置
+
+#### 1. 安装 NotebookLM CLI
+
+```bash
+pip install notebooklm-cli
+```
+
+#### 2. 认证登录
+
+```bash
+notebooklm login
+```
+
+按提示完成 Google 账号认证。
+
+#### 3. 验证安装
+
+```bash
+notebooklm status
+notebooklm list
+```
+
+### 使用方式
+
+**自动模式（推荐）**：运行 `npm run daily` 时自动生成信息图
+
+**手动模式**：
+```bash
+# 生成当天简报的信息图
+npm run generate:nlm-infographic
+
+# 生成指定日期的信息图
+npm run generate:nlm-infographic 2026-01-25
+```
+
+**跳过信息图**：如果不需要信息图，可加参数跳过
+```bash
+npm run generate:pro -- --skip-infographic
+```
+
+### 输出示例
+
+信息图会自动保存到 `output/` 目录：
+- 文件名：`ai-briefing-YYYY-MM-DD-infographic.png`
+- 内容：主要指数、产业链股票涨跌、市场要闻、投资建议
+
+### 注意事项
+
+- 需要稳定的网络连接（访问 Google 服务）
+- 首次使用需完成 Google 账号认证
+- 如果 NotebookLM CLI 未安装或未认证，系统会自动跳过信息图生成
 
 ---
 
