@@ -56,12 +56,17 @@ jobs:
         run: pip install notebooklm-cli
 
       - name: Setup NotebookLM authentication
-        if: ${{ secrets.NOTEBOOKLM_STORAGE_STATE != '' }}
+        env:
+          NOTEBOOKLM_STORAGE_STATE: ${{ secrets.NOTEBOOKLM_STORAGE_STATE }}
         run: |
-          mkdir -p ~/.notebooklm
-          echo "${{ secrets.NOTEBOOKLM_STORAGE_STATE }}" | base64 -d > ~/.notebooklm/storage_state.json
-          chmod 600 ~/.notebooklm/storage_state.json
-          echo "✅ NotebookLM authentication configured"
+          if [ -n "$NOTEBOOKLM_STORAGE_STATE" ]; then
+            mkdir -p ~/.notebooklm
+            echo "$NOTEBOOKLM_STORAGE_STATE" | base64 -d > ~/.notebooklm/storage_state.json
+            chmod 600 ~/.notebooklm/storage_state.json
+            echo "✅ NotebookLM authentication configured"
+          else
+            echo "⚠️ NotebookLM authentication not configured (secret not set)"
+          fi
 
       - name: Create .env file
         run: |
