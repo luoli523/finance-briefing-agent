@@ -53,7 +53,19 @@ jobs:
           python-version: '3.11'
 
       - name: Install NotebookLM CLI
-        run: pip install notebooklm-cli
+        run: |
+          pip install notebooklm-cli
+          # Verify installation and show path
+          which notebooklm || echo "notebooklm not in PATH"
+          notebooklm --version || echo "notebooklm version check failed"
+          # Add Python user bin to PATH for subsequent steps
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Verify NotebookLM CLI
+        run: |
+          echo "PATH: $PATH"
+          which notebooklm
+          notebooklm --version
 
       - name: Setup NotebookLM authentication
         env:
