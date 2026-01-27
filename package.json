@@ -23,6 +23,7 @@
     "generate:quick": "tsx src/scripts/generate-professional-briefing.ts --skip-llm",
     "send": "tsx src/scripts/generate-professional-briefing.ts --send-only",
     "generate:infographic": "tsx src/scripts/generate-infographic-enhanced.ts",
+    "generate:nlm-infographic": "tsx src/scripts/generate-notebooklm-infographic.ts",
     "workflow:intelligent": "tsx src/scripts/run-intelligent-workflow.ts",
     "workflow:pro": "tsx src/scripts/collect.ts && tsx src/scripts/analyze.ts && tsx src/scripts/generate-professional-briefing.ts",
     "verify:config": "tsx src/scripts/verify-config.ts",

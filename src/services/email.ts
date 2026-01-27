@@ -20,6 +20,14 @@ export interface EmailConfig {
   };
 }
 
+export interface EmailAttachment {
+  filename: string;
+  path?: string;
+  content?: string | Buffer;
+  contentType?: string;
+  cid?: string; // Content-ID for inline images
+}
+
 export function getEmailConfig(): EmailConfig {
   return {
     enabled: process.env.EMAIL_ENABLED === 'true',
@@ -37,9 +45,10 @@ export function getEmailConfig(): EmailConfig {
 /**
  * 发送简报邮件
  * @param briefingPath 简报文件路径
+ * @param infographicPath 可选的 infographic 图片路径
  * @returns 是否发送成功
  */
-export async function sendBriefingEmail(briefingPath: string): Promise<boolean> {
+export async function sendBriefingEmail(briefingPath: string, infographicPath?: string): Promise<boolean> {
   const config = getEmailConfig();
 
   if (!config.enabled) {
@@ -81,20 +90,50 @@ export async function sendBriefingEmail(briefingPath: string): Promise<boolean> 
     // 将 Markdown 转换为 HTML
     const htmlContent = await markdownToHtml(briefingContent);
 
+    // 准备附件
+    const attachments: any[] = [
+      {
+        filename: fileName,
+        content: briefingContent,
+        contentType: 'text/markdown',
+      },
+    ];
+
+    // 添加 Infographic 图片附件（如果存在）
+    let hasInfographic = false;
+    if (infographicPath && fs.existsSync(infographicPath)) {
+      const infographicFileName = path.basename(infographicPath);
+      attachments.push({
+        filename: infographicFileName,
+        path: infographicPath,
+        contentType: 'image/png',
+        cid: 'infographic', // Content-ID for inline display
+      });
+      hasInfographic = true;
+      console.log(`   📷 附加 Infographic: ${infographicFileName}`);
+    }
+
+    // 如果有 infographic，在 HTML 中添加内联图片
+    let finalHtmlContent = htmlContent;
+    if (hasInfographic) {
+      // 在 HTML 开头添加 infographic 预览
+      const infographicHtml = `
+        <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px;">
+          <h2 style="color: white; margin-bottom: 15px;">📊 今日简报信息图</h2>
+          <img src="cid:infographic" alt="AI投资简报信息图" style="max-width: 100%; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);" />
+        </div>
+      `;
+      finalHtmlContent = htmlContent.replace('<div class="container">', `<div class="container">\n${infographicHtml}`);
+    }
+
     // 发送邮件
     const info = await transporter.sendMail({
       from: `"AI投资简报" <${config.from || config.smtp.user}>`,
       to: config.to,
-      subject: `📊 AI Industry 每日简报 - ${today}`,
+      subject: `📊 AI Industry 每日简报 - ${today}${hasInfographic ? ' [含信息图]' : ''}`,
       text: briefingContent, // 纯文本版本
-      html: htmlContent, // HTML 版本
-      attachments: [
-        {
-          filename: fileName,
-          content: briefingContent,
-          contentType: 'text/markdown',
-        },
-      ],
+      html: finalHtmlContent, // HTML 版本
+      attachments,
     });
 
     console.log(`\n╔══════════════════════════════════════════════════════════════════════╗`);

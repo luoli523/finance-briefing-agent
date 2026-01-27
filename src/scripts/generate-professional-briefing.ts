@@ -19,6 +19,7 @@ import { appConfig } from '../config';
 import type { ComprehensiveAnalysis } from '../analyzers/types';
 import { sendBriefingEmail, getEmailConfig } from '../services/email';
 import { sendBriefingTelegram, getTelegramConfig } from '../services/telegram';
+import { generateInfographic, checkNotebookLMCLI, checkNotebookLMAuth } from './generate-notebooklm-infographic';
 
 // 加载环境变量
 dotenv.config();
@@ -27,6 +28,8 @@ dotenv.config();
 const args = process.argv.slice(2);
 const skipLLM = args.includes('--skip-llm') || args.includes('-s');
 const sendOnly = args.includes('--send-only') || args.includes('-o');
+const withInfographic = args.includes('--with-infographic') || args.includes('-i');
+const skipInfographic = args.includes('--skip-infographic');
 
 // 专业简报的prompt加载
 function loadProfessionalPrompts(): { systemPrompt: string; taskPrompt: string } {
@@ -79,7 +82,15 @@ async function main() {
     }
 
     console.log(`📄 使用已有报告: ${markdownPath}`);
-    await sendReports(markdownPath);
+
+    // 检查是否有已生成的 infographic
+    const infographicPath = path.join(outputDir, `ai-briefing-${today}-infographic.png`);
+    const existingInfographic = fs.existsSync(infographicPath) ? infographicPath : undefined;
+    if (existingInfographic) {
+      console.log(`🖼️  使用已有 Infographic: ${path.basename(infographicPath)}`);
+    }
+
+    await sendReports(markdownPath, existingInfographic);
     return;
   }
 
@@ -235,8 +246,40 @@ async function main() {
   console.log('\n📄 查看报告:');
   console.log(`   cat ${markdownPath}`);
 
-  // 5. 发送报告（邮件和/或 Telegram）
-  await sendReports(markdownPath);
+  // 5. 生成 NotebookLM Infographic（如果启用）
+  let infographicPath: string | undefined;
+  const infographicOutputPath = path.join(outputDir, `ai-briefing-${today}-infographic.png`);
+
+  // 默认启用 infographic，除非指定 --skip-infographic
+  const shouldGenerateInfographic = !skipInfographic;
+
+  if (shouldGenerateInfographic) {
+    console.log('\n🎨 生成 NotebookLM Infographic...');
+
+    // 检查 NotebookLM CLI 是否可用
+    if (!checkNotebookLMCLI()) {
+      console.log('   ⚠️ NotebookLM CLI 未安装，跳过 Infographic 生成');
+      console.log('   提示: pip install notebooklm-cli');
+    } else if (!checkNotebookLMAuth()) {
+      console.log('   ⚠️ NotebookLM 未认证，跳过 Infographic 生成');
+      console.log('   提示: notebooklm login');
+    } else {
+      try {
+        const result = await generateInfographic(markdownPath, infographicOutputPath);
+        if (result.success && result.imagePath) {
+          infographicPath = result.imagePath;
+          console.log(`   ✅ Infographic 生成成功: ${path.basename(infographicPath)}`);
+        } else {
+          console.log(`   ⚠️ Infographic 生成失败: ${result.error}`);
+        }
+      } catch (error: any) {
+        console.log(`   ⚠️ Infographic 生成出错: ${error.message}`);
+      }
+    }
+  }
+
+  // 6. 发送报告（邮件和/或 Telegram）
+  await sendReports(markdownPath, infographicPath);
 
   console.log('\n');
 }
@@ -244,14 +287,17 @@ async function main() {
 /**
  * 发送报告（邮件和/或 Telegram）
  */
-async function sendReports(markdownPath: string): Promise<void> {
+async function sendReports(markdownPath: string, infographicPath?: string): Promise<void> {
   const emailConfig = getEmailConfig();
   const telegramConfig = getTelegramConfig();
 
   // 发送邮件
   if (emailConfig.enabled) {
     console.log('\n📧 正在发送简报邮件...');
-    await sendBriefingEmail(markdownPath);
+    if (infographicPath && fs.existsSync(infographicPath)) {
+      console.log(`   📷 附带 Infographic: ${path.basename(infographicPath)}`);
+    }
+    await sendBriefingEmail(markdownPath, infographicPath);
   }
 
   // 发送 Telegram
