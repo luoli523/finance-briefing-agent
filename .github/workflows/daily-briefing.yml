@@ -100,11 +100,19 @@ jobs:
         run: npm run analyze
         continue-on-error: false
 
-      - name: Generate professional briefing with infographic
+      - name: Generate professional briefing
         run: npm run generate:pro
         continue-on-error: false
 
-      - name: Send email (with infographic)
+      - name: Generate NotebookLM infographic
+        run: npm run generate:nlm-infographic
+        continue-on-error: true
+
+      - name: Generate NotebookLM slides
+        run: npm run generate:nlm-slides
+        continue-on-error: true
+
+      - name: Send email (with infographic and slides)
         run: npm run send-email
 
       - name: Send Telegram
