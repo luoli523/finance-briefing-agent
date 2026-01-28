@@ -262,26 +262,70 @@ async function generateInfographic(
           '--language', 'zh_Hans',
           '--detail', 'detailed',
           '--orientation', 'portrait',
-          '--wait',
+          '--json',
           ...(sourceId ? ['--source', sourceId] : [])
         ]
       : [
           'generate', 'slide-deck',
           '请生成投资简报PPT，包含：主要指数表现、涨跌榜、市场要闻、投资建议。',
           '--language', 'zh_Hans',
-          '--wait',
+          '--json',
           ...(sourceId ? ['--source', sourceId] : [])
         ];
 
+    // 发起生成请求（不等待）
     const generateResult = spawnSync('notebooklm', generateArgs, {
       encoding: 'utf-8',
-      timeout: 300000,
+      timeout: 60000,
     });
 
     if (generateResult.status !== 0) {
       throw new Error(`生成 ${typeLabel} 失败: ${generateResult.stderr || generateResult.stdout}`);
     }
+
+    // 从 JSON 输出中提取 task ID
+    let taskId: string | null = null;
+    try {
+      const genData = JSON.parse(generateResult.stdout);
+      taskId = genData.task_id || genData.artifact_id;
+    } catch {
+      const taskMatch = generateResult.stdout.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+      if (taskMatch) {
+        taskId = taskMatch[1];
+      }
+    }
+
+    // 等待生成完成
+    if (taskId) {
+      console.log(`   ⏳ 等待生成完成 (Task: ${taskId.slice(0, 8)}...)...`);
+      const waitResult = spawnSync('notebooklm', [
+        'artifact', 'wait', taskId,
+        '--timeout', '600'  // 10 分钟超时
+      ], {
+        encoding: 'utf-8',
+        timeout: 620000,
+      });
+
+      if (waitResult.status !== 0) {
+        throw new Error(`等待生成超时: ${waitResult.stderr || waitResult.stdout}`);
+      }
+    } else {
+      // 无法获取 task ID，等待固定时间
+      console.log(`   ⏳ 等待生成完成...`);
+      await sleep(30000);
+    }
+
     console.log(`   ✅ ${typeLabel} 生成成功`);
+
+    // 4.5 重命名 artifact 以便在 NotebookLM 中区分
+    if (taskId) {
+      const artifactName = `ai-briefing-${targetDate}-${artifactType}`;
+      console.log(`   📝 重命名 Artifact: ${artifactName}`);
+      spawnSync('notebooklm', ['artifact', 'rename', taskId, artifactName], {
+        encoding: 'utf-8',
+        timeout: 30000,
+      });
+    }
 
     // 5. 下载生成的文件
     console.log(`📥 下载 ${typeLabel} 到: ${outputPath}`);
@@ -336,9 +380,21 @@ async function main() {
   console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
 
   // 解析命令行参数
+  // 支持: npm run infographic [date] [type]
+  //       npm run slides [date]
   const args = process.argv.slice(2);
-  const targetDate = args[0] || new Date().toISOString().split('T')[0];
-  const artifactType = (args[1] === 'slides' || args[1] === 'slide-deck') ? 'slide-deck' : 'infographic';
+  const today = new Date().toISOString().split('T')[0];
+
+  let targetDate = today;
+  let artifactType: 'infographic' | 'slide-deck' = 'infographic';
+
+  for (const arg of args) {
+    if (arg === 'slides' || arg === 'slide-deck') {
+      artifactType = 'slide-deck';
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(arg)) {
+      targetDate = arg;
+    }
+  }
 
   // 1. 检查 NotebookLM CLI
   console.log('🔍 检查 NotebookLM CLI...');

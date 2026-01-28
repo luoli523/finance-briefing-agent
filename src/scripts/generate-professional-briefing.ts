@@ -17,7 +17,6 @@ import { ProfessionalBriefingGenerator } from '../generators/professional-briefi
 import { LLMEnhancer } from '../analyzers/llm/enhancer';
 import { appConfig } from '../config';
 import type { ComprehensiveAnalysis } from '../analyzers/types';
-import { generateInfographic, checkNotebookLMCLI, checkNotebookLMAuth } from './generate-notebooklm-infographic';
 
 // 加载环境变量
 dotenv.config();
@@ -26,8 +25,6 @@ dotenv.config();
 const args = process.argv.slice(2);
 const skipLLM = args.includes('--skip-llm') || args.includes('-s');
 const sendOnly = args.includes('--send-only') || args.includes('-o');
-const withInfographic = args.includes('--with-infographic') || args.includes('-i');
-const skipInfographic = args.includes('--skip-infographic');
 
 // 专业简报的prompt加载
 function loadProfessionalPrompts(): { systemPrompt: string; taskPrompt: string } {
@@ -238,42 +235,12 @@ async function main() {
   console.log('\n📄 查看报告:');
   console.log(`   cat ${markdownPath}`);
 
-  // 5. 生成 NotebookLM Infographic（如果启用）
-  let infographicPath: string | undefined;
-  const infographicOutputPath = path.join(outputDir, `ai-briefing-${today}-infographic.png`);
-
-  // 默认启用 infographic，除非指定 --skip-infographic
-  const shouldGenerateInfographic = !skipInfographic;
-
-  if (shouldGenerateInfographic) {
-    console.log('\n🎨 生成 NotebookLM Infographic...');
-
-    // 检查 NotebookLM CLI 是否可用
-    if (!checkNotebookLMCLI()) {
-      console.log('   ⚠️ NotebookLM CLI 未安装，跳过 Infographic 生成');
-      console.log('   提示: pip install notebooklm-cli');
-    } else if (!checkNotebookLMAuth()) {
-      console.log('   ⚠️ NotebookLM 未认证，跳过 Infographic 生成');
-      console.log('   提示: notebooklm login');
-    } else {
-      try {
-        const result = await generateInfographic(markdownPath, infographicOutputPath);
-        if (result.success && result.imagePath) {
-          infographicPath = result.imagePath;
-          console.log(`   ✅ Infographic 生成成功: ${path.basename(infographicPath)}`);
-        } else {
-          console.log(`   ⚠️ Infographic 生成失败: ${result.error}`);
-        }
-      } catch (error: any) {
-        console.log(`   ⚠️ Infographic 生成出错: ${error.message}`);
-      }
-    }
-  }
-
-  // 6. 提示发送命令
-  console.log('\n💡 发送报告:');
-  console.log('   npm run send-email    # 发送邮件（含 Infographic）');
-  console.log('   npm run send-telegram # 发送 Telegram');
+  // 5. 提示后续步骤
+  console.log('\n💡 后续步骤:');
+  console.log('   npm run generate:nlm-infographic  # 生成 NotebookLM 信息图');
+  console.log('   npm run generate:nlm-slides       # 生成 NotebookLM Slides');
+  console.log('   npm run send-email                # 发送邮件');
+  console.log('   npm run send-telegram             # 发送 Telegram');
   console.log('\n');
 }
 

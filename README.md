@@ -74,12 +74,14 @@ npm run daily
 3. **🤖 LLM 深度分析** (~90秒) - GPT-5.2 产业链洞察
 4. **📄 生成简报** (~1秒) - 专业投资报告
 5. **🎨 生成信息图** (~60秒) - NotebookLM 中文可视化
-6. **📧 发送邮件** - 含信息图附件
-7. **📱 发送 Telegram** - 简报摘要
+6. **📑 生成 Slides** (~60秒) - NotebookLM PPT
+7. **📧 发送邮件** - 含信息图和 Slides 附件
+8. **📱 发送 Telegram** - 简报摘要
 
 生成的文件：
 - `output/ai-briefing-YYYY-MM-DD.md` - Markdown 简报
 - `output/ai-briefing-YYYY-MM-DD-infographic.png` - 信息图
+- `output/ai-briefing-YYYY-MM-DD-slide-deck.pdf` - Slides
 
 ---
 
@@ -198,9 +200,9 @@ npm run workflow:full
 
 | 命令 | 说明 | 包含步骤 |
 |------|------|----------|
-| `npm run daily` | 完整流程 | 收集 → 分析 → 生成 → 邮件 → Telegram |
-| `npm run workflow:full` | 同上 | 收集 → 分析 → 生成 → 邮件 → Telegram |
-| `npm run workflow:pro` | 只生成不发送 | 收集 → 分析 → 生成 |
+| `npm run daily` | 完整流程 | 收集 → 分析 → 生成 → 信息图 → Slides → 邮件 → Telegram |
+| `npm run workflow:full` | 同上 | 收集 → 分析 → 生成 → 信息图 → Slides → 邮件 → Telegram |
+| `npm run workflow:pro` | 只生成简报 | 收集 → 分析 → 生成 |
 
 ### 独立命令
 
@@ -208,11 +210,12 @@ npm run workflow:full
 |------|------|
 | `npm run collect` | 收集市场数据 |
 | `npm run analyze` | 分析数据 |
-| `npm run generate:pro` | 生成简报 + 信息图（不发送） |
+| `npm run generate:pro` | 生成简报（不含信息图/Slides） |
 | `npm run generate:quick` | 快速生成（跳过 LLM） |
-| `npm run send-email` | 发送邮件（自动含信息图） |
+| `npm run send-email` | 发送邮件（自动含信息图+Slides） |
 | `npm run send-telegram` | 发送 Telegram |
-| `npm run infographic` | 单独生成 NotebookLM 信息图（重试用） |
+| `npm run generate:nlm-infographic` | 单独生成 NotebookLM 信息图 |
+| `npm run generate:nlm-slides` | 生成 NotebookLM Slides (PPT) |
 
 ### 分步执行
 
@@ -223,13 +226,19 @@ npm run collect
 # 2. 数据分析
 npm run analyze
 
-# 3. 生成简报和信息图
+# 3. 生成简报
 npm run generate:pro
 
-# 4. 发送邮件（自动附加信息图）
+# 4. 生成 NotebookLM 信息图
+npm run generate:nlm-infographic
+
+# 5. 生成 NotebookLM Slides
+npm run generate:nlm-slides
+
+# 6. 发送邮件（自动附加信息图和 Slides）
 npm run send-email
 
-# 5. 发送 Telegram
+# 7. 发送 Telegram
 npm run send-telegram
 ```
 
@@ -239,13 +248,14 @@ npm run send-telegram
 # 快速重新生成（跳过 LLM 分析，使用已有 insights）
 npm run generate:quick
 
-# 单独生成信息图
+# 单独生成信息图/Slides
 npm run generate:nlm-infographic
 npm run generate:nlm-infographic 2026-01-25  # 指定日期
+npm run generate:nlm-slides
+npm run generate:nlm-slides 2026-01-25       # 指定日期
 
 # 命令行参数
 npm run generate:pro -- --skip-llm         # 跳过 LLM
-npm run generate:pro -- --skip-infographic # 跳过信息图生成
 ```
 
 ### 单独收集器
@@ -261,25 +271,22 @@ npm run collect:rss      # 政府RSS
 ### 发送命令
 
 ```bash
-npm run send-email              # 发送邮件（自动含信息图）
+npm run send-email              # 发送邮件（自动含信息图+Slides）
 npm run send-email 2026-01-25   # 发送指定日期邮件
 npm run send-telegram           # 发送 Telegram
 npm run send-telegram 2026-01-25
 ```
 
-### 信息图生成
+### 信息图与 Slides 生成
 
 ```bash
 # NotebookLM 信息图 - 自动集成到 daily workflow
-npm run infographic                # 当天简报（推荐，简短命令）
-npm run infographic 2026-01-25     # 指定日期
+npm run generate:nlm-infographic              # 当天简报
+npm run generate:nlm-infographic 2026-01-25   # 指定日期
 
-# 完整命令（同上）
-npm run generate:nlm-infographic          # 当天简报
-npm run generate:nlm-infographic 2026-01-25  # 指定日期
-
-# 本地 HTML 信息图
-npm run generate:infographic    # 生成交互式 HTML 信息图
+# NotebookLM Slides (PPT)
+npm run generate:nlm-slides                  # 当天简报
+npm run generate:nlm-slides 2026-01-25       # 指定日期
 ```
 
 ### 其他命令
@@ -451,22 +458,24 @@ notebooklm list
 
 **手动模式**：
 ```bash
-# 生成当天简报的信息图（推荐简短命令）
-npm run infographic
+# 生成当天简报的信息图
+npm run generate:nlm-infographic
 
 # 生成指定日期的信息图
-npm run infographic 2026-01-25
+npm run generate:nlm-infographic 2026-01-25
+
+# 生成 Slides (PPT)
+npm run generate:nlm-slides
+npm run generate:nlm-slides 2026-01-25
 ```
 
-**跳过信息图**：如果不需要信息图，可加参数跳过
-```bash
-npm run generate:pro -- --skip-infographic
-```
+**注意**：信息图和 Slides 现在是独立步骤，不包含在 `generate:pro` 中。如需跳过，直接不运行对应命令即可。
 
 ### 输出示例
 
-信息图会自动保存到 `output/` 目录：
-- 文件名：`ai-briefing-YYYY-MM-DD-infographic.png`
+文件会自动保存到 `output/` 目录：
+- 信息图：`ai-briefing-YYYY-MM-DD-infographic.png`
+- Slides：`ai-briefing-YYYY-MM-DD-slide-deck.pdf`
 - 内容：主要指数、产业链股票涨跌、市场要闻、投资建议
 
 ### 注意事项
@@ -512,14 +521,14 @@ EMAIL_SMTP_PASS=your-app-password
 **单独发送邮件（不重新生成简报）：**
 
 ```bash
-# 发送当天简报（自动附加信息图，如果存在）
+# 发送当天简报（自动附加信息图和 Slides，如果存在）
 npm run send-email
 
 # 发送指定日期简报
 npm run send-email 2026-01-25
 ```
 
-> 📷 如果对应日期的信息图文件 (`ai-briefing-YYYY-MM-DD-infographic.png`) 存在，会自动内嵌到邮件中。
+> 📷 如果对应日期的信息图 (`ai-briefing-YYYY-MM-DD-infographic.png`) 和 Slides (`ai-briefing-YYYY-MM-DD-slide-deck.pdf`) 存在，会自动附加到邮件中。
 
 ### 方式二：使用 Claude Code + Composio（交互式）
 

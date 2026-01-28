@@ -46,9 +46,10 @@ export function getEmailConfig(): EmailConfig {
  * 发送简报邮件
  * @param briefingPath 简报文件路径
  * @param infographicPath 可选的 infographic 图片路径
+ * @param slidesPath 可选的 slides PDF 路径
  * @returns 是否发送成功
  */
-export async function sendBriefingEmail(briefingPath: string, infographicPath?: string): Promise<boolean> {
+export async function sendBriefingEmail(briefingPath: string, infographicPath?: string, slidesPath?: string): Promise<boolean> {
   const config = getEmailConfig();
 
   if (!config.enabled) {
@@ -113,6 +114,19 @@ export async function sendBriefingEmail(briefingPath: string, infographicPath?: 
       console.log(`   📷 附加 Infographic: ${infographicFileName}`);
     }
 
+    // 添加 Slides PDF 附件（如果存在）
+    let hasSlides = false;
+    if (slidesPath && fs.existsSync(slidesPath)) {
+      const slidesFileName = path.basename(slidesPath);
+      attachments.push({
+        filename: slidesFileName,
+        path: slidesPath,
+        contentType: 'application/pdf',
+      });
+      hasSlides = true;
+      console.log(`   📑 附加 Slides: ${slidesFileName}`);
+    }
+
     // 如果有 infographic，在 HTML 中添加内联图片
     let finalHtmlContent = htmlContent;
     if (hasInfographic) {
@@ -130,7 +144,7 @@ export async function sendBriefingEmail(briefingPath: string, infographicPath?: 
     const info = await transporter.sendMail({
       from: `"AI投资简报" <${config.from || config.smtp.user}>`,
       to: config.to,
-      subject: `📊 AI Industry 每日简报 - ${today}${hasInfographic ? ' [含信息图]' : ''}`,
+      subject: `📊 AI Industry 每日简报 - ${today}${hasInfographic || hasSlides ? ' [含' + (hasInfographic ? '信息图' : '') + (hasInfographic && hasSlides ? '+' : '') + (hasSlides ? 'Slides' : '') + ']' : ''}`,
       text: briefingContent, // 纯文本版本
       html: finalHtmlContent, // HTML 版本
       attachments,

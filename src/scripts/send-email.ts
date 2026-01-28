@@ -73,10 +73,24 @@ async function main() {
   } else {
     console.log(`ℹ️  无 Infographic 文件`);
   }
+
+  // 查找对应的 slides PDF 文件
+  const slidesPath = path.join(outputDir, `ai-briefing-${targetDate}-slide-deck.pdf`);
+  const hasSlides = fs.existsSync(slidesPath);
+
+  if (hasSlides) {
+    console.log(`📑 Slides: ai-briefing-${targetDate}-slide-deck.pdf`);
+  } else {
+    console.log(`ℹ️  无 Slides 文件`);
+  }
   console.log('');
 
-  // 发送邮件（带 infographic，如果存在）
-  const success = await sendBriefingEmail(briefingPath, hasInfographic ? infographicPath : undefined);
+  // 发送邮件（带 infographic 和 slides，如果存在）
+  const success = await sendBriefingEmail(
+    briefingPath,
+    hasInfographic ? infographicPath : undefined,
+    hasSlides ? slidesPath : undefined
+  );
 
   if (!success) {
     process.exit(1);
