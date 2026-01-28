@@ -2,10 +2,12 @@
  * NotebookLM Infographic 生成脚本
  *
  * 使用 NotebookLM CLI 基于当日简报生成中文信息图
+ * 复用固定的 "AI投资简报" notebook，避免创建过多临时 notebook
  *
  * 用法：
- *   npm run generate:nlm-infographic          # 使用当天简报
- *   npm run generate:nlm-infographic 2026-01-25  # 使用指定日期简报
+ *   npm run infographic                    # 使用当天简报生成 infographic
+ *   npm run infographic 2026-01-25         # 使用指定日期简报
+ *   npm run infographic 2026-01-25 slides  # 生成 slides 而不是 infographic
  */
 
 import * as fs from 'fs';
@@ -14,6 +16,9 @@ import { execSync, spawnSync } from 'child_process';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
+
+// 固定的 Notebook 名称
+const NOTEBOOK_NAME = 'AI投资简报';
 
 interface InfographicResult {
   success: boolean;
@@ -40,7 +45,6 @@ function checkNotebookLMCLI(): boolean {
 function checkNotebookLMAuth(): boolean {
   try {
     const result = execSync('notebooklm status 2>&1', { encoding: 'utf-8' });
-    // 如果没有报错，说明已认证
     return !result.includes('not authenticated') && !result.includes('login');
   } catch {
     return false;
@@ -48,34 +52,131 @@ function checkNotebookLMAuth(): boolean {
 }
 
 /**
- * 使用 NotebookLM 生成 infographic
+ * 查找名为 NOTEBOOK_NAME 的 notebook
+ * @returns notebook ID 或 null
  */
-async function generateInfographic(briefingPath: string, outputPath: string): Promise<InfographicResult> {
-  const today = new Date().toISOString().split('T')[0];
-  const notebookTitle = `AI投资简报 ${today}`;
+function findNotebook(): string | null {
+  try {
+    // 使用 --json 格式获取更精确的数据
+    const result = execSync('notebooklm list --json 2>&1', { encoding: 'utf-8' });
+    try {
+      const data = JSON.parse(result);
+      // 格式: { notebooks: [...] }
+      const notebooks = data.notebooks || data;
+      for (const nb of notebooks) {
+        // 精确匹配 "AI投资简报"（不带日期后缀）
+        if (nb.title === NOTEBOOK_NAME) {
+          return nb.id;
+        }
+      }
+    } catch {
+      // JSON 解析失败，回退到文本解析
+      const lines = result.split('\n');
+      for (const line of lines) {
+        if (line.includes('│') && line.includes(NOTEBOOK_NAME)) {
+          const parts = line.split('│').map(p => p.trim());
+          if (parts[2] === NOTEBOOK_NAME) {
+            const idMatch = parts[1].match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+            if (idMatch) {
+              return idMatch[1];
+            }
+            const shortId = parts[1].replace('…', '').replace(/[^0-9a-f-]/gi, '').trim();
+            if (shortId.length >= 8) {
+              return shortId;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
+/**
+ * 创建新的 notebook
+ * @returns notebook ID
+ */
+function createNotebook(): string {
+  const result = spawnSync('notebooklm', ['create', NOTEBOOK_NAME], {
+    encoding: 'utf-8',
+    timeout: 30000,
+  });
+
+  if (result.status !== 0) {
+    throw new Error(`创建 Notebook 失败: ${result.stderr || result.stdout}`);
+  }
+
+  const idMatch = result.stdout.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+  if (!idMatch) {
+    throw new Error('无法获取新创建的 Notebook ID');
+  }
+  return idMatch[1];
+}
+
+/**
+ * 检查指定日期的简报是否已上传
+ * @param targetDate 目标日期 (YYYY-MM-DD)
+ * @returns source ID 或 null
+ */
+function findExistingSource(targetDate: string): string | null {
+  try {
+    const result = execSync('notebooklm source list --json 2>&1', { encoding: 'utf-8' });
+    // 匹配 "ai-briefing-2026-01-28" 或 "ai-briefing-2026-01-28.md"
+    const sourcePattern = `ai-briefing-${targetDate}`;
+
+    try {
+      const data = JSON.parse(result);
+      const sources = data.sources || [];
+      for (const src of sources) {
+        // 检查 title 是否包含目标日期
+        if (src.title && src.title.includes(sourcePattern)) {
+          return src.id;
+        }
+      }
+    } catch {
+      // JSON 解析失败，回退到文本解析
+      const lines = result.split('\n');
+      for (const line of lines) {
+        if (line.includes('│') && line.includes(sourcePattern)) {
+          const parts = line.split('│').map(p => p.trim());
+          const shortId = parts[1].replace('…', '').trim();
+          if (shortId.length >= 8) {
+            return shortId;
+          }
+        }
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 使用 NotebookLM 生成 infographic 或 slides
+ */
+async function generateInfographic(
+  briefingPath: string,
+  outputPath: string,
+  targetDate: string,
+  artifactType: 'infographic' | 'slide-deck' = 'infographic'
+): Promise<InfographicResult> {
   console.log('\n🎨 [NotebookLM] 开始生成 Infographic...\n');
 
   try {
-    // 1. 创建新的 Notebook
-    console.log(`📓 创建 Notebook: ${notebookTitle}`);
-    const createResult = spawnSync('notebooklm', ['create', notebookTitle], {
-      encoding: 'utf-8',
-      timeout: 30000,
-    });
+    // 1. 查找或创建 Notebook
+    let notebookId = findNotebook();
 
-    if (createResult.status !== 0) {
-      throw new Error(`创建 Notebook 失败: ${createResult.stderr || createResult.stdout}`);
+    if (notebookId) {
+      console.log(`📓 找到已有 Notebook: ${NOTEBOOK_NAME}`);
+      console.log(`   ID: ${notebookId}`);
+    } else {
+      console.log(`📓 创建新 Notebook: ${NOTEBOOK_NAME}`);
+      notebookId = createNotebook();
+      console.log(`   ✅ Notebook ID: ${notebookId}`);
     }
-
-    // 提取 notebook ID
-    const createOutput = createResult.stdout;
-    const notebookIdMatch = createOutput.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
-    if (!notebookIdMatch) {
-      throw new Error('无法获取 Notebook ID');
-    }
-    const notebookId = notebookIdMatch[1];
-    console.log(`   ✅ Notebook ID: ${notebookId}`);
 
     // 2. 设置当前 Notebook
     console.log(`📌 设置当前 Notebook...`);
@@ -88,58 +189,115 @@ async function generateInfographic(briefingPath: string, outputPath: string): Pr
       throw new Error(`设置 Notebook 失败: ${useResult.stderr || useResult.stdout}`);
     }
 
-    // 3. 上传简报文件
-    console.log(`📤 上传简报文件: ${path.basename(briefingPath)}`);
-    const addResult = spawnSync('notebooklm', [
-      'source', 'add', briefingPath,
-      '--title', `AI投资简报 ${today}`
-    ], {
-      encoding: 'utf-8',
-      timeout: 60000,
-    });
+    // 3. 检查当天简报是否已上传，获取 source ID
+    let sourceId = findExistingSource(targetDate);
 
-    if (addResult.status !== 0) {
-      throw new Error(`上传文件失败: ${addResult.stderr || addResult.stdout}`);
+    if (sourceId) {
+      console.log(`📄 简报已存在: ai-briefing-${targetDate}`);
+      console.log(`   Source ID: ${sourceId}`);
+    } else {
+      // 上传简报文件
+      console.log(`📤 上传简报文件: ${path.basename(briefingPath)}`);
+      const addResult = spawnSync('notebooklm', [
+        'source', 'add', briefingPath,
+        '--title', `ai-briefing-${targetDate}`,
+        '--json'
+      ], {
+        encoding: 'utf-8',
+        timeout: 120000,
+      });
+
+      if (addResult.status !== 0) {
+        throw new Error(`上传文件失败: ${addResult.stderr || addResult.stdout}`);
+      }
+
+      // 从 JSON 输出中提取 source ID
+      try {
+        const addData = JSON.parse(addResult.stdout);
+        sourceId = addData.source_id || addData.id;
+      } catch {
+        // 回退到正则匹配
+        const sourceIdMatch = addResult.stdout.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+        if (sourceIdMatch) {
+          sourceId = sourceIdMatch[1];
+        }
+      }
+      console.log(`   ✅ 文件上传成功`);
+
+      // 等待 source 处理完成
+      if (sourceId) {
+        console.log(`⏳ 等待 NotebookLM 处理文件...`);
+        console.log(`   Source ID: ${sourceId}`);
+        const waitResult = spawnSync('notebooklm', [
+          'source', 'wait', sourceId,
+          '--timeout', '120'
+        ], {
+          encoding: 'utf-8',
+          timeout: 130000,
+        });
+
+        if (waitResult.status !== 0) {
+          console.log(`   ⚠️ 等待超时，继续尝试生成...`);
+        } else {
+          console.log(`   ✅ 文件处理完成`);
+        }
+      } else {
+        // 无法提取 source ID，等待固定时间
+        console.log(`⏳ 等待 NotebookLM 处理文件...`);
+        await sleep(5000);
+      }
     }
-    console.log(`   ✅ 文件上传成功`);
 
-    // 等待处理完成
-    console.log(`⏳ 等待 NotebookLM 处理文件...`);
-    await sleep(5000);
+    // 4. 生成 Infographic 或 Slides（仅使用当天的简报 source）
+    const typeLabel = artifactType === 'slide-deck' ? 'Slides' : 'Infographic';
+    console.log(`🎨 生成中文${typeLabel}...`);
+    if (sourceId) {
+      console.log(`   📌 仅使用 Source: ai-briefing-${targetDate}`);
+    }
 
-    // 4. 生成 Infographic
-    console.log(`🎨 生成中文信息图...`);
-    const generateResult = spawnSync('notebooklm', [
-      'generate', 'infographic',
-      '请生成信息图，重点展示：主要指数表现、AI产业链股票涨跌情况、市场宏观要闻、投资建议与策略。使用清晰的可视化布局。',
-      '--language', 'zh_Hans',
-      '--detail', 'detailed',
-      '--orientation', 'portrait',
-      '--wait'
-    ], {
+    const generateArgs = artifactType === 'infographic'
+      ? [
+          'generate', 'infographic',
+          '请生成信息图，重点展示：主要指数表现、AI产业链股票涨跌情况、市场宏观要闻、投资建议与策略。使用清晰的可视化布局。',
+          '--language', 'zh_Hans',
+          '--detail', 'detailed',
+          '--orientation', 'portrait',
+          '--wait',
+          ...(sourceId ? ['--source', sourceId] : [])
+        ]
+      : [
+          'generate', 'slide-deck',
+          '请生成投资简报PPT，包含：主要指数表现、涨跌榜、市场要闻、投资建议。',
+          '--language', 'zh_Hans',
+          '--wait',
+          ...(sourceId ? ['--source', sourceId] : [])
+        ];
+
+    const generateResult = spawnSync('notebooklm', generateArgs, {
       encoding: 'utf-8',
-      timeout: 300000, // 5 分钟超时
+      timeout: 300000,
     });
 
     if (generateResult.status !== 0) {
-      throw new Error(`生成 Infographic 失败: ${generateResult.stderr || generateResult.stdout}`);
+      throw new Error(`生成 ${typeLabel} 失败: ${generateResult.stderr || generateResult.stdout}`);
     }
-    console.log(`   ✅ Infographic 生成成功`);
+    console.log(`   ✅ ${typeLabel} 生成成功`);
 
-    // 5. 下载 Infographic
-    console.log(`📥 下载 Infographic 到: ${outputPath}`);
+    // 5. 下载生成的文件
+    console.log(`📥 下载 ${typeLabel} 到: ${outputPath}`);
     const downloadResult = spawnSync('notebooklm', [
-      'download', 'infographic', outputPath
+      'download', artifactType, outputPath,
+      '--force',  // 覆盖已有文件
+      '--latest'  // 下载最新的 artifact
     ], {
       encoding: 'utf-8',
       timeout: 60000,
     });
 
     if (downloadResult.status !== 0) {
-      throw new Error(`下载 Infographic 失败: ${downloadResult.stderr || downloadResult.stdout}`);
+      throw new Error(`下载 ${typeLabel} 失败: ${downloadResult.stderr || downloadResult.stdout}`);
     }
 
-    // 验证文件是否存在
     if (!fs.existsSync(outputPath)) {
       throw new Error('下载完成但文件不存在');
     }
@@ -180,12 +338,13 @@ async function main() {
   // 解析命令行参数
   const args = process.argv.slice(2);
   const targetDate = args[0] || new Date().toISOString().split('T')[0];
+  const artifactType = (args[1] === 'slides' || args[1] === 'slide-deck') ? 'slide-deck' : 'infographic';
 
   // 1. 检查 NotebookLM CLI
   console.log('🔍 检查 NotebookLM CLI...');
   if (!checkNotebookLMCLI()) {
     console.error('❌ NotebookLM CLI 未安装');
-    console.error('   请先安装: pip install notebooklm-cli');
+    console.error('   请先安装: pip install notebooklm-py');
     process.exit(1);
   }
   console.log('   ✅ NotebookLM CLI 已安装');
@@ -206,7 +365,6 @@ async function main() {
   if (!fs.existsSync(briefingPath)) {
     console.error(`\n❌ 未找到简报文件: ai-briefing-${targetDate}.md`);
 
-    // 列出可用的简报
     if (fs.existsSync(outputDir)) {
       const files = fs.readdirSync(outputDir)
         .filter(f => f.startsWith('ai-briefing-') && f.endsWith('.md'))
@@ -218,7 +376,7 @@ async function main() {
         console.log('\n📁 可用的简报文件:');
         files.forEach(f => {
           const date = f.replace('ai-briefing-', '').replace('.md', '');
-          console.log(`   npm run generate:nlm-infographic ${date}`);
+          console.log(`   npm run infographic ${date}`);
         });
       }
     }
@@ -226,29 +384,30 @@ async function main() {
   }
 
   console.log(`📄 简报文件: ai-briefing-${targetDate}.md`);
+  console.log(`🎯 生成类型: ${artifactType === 'slide-deck' ? 'Slides (PPT)' : 'Infographic'}`);
 
-  // 4. 生成 Infographic
-  const infographicPath = path.join(outputDir, `ai-briefing-${targetDate}-infographic.png`);
+  // 4. 生成 Infographic 或 Slides
+  const ext = artifactType === 'slide-deck' ? 'pdf' : 'png';
+  const outputFile = path.join(outputDir, `ai-briefing-${targetDate}-${artifactType}.${ext}`);
 
-  const result = await generateInfographic(briefingPath, infographicPath);
+  const result = await generateInfographic(briefingPath, outputFile, targetDate, artifactType);
 
   if (result.success) {
     console.log('\n╔══════════════════════════════════════════════════════════════════════╗');
-    console.log('║         ✅ Infographic 生成成功！                                    ║');
+    console.log(`║         ✅ ${artifactType === 'slide-deck' ? 'Slides' : 'Infographic'} 生成成功！                                    ║`);
     console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
 
     console.log('📁 生成的文件:');
     console.log(`   🖼️  ${result.imagePath}`);
-    console.log(`   📓 Notebook ID: ${result.notebookId}`);
+    console.log(`   📓 Notebook: ${NOTEBOOK_NAME}`);
 
     console.log('\n🌐 打开方式:');
     console.log(`   open ${result.imagePath}`);
 
-    // 导出路径供其他脚本使用
     process.env.INFOGRAPHIC_PATH = result.imagePath;
 
   } else {
-    console.error('\n❌ Infographic 生成失败');
+    console.error('\n❌ 生成失败');
     console.error(`   错误: ${result.error}`);
     process.exit(1);
   }
