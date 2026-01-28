@@ -212,7 +212,7 @@ npm run workflow:full
 | `npm run generate:quick` | 快速生成（跳过 LLM） |
 | `npm run send-email` | 发送邮件（自动含信息图） |
 | `npm run send-telegram` | 发送 Telegram |
-| `npm run generate:nlm-infographic` | 单独生成信息图 |
+| `npm run infographic` | 单独生成 NotebookLM 信息图（重试用） |
 
 ### 分步执行
 
@@ -270,7 +270,11 @@ npm run send-telegram 2026-01-25
 ### 信息图生成
 
 ```bash
-# NotebookLM 信息图（推荐）- 自动集成到 daily workflow
+# NotebookLM 信息图 - 自动集成到 daily workflow
+npm run infographic                # 当天简报（推荐，简短命令）
+npm run infographic 2026-01-25     # 指定日期
+
+# 完整命令（同上）
 npm run generate:nlm-infographic          # 当天简报
 npm run generate:nlm-infographic 2026-01-25  # 指定日期
 
@@ -447,11 +451,11 @@ notebooklm list
 
 **手动模式**：
 ```bash
-# 生成当天简报的信息图
-npm run generate:nlm-infographic
+# 生成当天简报的信息图（推荐简短命令）
+npm run infographic
 
 # 生成指定日期的信息图
-npm run generate:nlm-infographic 2026-01-25
+npm run infographic 2026-01-25
 ```
 
 **跳过信息图**：如果不需要信息图，可加参数跳过

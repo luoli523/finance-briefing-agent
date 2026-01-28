@@ -24,6 +24,7 @@
     "send": "tsx src/scripts/generate-professional-briefing.ts --send-only",
     "generate:infographic": "tsx src/scripts/generate-infographic-enhanced.ts",
     "generate:nlm-infographic": "tsx src/scripts/generate-notebooklm-infographic.ts",
+    "infographic": "tsx src/scripts/generate-notebooklm-infographic.ts",
     "workflow:intelligent": "tsx src/scripts/run-intelligent-workflow.ts",
     "workflow:pro": "npm run collect && npm run analyze && npm run generate:pro",
     "workflow:full": "npm run collect && npm run analyze && npm run generate:pro && npm run send-email && npm run send-telegram",
@@ -52,6 +53,7 @@
   "devDependencies": {
     "@types/node": "^20.10.0",
     "@types/nodemailer": "^7.0.5",
+    "puppeteer": "^24.36.1",
     "tsx": "^4.7.0",
     "typescript": "^5.3.0"
   }
