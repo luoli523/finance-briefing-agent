@@ -225,6 +225,7 @@ export class ProfessionalBriefingGenerator {
    */
   private processStockData(): void {
     const marketData = this.analysis.market;
+    if (!marketData) return;
     
     // 从各个数据源获取股票数据
     const allQuotes: any[] = [];
