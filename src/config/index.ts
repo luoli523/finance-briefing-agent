@@ -386,6 +386,15 @@ export const appConfig = {
     timeout: parseInt(process.env.LLM_TIMEOUT || '60000'),
   },
 
+  // 智慧资金数据源配置 (全部使用免费 API)
+  // - 国会交易: Finnhub (复用 finnhub.apiKey)
+  // - 对冲基金 13F: SEC EDGAR (免费公开数据)
+  // - 社交情绪: ApeWisdom (免费 Reddit 数据)
+  // - 预测市场: Polymarket (免费 API)
+  congressTrading: {
+    daysBack: parseInt(process.env.CONGRESS_DAYS_BACK || '30'),
+  },
+
   // 数据目录
   paths: {
     data: path.resolve(process.cwd(), 'data'),

@@ -328,6 +328,98 @@ function buildDataSummary(analysis: ComprehensiveAnalysis): string {
     summary += `\n`;
   }
   
+  // 智慧资金数据
+  if (analysis.smartMoney) {
+    summary += `## 智慧资金数据\n\n`;
+    
+    // 国会交易
+    if (analysis.smartMoney.congressTrading) {
+      const ct = analysis.smartMoney.congressTrading;
+      summary += `### 国会交易\n`;
+      summary += `- 总交易: ${ct.totalTrades || 0} 笔\n`;
+      summary += `- 买入: ${ct.buyTrades || 0} 笔, 卖出: ${ct.sellTrades || 0} 笔\n`;
+      summary += `- 整体情绪: ${ct.netSentiment || 'N/A'}\n`;
+      if (ct.topBuys && ct.topBuys.length > 0) {
+        summary += `- 热门买入: ${ct.topBuys.slice(0, 5).map((b: any) => `${b.ticker}(${b.buyCount}笔)`).join(', ')}\n`;
+      }
+      if (ct.notableTrades && ct.notableTrades.length > 0) {
+        summary += `- 重要交易:\n`;
+        ct.notableTrades.slice(0, 5).forEach((t: any) => {
+          summary += `  - ${t.politician} (${t.party}): ${t.type === 'buy' ? '买入' : '卖出'} ${t.ticker}, ${t.amount}\n`;
+        });
+      }
+      summary += `\n`;
+    }
+    
+    // 对冲基金持仓
+    if (analysis.smartMoney.hedgeFund) {
+      const hf = analysis.smartMoney.hedgeFund;
+      summary += `### 对冲基金持仓 (13F)\n`;
+      summary += `- 追踪基金: ${hf.totalFundsTracked || 0} 家\n`;
+      summary += `- 整体情绪: ${hf.aggregatedSentiment || 'N/A'}\n`;
+      if (hf.topHoldings && hf.topHoldings.length > 0) {
+        summary += `- 机构共识持仓:\n`;
+        hf.topHoldings.slice(0, 10).forEach((h: any) => {
+          summary += `  - ${h.ticker}: ${h.fundsHolding}家基金持有, 总市值$${(h.totalValue / 1e9).toFixed(2)}B\n`;
+        });
+      }
+      if (hf.significantChanges && hf.significantChanges.length > 0) {
+        summary += `- 显著变动:\n`;
+        hf.significantChanges.slice(0, 5).forEach((c: any) => {
+          summary += `  - ${c.fund}: ${c.ticker} ${c.action}\n`;
+        });
+      }
+      summary += `\n`;
+    }
+    
+    // 预测市场
+    if (analysis.smartMoney.predictionMarket) {
+      const pm = analysis.smartMoney.predictionMarket;
+      summary += `### 预测市场 (Polymarket)\n`;
+      summary += `- 监测市场: ${pm.totalMarkets || 0} 个\n`;
+      summary += `- 市场情绪: ${pm.marketSentiment || 'N/A'}\n`;
+      if (pm.keyPredictions && pm.keyPredictions.length > 0) {
+        summary += `- 关键预测:\n`;
+        pm.keyPredictions.slice(0, 5).forEach((p: any) => {
+          summary += `  - ${p.question}: ${(p.probability * 100).toFixed(0)}%\n`;
+        });
+      }
+      summary += `\n`;
+    }
+    
+    // 社交情绪
+    if (analysis.smartMoney.socialSentiment) {
+      const ss = analysis.smartMoney.socialSentiment;
+      summary += `### 社交情绪 (Reddit/X.com)\n`;
+      summary += `- 整体情绪: ${ss.overallSentiment || 'N/A'}, 得分: ${ss.sentimentScore?.toFixed(0) || 'N/A'}\n`;
+      if (ss.mostBullish && ss.mostBullish.length > 0) {
+        summary += `- 最受看好: ${ss.mostBullish.slice(0, 5).map((s: any) => `${s.ticker}(${s.bullishPercent?.toFixed(0)}%)`).join(', ')}\n`;
+      }
+      if (ss.mostBearish && ss.mostBearish.length > 0) {
+        summary += `- 最不看好: ${ss.mostBearish.slice(0, 5).map((s: any) => `${s.ticker}(${s.bearishPercent?.toFixed(0)}%)`).join(', ')}\n`;
+      }
+      if (ss.contrarianSignals && ss.contrarianSignals.length > 0) {
+        summary += `- 逆向信号: ${ss.contrarianSignals.map((c: any) => `${c.ticker}(${c.signal})`).join(', ')}\n`;
+      }
+      summary += `\n`;
+    }
+    
+    // 综合研判
+    if (analysis.smartMoney.synthesis) {
+      const syn = analysis.smartMoney.synthesis;
+      summary += `### 智慧资金综合研判\n`;
+      summary += `- 整体信号: ${syn.overallSignal || 'N/A'}\n`;
+      summary += `- 信号强度: ${syn.signalStrength || 'N/A'}\n`;
+      if (syn.focusStocks && syn.focusStocks.length > 0) {
+        summary += `- 重点关注:\n`;
+        syn.focusStocks.forEach((s: any) => {
+          summary += `  - ${s.ticker}: ${s.signals?.join(', ')}\n`;
+        });
+      }
+      summary += `\n`;
+    }
+  }
+  
   return summary;
 }
 
@@ -358,15 +450,56 @@ function getDefaultTaskPrompt(): string {
   "companyDeepDive": [...],
   "industryLinkageAnalysis": { "gpuSupplyChain": {...}, "dataCenterExpansion": {...}, "semiconCapex": {...} },
   "capitalMovements": [...],
+  "smartMoneyAnalysis": {
+    "congressTrading": {
+      "summary": "国会交易整体解读",
+      "notableTrades": [{ "politician": "", "party": "D/R/I", "ticker": "", "action": "", "amount": "", "significance": "" }],
+      "focusStocks": [],
+      "interpretation": "国会交易的深度投资洞察"
+    },
+    "hedgeFundHoldings": {
+      "summary": "对冲基金持仓解读",
+      "topHoldings": [],
+      "significantChanges": [{ "fund": "", "ticker": "", "action": "", "implication": "" }],
+      "interpretation": "机构布局的投资含义"
+    },
+    "predictionMarket": {
+      "summary": "预测市场解读",
+      "keyPredictions": [{ "question": "", "probability": "", "marketImplication": "" }],
+      "interpretation": "预测市场对投资的启示"
+    },
+    "socialSentiment": {
+      "summary": "社交情绪解读",
+      "mostBullish": [],
+      "mostBearish": [],
+      "contrarianSignals": [{ "ticker": "", "signal": "", "interpretation": "" }],
+      "interpretation": "散户情绪的逆向投资机会"
+    },
+    "synthesis": {
+      "overallSignal": "bullish/bearish/neutral/mixed",
+      "signalStrength": "strong/moderate/weak",
+      "focusStocks": [{ "ticker": "", "signals": [], "recommendation": "" }],
+      "actionableInsights": ["可立即执行的投资建议"],
+      "riskWarnings": ["需要警惕的风险"]
+    }
+  },
   "investmentStrategy": { "overallJudgment": {...}, "shortTerm": {...}, "mediumTerm": {...}, "longTerm": {...}, "portfolioSuggestion": {...}, "riskControl": {...} },
   "dailyBlessing": "一句温和积极的祝福语"
 }
+
+## 智慧资金分析要求
+请特别关注智慧资金数据，提供深度投资洞察：
+1. 国会交易：分析议员交易背后可能的政策信号或信息优势
+2. 对冲基金：识别机构共识持仓和布局方向
+3. 预测市场：解读赔率变化对股市的影响
+4. 社交情绪：挖掘散户极端情绪带来的逆向投资机会
 
 请确保：
 1. 所有内容用中文
 2. 数字准确，不确定写N/A
 3. 输出有效JSON，可被JSON.parse()解析
-4. 不要添加markdown代码块标记`;
+4. 不要添加markdown代码块标记
+5. 智慧资金分析要结合 AI 产业链视角，重点关注相关标的`;
 }
 
 main().catch(console.error);

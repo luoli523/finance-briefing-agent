@@ -157,7 +157,76 @@
     }
   },
   
-  "dailyBlessing": "温和、积极、让人开心的一句话祝福（不涉及投资，不含表情符号）"
+  "dailyBlessing": "温和、积极、让人开心的一句话祝福（不涉及投资，不含表情符号）",
+
+  "smartMoneyAnalysis": {
+    // 【新增】智慧资金与市场情绪分析
+    "congressTrading": {
+      "summary": "国会交易总结（1-2句：整体偏买入还是卖出，重点关注哪些票）",
+      "notableTrades": [
+        {
+          "politician": "议员姓名",
+          "party": "D|R|I",
+          "ticker": "股票代码",
+          "action": "买入|卖出",
+          "amount": "金额范围",
+          "significance": "交易意义解读"
+        }
+      ],
+      "focusStocks": ["被多位议员买入的股票"],
+      "interpretation": "国会交易信号的投资含义（2-3句）"
+    },
+    "hedgeFundHoldings": {
+      "summary": "对冲基金持仓总结（1-2句：机构整体在加仓还是减仓）",
+      "topHoldings": ["机构共识持仓股票前5"],
+      "significantChanges": [
+        {
+          "fund": "基金名称",
+          "ticker": "股票代码",
+          "action": "新建仓|加仓|减仓|清仓",
+          "implication": "操作含义"
+        }
+      ],
+      "interpretation": "机构持仓变动的投资含义（2-3句）"
+    },
+    "predictionMarket": {
+      "summary": "预测市场信号总结（1-2句：市场对经济/政策的预期）",
+      "keyPredictions": [
+        {
+          "question": "预测问题",
+          "probability": "概率%",
+          "marketImplication": "对股市的影响"
+        }
+      ],
+      "interpretation": "预测市场信号的投资含义（2-3句）"
+    },
+    "socialSentiment": {
+      "summary": "社交情绪总结（1-2句：散户整体情绪偏多还是偏空）",
+      "mostBullish": ["最受看好的股票"],
+      "mostBearish": ["最不被看好的股票"],
+      "contrarianSignals": [
+        {
+          "ticker": "股票代码",
+          "signal": "极端看涨|极端看跌",
+          "interpretation": "逆向信号解读"
+        }
+      ],
+      "interpretation": "社交情绪的投资含义（注意逆向指标价值）"
+    },
+    "synthesis": {
+      "overallSignal": "bullish|bearish|neutral|mixed",
+      "signalStrength": "strong|moderate|weak",
+      "focusStocks": [
+        {
+          "ticker": "股票代码",
+          "signals": ["国会买入", "机构持有", "社交看涨"],
+          "recommendation": "多重信号共振建议"
+        }
+      ],
+      "actionableInsights": ["可操作的投资建议1", "建议2"],
+      "riskWarnings": ["风险提示1", "提示2"]
+    }
+  }
 }
 
 ## 重要提示

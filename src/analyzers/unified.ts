@@ -4,11 +4,13 @@ import { CollectedData } from '../collectors/types';
 import { MarketAnalyzer } from './market';
 import { NewsAnalyzer } from './news';
 import { EconomicAnalyzer } from './economic';
+import { SmartMoneyAnalyzer } from './smart-money';
 import {
   ComprehensiveAnalysis,
   MarketAnalysis,
   NewsAnalysis,
   EconomicAnalysis,
+  SmartMoneyAnalysis,
   MarketCondition,
   Sentiment,
   AnalyzerConfig,
@@ -20,6 +22,11 @@ interface AggregatedData {
   market?: CollectedData;
   news?: CollectedData;
   economic?: CollectedData;
+  congressTrading?: CollectedData;
+  hedgeFund?: CollectedData;
+  predictionMarket?: CollectedData;
+  socialSentiment?: CollectedData;      // Reddit (ApeWisdom)
+  twitterSentiment?: CollectedData;     // X.com (StockGeist)
 }
 
 /**
@@ -30,6 +37,7 @@ export class UnifiedAnalyzer {
   private marketAnalyzer: MarketAnalyzer;
   private newsAnalyzer: NewsAnalyzer;
   private economicAnalyzer: EconomicAnalyzer;
+  private smartMoneyAnalyzer: SmartMoneyAnalyzer;
   private config: AnalyzerConfig;
 
   constructor(config: AnalyzerConfig = {}) {
@@ -37,6 +45,7 @@ export class UnifiedAnalyzer {
     this.marketAnalyzer = new MarketAnalyzer(config);
     this.newsAnalyzer = new NewsAnalyzer(config);
     this.economicAnalyzer = new EconomicAnalyzer(config);
+    this.smartMoneyAnalyzer = new SmartMoneyAnalyzer(config);
   }
 
   /**
@@ -48,6 +57,7 @@ export class UnifiedAnalyzer {
     let marketAnalysis: MarketAnalysis | undefined;
     let newsAnalysis: NewsAnalysis | undefined;
     let economicAnalysis: EconomicAnalysis | undefined;
+    let smartMoneyAnalysis: SmartMoneyAnalysis | undefined;
 
     // 分析市场数据
     if (data.market) {
@@ -76,14 +86,31 @@ export class UnifiedAnalyzer {
       }
     }
 
+    // 分析智慧资金数据
+    const hasSmartMoneyData = data.congressTrading || data.hedgeFund ||
+                             data.predictionMarket || data.socialSentiment;
+    if (hasSmartMoneyData) {
+      try {
+        smartMoneyAnalysis = await this.smartMoneyAnalyzer.analyze({
+          congressTrading: data.congressTrading,
+          hedgeFund: data.hedgeFund,
+          predictionMarket: data.predictionMarket,
+          socialSentiment: data.socialSentiment,
+        });
+      } catch (error) {
+        console.error('[unified-analyzer] Smart money analysis failed:', error);
+      }
+    }
+
     // 生成综合摘要
-    const summary = this.generateSummary(marketAnalysis, newsAnalysis, economicAnalysis);
+    const summary = this.generateSummary(marketAnalysis, newsAnalysis, economicAnalysis, smartMoneyAnalysis);
 
     const result: ComprehensiveAnalysis = {
       timestamp: new Date(),
       market: marketAnalysis,
       news: newsAnalysis,
       economic: economicAnalysis,
+      smartMoney: smartMoneyAnalysis,
       summary,
     };
 
@@ -129,7 +156,8 @@ export class UnifiedAnalyzer {
   private generateSummary(
     market?: MarketAnalysis,
     news?: NewsAnalysis,
-    economic?: EconomicAnalysis
+    economic?: EconomicAnalysis,
+    smartMoney?: SmartMoneyAnalysis
   ): ComprehensiveAnalysis['summary'] {
     // 综合市场状态
     const marketCondition = market?.condition || 'mixed';
@@ -155,6 +183,11 @@ export class UnifiedAnalyzer {
       keyPoints.push(...economic.highlights.slice(0, 2));
     }
 
+    // 智慧资金关键点
+    if (smartMoney) {
+      keyPoints.push(...smartMoney.highlights.slice(0, 2));
+    }
+
     // 收集风险和关注点
     const risksAndConcerns: string[] = [];
 
@@ -164,6 +197,11 @@ export class UnifiedAnalyzer {
 
     if (economic) {
       risksAndConcerns.push(...economic.riskFactors);
+    }
+
+    // 智慧资金风险提示
+    if (smartMoney?.synthesis?.riskWarnings) {
+      risksAndConcerns.push(...smartMoney.synthesis.riskWarnings);
     }
 
     // 生成展望

@@ -148,6 +148,63 @@ interface LLMInsights {
     };
   };
   dailyBlessing?: string;
+  smartMoneyAnalysis?: {
+    congressTrading?: {
+      summary: string;
+      notableTrades: Array<{
+        politician: string;
+        party: 'D' | 'R' | 'I';
+        ticker: string;
+        action: string;
+        amount: string;
+        significance: string;
+      }>;
+      focusStocks: string[];
+      interpretation: string;
+    };
+    hedgeFundHoldings?: {
+      summary: string;
+      topHoldings: string[];
+      significantChanges: Array<{
+        fund: string;
+        ticker: string;
+        action: string;
+        implication: string;
+      }>;
+      interpretation: string;
+    };
+    predictionMarket?: {
+      summary: string;
+      keyPredictions: Array<{
+        question: string;
+        probability: string;
+        marketImplication: string;
+      }>;
+      interpretation: string;
+    };
+    socialSentiment?: {
+      summary: string;
+      mostBullish: string[];
+      mostBearish: string[];
+      contrarianSignals: Array<{
+        ticker: string;
+        signal: string;
+        interpretation: string;
+      }>;
+      interpretation: string;
+    };
+    synthesis?: {
+      overallSignal: 'bullish' | 'bearish' | 'neutral' | 'mixed';
+      signalStrength: 'strong' | 'moderate' | 'weak';
+      focusStocks: Array<{
+        ticker: string;
+        signals: string[];
+        recommendation: string;
+      }>;
+      actionableInsights: string[];
+      riskWarnings: string[];
+    };
+  };
 }
 
 export class ProfessionalBriefingGenerator {
@@ -225,6 +282,7 @@ export class ProfessionalBriefingGenerator {
       this.generateLinkageAnalysisSection(),
       this.generateCapitalMovementsSection(),
       this.generateInvestmentStrategySection(),
+      this.generateSmartMoneySection(),
       this.generateBlessing(),
       this.generateFooter(),
     ];
@@ -833,6 +891,271 @@ export class ProfessionalBriefingGenerator {
       content += `- 利率上行（资金成本）\n`;
       content += `- 地缘冲突（台海风险）\n\n`;
       content += `**对冲建议**: 短债ETF、美元、黄金(GLD)\n`;
+    }
+
+    return content;
+  }
+
+  /**
+   * 七、智慧资金与市场情绪
+   */
+  private generateSmartMoneySection(): string {
+    let content = `## 七、智慧资金与市场情绪
+
+`;
+
+    const smartMoney = this.analysis.smartMoney;
+    const llmSmartMoney = this.llmInsights?.smartMoneyAnalysis;
+
+    // 1. 国会议员交易动向
+    content += `### 1. 国会议员交易动向\n\n`;
+
+    if (llmSmartMoney?.congressTrading) {
+      const congress = llmSmartMoney.congressTrading;
+      content += `**概况**: ${congress.summary}\n\n`;
+
+      if (congress.notableTrades && congress.notableTrades.length > 0) {
+        content += `**近期重要交易**:\n\n`;
+        content += `| 议员 | 党派 | 股票 | 操作 | 金额 | 意义 |\n`;
+        content += `|:-----|:----:|:----:|:----:|:----:|:-----|\n`;
+        for (const trade of congress.notableTrades.slice(0, 5)) {
+          const partyEmoji = trade.party === 'D' ? '🔵' : trade.party === 'R' ? '🔴' : '⚪';
+          content += `| ${trade.politician} | ${partyEmoji} | ${trade.ticker} | ${trade.action} | ${trade.amount} | ${trade.significance} |\n`;
+        }
+        content += `\n`;
+      }
+
+      if (congress.focusStocks && congress.focusStocks.length > 0) {
+        content += `**重点关注标的**: ${congress.focusStocks.join('、')}\n\n`;
+      }
+
+      if (congress.interpretation) {
+        content += `**解读**: ${congress.interpretation}\n\n`;
+      }
+    } else if (smartMoney?.congressTrading) {
+      const congress = smartMoney.congressTrading;
+      content += `**概况**: 过去7天共 ${congress.totalTrades} 笔交易，买入 ${congress.buyTrades} 笔，卖出 ${congress.sellTrades} 笔\n\n`;
+
+      if (congress.topBuys && congress.topBuys.length > 0) {
+        content += `**热门买入**: ${congress.topBuys.slice(0, 5).map(b => `${b.ticker}(${b.buyCount}笔)`).join('、')}\n\n`;
+      }
+
+      if (congress.highlights && congress.highlights.length > 0) {
+        content += `**要点**: ${congress.highlights.join('；')}\n\n`;
+      }
+    } else {
+      content += `*暂无国会交易数据（需配置 FINNHUB_API_KEY，免费版即包含）*\n\n`;
+    }
+
+    // 2. 对冲基金持仓变动
+    content += `### 2. 对冲基金持仓变动\n\n`;
+
+    if (llmSmartMoney?.hedgeFundHoldings) {
+      const hedge = llmSmartMoney.hedgeFundHoldings;
+      content += `**概况**: ${hedge.summary}\n\n`;
+
+      if (hedge.topHoldings && hedge.topHoldings.length > 0) {
+        content += `**机构共识持仓**: ${hedge.topHoldings.join('、')}\n\n`;
+      }
+
+      if (hedge.significantChanges && hedge.significantChanges.length > 0) {
+        content += `**显著变动**:\n\n`;
+        for (const change of hedge.significantChanges.slice(0, 5)) {
+          const actionEmoji = change.action === '新建仓' ? '🆕' :
+                             change.action === '加仓' ? '⬆️' :
+                             change.action === '减仓' ? '⬇️' : '🚫';
+          content += `- ${actionEmoji} ${change.fund}: ${change.ticker} ${change.action} - ${change.implication}\n`;
+        }
+        content += `\n`;
+      }
+
+      if (hedge.interpretation) {
+        content += `**解读**: ${hedge.interpretation}\n\n`;
+      }
+    } else if (smartMoney?.hedgeFund) {
+      const hedge = smartMoney.hedgeFund;
+      content += `**概况**: 追踪 ${hedge.totalFundsTracked} 家基金，整体偏${hedge.aggregatedSentiment === 'bullish' ? '多' : hedge.aggregatedSentiment === 'bearish' ? '空' : '中性'}\n\n`;
+
+      if (hedge.topHoldings && hedge.topHoldings.length > 0) {
+        content += `**机构共识持仓**: ${hedge.topHoldings.slice(0, 5).map(h => `${h.ticker}(${h.fundsHolding}家)`).join('、')}\n\n`;
+      }
+
+      if (hedge.highlights && hedge.highlights.length > 0) {
+        content += `**要点**: ${hedge.highlights.join('；')}\n\n`;
+      }
+    } else {
+      content += `*暂无对冲基金数据（使用 SEC EDGAR 免费公开数据）*\n\n`;
+    }
+
+    // 3. 预测市场信号
+    content += `### 3. 预测市场信号\n\n`;
+
+    if (llmSmartMoney?.predictionMarket) {
+      const pred = llmSmartMoney.predictionMarket;
+      content += `**概况**: ${pred.summary}\n\n`;
+
+      if (pred.keyPredictions && pred.keyPredictions.length > 0) {
+        content += `**关键预测**:\n\n`;
+        content += `| 预测问题 | 概率 | 市场含义 |\n`;
+        content += `|:---------|:----:|:---------|\n`;
+        for (const p of pred.keyPredictions.slice(0, 5)) {
+          content += `| ${p.question} | ${p.probability} | ${p.marketImplication} |\n`;
+        }
+        content += `\n`;
+      }
+
+      if (pred.interpretation) {
+        content += `**解读**: ${pred.interpretation}\n\n`;
+      }
+    } else if (smartMoney?.predictionMarket) {
+      const pred = smartMoney.predictionMarket;
+      content += `**概况**: 监测 ${pred.totalMarkets} 个预测市场，整体情绪${pred.marketSentiment === 'optimistic' ? '乐观' : pred.marketSentiment === 'pessimistic' ? '悲观' : '中性'}\n\n`;
+
+      if (pred.keyPredictions && pred.keyPredictions.length > 0) {
+        content += `**热门预测**:\n`;
+        for (const p of pred.keyPredictions.slice(0, 3)) {
+          content += `- ${p.question}: ${(p.probability * 100).toFixed(0)}% (${p.marketImplication})\n`;
+        }
+        content += `\n`;
+      }
+
+      if (pred.highlights && pred.highlights.length > 0) {
+        content += `**要点**: ${pred.highlights.join('；')}\n\n`;
+      }
+    } else {
+      content += `*暂无预测市场数据*\n\n`;
+    }
+
+    // 4. 社交情绪分析
+    content += `### 4. 社交情绪分析\n\n`;
+
+    if (llmSmartMoney?.socialSentiment) {
+      const social = llmSmartMoney.socialSentiment;
+      content += `**概况**: ${social.summary}\n\n`;
+
+      if (social.mostBullish && social.mostBullish.length > 0) {
+        content += `**最受看好**: ${social.mostBullish.join('、')}\n\n`;
+      }
+
+      if (social.mostBearish && social.mostBearish.length > 0) {
+        content += `**最不看好**: ${social.mostBearish.join('、')}\n\n`;
+      }
+
+      if (social.contrarianSignals && social.contrarianSignals.length > 0) {
+        content += `**逆向信号提示**:\n`;
+        for (const signal of social.contrarianSignals) {
+          const emoji = signal.signal === '极端看涨' ? '⚠️🟢' : '⚠️🔴';
+          content += `- ${emoji} ${signal.ticker}: ${signal.signal} - ${signal.interpretation}\n`;
+        }
+        content += `\n`;
+      }
+
+      if (social.interpretation) {
+        content += `**解读**: ${social.interpretation}\n\n`;
+      }
+    } else if (smartMoney?.socialSentiment) {
+      const social = smartMoney.socialSentiment;
+      content += `**概况**: 整体情绪${social.overallSentiment === 'bullish' ? '偏多' : social.overallSentiment === 'bearish' ? '偏空' : '中性'}，情绪得分 ${social.sentimentScore.toFixed(0)}\n\n`;
+
+      if (social.mostBullish && social.mostBullish.length > 0) {
+        content += `**最受看好**: ${social.mostBullish.slice(0, 5).map(s => `${s.ticker}(${s.bullishPercent.toFixed(0)}%)`).join('、')}\n\n`;
+      }
+
+      if (social.contrarianSignals && social.contrarianSignals.length > 0) {
+        content += `**逆向信号**: ${social.contrarianSignals.map(c => `${c.ticker}(${c.signal})`).join('、')}\n\n`;
+      }
+
+      if (social.highlights && social.highlights.length > 0) {
+        content += `**要点**: ${social.highlights.join('；')}\n\n`;
+      }
+    } else {
+      content += `*暂无社交情绪数据*\n\n`;
+    }
+
+    // 5. 智慧资金综合研判
+    content += `### 5. 智慧资金综合研判\n\n`;
+
+    if (llmSmartMoney?.synthesis) {
+      const syn = llmSmartMoney.synthesis;
+      const signalText = syn.overallSignal === 'bullish' ? '偏多' :
+                        syn.overallSignal === 'bearish' ? '偏空' :
+                        syn.overallSignal === 'mixed' ? '分化' : '中性';
+      const strengthText = syn.signalStrength === 'strong' ? '强' :
+                          syn.signalStrength === 'moderate' ? '中等' : '弱';
+
+      content += `**综合信号**: ${signalText} (${strengthText})\n\n`;
+
+      if (syn.focusStocks && syn.focusStocks.length > 0) {
+        content += `**重点关注标的**:\n\n`;
+        content += `| 股票 | 信号来源 | 建议 |\n`;
+        content += `|:----:|:---------|:-----|\n`;
+        for (const stock of syn.focusStocks) {
+          content += `| ${stock.ticker} | ${stock.signals.join('、')} | ${stock.recommendation} |\n`;
+        }
+        content += `\n`;
+      }
+
+      if (syn.actionableInsights && syn.actionableInsights.length > 0) {
+        content += `**可操作建议**:\n`;
+        for (const insight of syn.actionableInsights) {
+          content += `- ${insight}\n`;
+        }
+        content += `\n`;
+      }
+
+      if (syn.riskWarnings && syn.riskWarnings.length > 0) {
+        content += `**风险提示**:\n`;
+        for (const warning of syn.riskWarnings) {
+          content += `- ⚠️ ${warning}\n`;
+        }
+        content += `\n`;
+      }
+    } else if (smartMoney?.synthesis) {
+      const syn = smartMoney.synthesis;
+      const signalText = syn.overallSignal === 'bullish' ? '偏多' :
+                        syn.overallSignal === 'bearish' ? '偏空' :
+                        syn.overallSignal === 'mixed' ? '分化' : '中性';
+      const strengthText = syn.signalStrength === 'strong' ? '强' :
+                          syn.signalStrength === 'moderate' ? '中等' : '弱';
+
+      content += `**综合信号**: ${signalText} (${strengthText})\n\n`;
+
+      if (syn.aggregatedSignals && syn.aggregatedSignals.length > 0) {
+        content += `**各数据源信号**:\n`;
+        for (const signal of syn.aggregatedSignals) {
+          const emoji = signal.signal === 'bullish' ? '🟢' :
+                       signal.signal === 'bearish' ? '🔴' : '⚪';
+          content += `- ${emoji} ${signal.source}: ${signal.signal} (权重${(signal.weight * 100).toFixed(0)}%)\n`;
+        }
+        content += `\n`;
+      }
+
+      if (syn.focusStocks && syn.focusStocks.length > 0) {
+        content += `**重点关注标的**: ${syn.focusStocks.map(s => `${s.ticker}(${s.signals.join('+')})`).join('、')}\n\n`;
+      }
+
+      if (syn.actionableInsights && syn.actionableInsights.length > 0) {
+        content += `**可操作建议**:\n`;
+        for (const insight of syn.actionableInsights) {
+          content += `- ${insight}\n`;
+        }
+        content += `\n`;
+      }
+
+      if (syn.riskWarnings && syn.riskWarnings.length > 0) {
+        content += `**风险提示**:\n`;
+        for (const warning of syn.riskWarnings) {
+          content += `- ⚠️ ${warning}\n`;
+        }
+      }
+    } else {
+      content += `*智慧资金数据不足，无法生成综合研判*\n\n`;
+      content += `**提示**: 本项目使用免费 API 数据源:\n`;
+      content += `- Finnhub (免费): 国会交易数据 (需 FINNHUB_API_KEY)\n`;
+      content += `- SEC EDGAR (免费): 对冲基金 13F 持仓\n`;
+      content += `- ApeWisdom (免费): Reddit 社交情绪\n`;
+      content += `- Polymarket (免费): 预测市场赔率\n`;
+      content += `- StockGeist (可选): X.com 情绪 (需 STOCKGEIST_API_KEY)\n`;
     }
 
     return content;

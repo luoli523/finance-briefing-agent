@@ -27,3 +27,11 @@ export { SECCollector, createSECCollector } from './sec-edgar';
 
 // RSS 收集器
 export { RSSCollector, createRSSCollector } from './rss';
+
+// 智慧资金收集器
+export { CongressTradingCollector, createCongressTradingCollector, congressTradingCollector } from './congress-trading';
+export { HedgeFundCollector, createHedgeFundCollector, hedgeFundCollector } from './hedge-fund';
+export { PredictionMarketCollector, createPredictionMarketCollector, predictionMarketCollector } from './prediction-market';
+export { SocialSentimentCollector, createSocialSentimentCollector, socialSentimentCollector } from './social-sentiment';
+export { TwitterSentimentCollector, createTwitterSentimentCollector, twitterSentimentCollector } from './twitter-sentiment';
+export type { TwitterSentiment, TwitterSentimentConfig } from './twitter-sentiment';

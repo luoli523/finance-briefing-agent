@@ -23,6 +23,12 @@
 - **FRED** - 美国宏观经济指标
 - **政府 RSS** - Fed 公告、SEC 新闻
 
+### 💰 智慧资金追踪（新增）
+- **对冲基金 13F** - SEC EDGAR 直接解析，追踪顶级基金持仓（免费）
+- **Polymarket** - 预测市场赔率，政策/经济事件定价（免费）
+- **Reddit 情绪** - ApeWisdom r/wallstreetbets 等热门讨论（免费）
+- **X.com 情绪** - StockGeist 社交媒体情绪分析（可选 API Key）
+
 ### 🎨 NotebookLM 智能信息图
 - **自动生成** - 基于每日简报自动生成中文信息图
 - **可视化摘要** - 指数表现、产业链股票、市场要闻一图尽览
@@ -69,10 +75,10 @@ npm run daily
 ```
 
 这将自动执行完整流程：
-1. **📊 收集数据** (~20秒) - 市场行情、新闻、经济指标
+1. **📊 收集数据** (~30秒) - 市场行情、新闻、经济指标、智慧资金数据
 2. **🧠 智能分析** (~2秒) - 多维度数据分析
-3. **🤖 LLM 深度分析** (~90秒) - GPT-5.2 产业链洞察
-4. **📄 生成简报** (~1秒) - 专业投资报告
+3. **🤖 LLM 深度分析** (~90秒) - GPT-5.2 产业链 + 智慧资金洞察
+4. **📄 生成简报** (~1秒) - 专业投资报告（含智慧资金分析）
 5. **🎨 生成信息图** (~60秒) - NotebookLM 中文可视化
 6. **📑 生成 Slides** (~60秒) - NotebookLM PPT
 7. **📧 发送邮件** - 含信息图和 Slides 附件
@@ -87,7 +93,7 @@ npm run daily
 
 ## 📄 简报内容
 
-生成的简报包含 **6 大核心板块**：
+生成的简报包含 **7 大核心板块**：
 
 ### 一、核心股票池表现
 
@@ -144,6 +150,13 @@ npm run daily
 ### 六、投资建议与策略展望
 - 短期（1月）/ 中期（3-6月）/ 长期（6-12月）配置
 - 精选标的、风险控制、对冲建议
+
+### 七、智慧资金与市场情绪（新增）
+- **国会交易** - 议员买卖动向、政策敏感信号
+- **对冲基金** - 机构共识持仓、显著变动解读
+- **预测市场** - Polymarket 赔率、政策/经济预期
+- **社交情绪** - Reddit/X.com 散户情绪、逆向信号
+- **综合研判** - 多数据源交叉验证、重点标的推荐
 
 ---
 
@@ -261,11 +274,18 @@ npm run generate:pro -- --skip-llm         # 跳过 LLM
 ### 单独收集器
 
 ```bash
+# 核心数据
 npm run collect:yahoo    # 美股行情（无需API）
 npm run collect:finnhub  # 财经新闻
 npm run collect:fred     # 经济数据
 npm run collect:sec      # SEC文件
 npm run collect:rss      # 政府RSS
+
+# 智慧资金数据
+npm run collect:hedge-fund       # 对冲基金 13F（SEC EDGAR）
+npm run collect:prediction       # Polymarket 预测市场
+npm run collect:reddit           # Reddit 情绪（ApeWisdom）
+npm run collect:twitter          # X.com 情绪（StockGeist）
 ```
 
 ### 发送命令
@@ -331,23 +351,98 @@ LLM_API_KEY=your_google_key
 
 ---
 
+## 💰 智慧资金数据配置
+
+系统支持追踪多种"聪明钱"数据源，帮助识别机构动向和市场情绪。
+
+### 数据源概览
+
+| 数据源 | 说明 | API | 状态 |
+|--------|------|-----|------|
+| **对冲基金 13F** | SEC EDGAR 直接解析，追踪 Citadel、D.E. Shaw、Bridgewater 等顶级基金持仓 | 免费 | ✅ 可用 |
+| **Polymarket** | 预测市场赔率，政策/经济事件定价 | 免费 | ✅ 可用 |
+| **Reddit 情绪** | ApeWisdom 聚合 r/wallstreetbets、r/stocks 等热门讨论 | 免费 | ✅ 可用 |
+| **X.com 情绪** | StockGeist 社交媒体情绪分析 | 可选（10,000 免费额度） | ✅ 可用 |
+| **国会交易** | Finnhub Congressional Trading API | 可能需付费 | ⚠️ 测试中 |
+
+### 配置示例
+
+```env
+# 智慧资金数据配置（可选）
+
+# StockGeist X.com 情绪分析（可选，有免费额度）
+# 注册: https://www.stockgeist.ai/
+STOCKGEIST_API_KEY=your_stockgeist_key
+
+# 其他智慧资金数据源均为免费，无需配置
+```
+
+### 追踪的对冲基金
+
+系统默认追踪以下顶级对冲基金的 13F 持仓：
+
+| 基金 | CIK | 说明 |
+|------|-----|------|
+| Citadel Advisors | 1423053 | 全球最大对冲基金之一 |
+| D.E. Shaw | 1009207 | 量化投资先驱 |
+| Bridgewater | 1350694 | 全球最大对冲基金 |
+| Renaissance Technologies | 1037389 | 量化投资传奇 |
+| Two Sigma | 1179392 | 科技驱动投资 |
+| AQR Capital | 1167557 | 因子投资专家 |
+| Tiger Global | 1167483 | 科技投资专家 |
+| Coatue Management | 1535392 | 科技成长投资 |
+| Viking Global | 1103804 | 长期价值投资 |
+| Point72 | 1603466 | 多策略对冲基金 |
+
+### 智慧资金分析输出
+
+简报第七部分自动生成以下分析：
+
+```markdown
+## 七、智慧资金与市场情绪
+
+### 1. 国会议员交易动向
+- 交易概况、重点股票、政策信号解读
+
+### 2. 对冲基金持仓变动
+- 机构共识持仓、显著变动、布局意图
+
+### 3. 预测市场信号
+- 关键预测、概率、对股市影响
+
+### 4. 社交情绪分析
+- 散户情绪、逆向信号、投资机会
+
+### 5. 智慧资金综合研判
+- 整体信号、重点标的、可操作建议
+```
+
+---
+
 ## 📁 项目结构
 
 ```
 finance-briefing-agent/
 ├── src/
 │   ├── collectors/          # 数据收集器
-│   │   ├── yahoo-finance.ts # 美股行情
+│   │   ├── yahoo-finance.ts # 美股行情（免费）
 │   │   ├── finnhub.ts       # 财经新闻
 │   │   ├── fred.ts          # 经济数据
+│   │   ├── hedge-fund.ts    # 对冲基金 13F（SEC EDGAR 免费）
+│   │   ├── prediction-market.ts  # Polymarket 预测市场（免费）
+│   │   ├── social-sentiment.ts   # Reddit 情绪（ApeWisdom 免费）
+│   │   ├── twitter-sentiment.ts  # X.com 情绪（StockGeist 可选）
+│   │   ├── congress-trading.ts   # 国会交易（Finnhub）
 │   │   └── history.ts       # 历史数据管理
 │   │
 │   ├── analyzers/           # 数据分析
 │   │   ├── market.ts        # 市场分析
 │   │   ├── news.ts          # 新闻分析
 │   │   ├── economic.ts      # 经济分析
+│   │   ├── smart-money.ts   # 智慧资金分析
 │   │   └── llm/             # LLM增强分析
-│   │       └── providers/   # 多LLM提供商
+│   │       ├── providers/   # 多LLM提供商
+│   │       └── smart-money-llm.ts  # 智慧资金深度分析
 │   │
 │   ├── generators/          # 报告生成
 │   │   └── professional-briefing.ts  # 专业简报生成器
@@ -365,7 +460,8 @@ finance-briefing-agent/
 │
 ├── prompts/                 # LLM提示词
 │   ├── professional-briefing-system.txt
-│   └── professional-briefing-task.txt
+│   ├── professional-briefing-task.txt
+│   └── smart-money-analysis.txt   # 智慧资金分析提示词
 │
 ├── data/
 │   ├── raw/                 # 原始数据
@@ -723,6 +819,15 @@ A: 确认 Gmail App Password 正确，确保已开启两步验证。检查 `EMAI
 
 **Q: 报告中某些数据显示 N/A？**  
 A: 这通常是因为 LLM 无法从当日新闻中提取具体数值。这是正常现象，表示该数据暂无可靠来源。
+
+**Q: 智慧资金数据需要付费吗？**  
+A: 大部分免费！对冲基金 13F（SEC EDGAR）、Polymarket、Reddit 情绪（ApeWisdom）均完全免费。X.com 情绪需要 StockGeist API Key（有 10,000 免费额度）。
+
+**Q: 对冲基金 13F 数据延迟多久？**  
+A: 根据 SEC 规定，13F 报告需在季度结束后 45 天内提交。因此数据通常延迟 1-2 个月，适合用于了解机构长期布局，而非短期交易。
+
+**Q: 如何添加更多对冲基金追踪？**  
+A: 编辑 `src/collectors/hedge-fund.ts` 中的 `TRACKED_FUNDS` 数组，添加基金名称和 CIK 号码即可。
 
 ---
 

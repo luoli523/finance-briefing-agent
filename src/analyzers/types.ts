@@ -157,6 +157,7 @@ export interface ComprehensiveAnalysis {
   market?: MarketAnalysis;
   news?: NewsAnalysis;
   economic?: EconomicAnalysis;
+  smartMoney?: SmartMoneyAnalysis;
 
   // 综合摘要
   summary: {
@@ -172,4 +173,155 @@ export interface ComprehensiveAnalysis {
 export interface AnalyzerConfig {
   topN?: number;              // Top N 结果数量
   includeDetails?: boolean;   // 是否包含详细信息
+}
+
+// ===== 智慧资金分析类型 =====
+
+// 国会交易分析
+export interface CongressTradingAnalysis {
+  totalTrades: number;
+  buyTrades: number;
+  sellTrades: number;
+  netSentiment: 'bullish' | 'bearish' | 'neutral';
+  topBuys: {
+    ticker: string;
+    company: string;
+    buyCount: number;
+    politicians: string[];
+    totalAmount: string;
+  }[];
+  topSells: {
+    ticker: string;
+    company: string;
+    sellCount: number;
+    politicians: string[];
+    totalAmount: string;
+  }[];
+  notableTrades: {
+    politician: string;
+    party: 'D' | 'R' | 'I';
+    ticker: string;
+    type: 'buy' | 'sell';
+    amount: string;
+    date: Date;
+    significance: string;
+  }[];
+  highlights: string[];
+}
+
+// 对冲基金持仓分析
+export interface HedgeFundAnalysis {
+  totalFundsTracked: number;
+  aggregatedSentiment: 'bullish' | 'bearish' | 'neutral';
+  topHoldings: {
+    ticker: string;
+    company: string;
+    fundsHolding: number;
+    totalValue: number;
+    avgWeight: number;
+    recentAction: 'accumulating' | 'reducing' | 'stable';
+  }[];
+  significantChanges: {
+    ticker: string;
+    company: string;
+    fundName: string;
+    action: 'new' | 'add' | 'reduce' | 'sold';
+    changePercent: number;
+    value: number;
+  }[];
+  sectorConcentration: {
+    sector: string;
+    weight: number;
+    change: number;
+  }[];
+  highlights: string[];
+}
+
+// 预测市场分析
+export interface PredictionMarketAnalysis {
+  totalMarkets: number;
+  keyPredictions: {
+    question: string;
+    category: string;
+    topOutcome: string;
+    probability: number;
+    volume: number;
+    marketImplication: string;
+  }[];
+  economicIndicators: {
+    question: string;
+    currentProbability: number;
+    implication: string;
+  }[];
+  marketSentiment: 'optimistic' | 'pessimistic' | 'neutral';
+  highlights: string[];
+}
+
+// 社交情绪分析
+export interface SocialSentimentAnalysis {
+  overallSentiment: 'bullish' | 'bearish' | 'neutral';
+  sentimentScore: number; // -100 to 100
+  mostBullish: {
+    ticker: string;
+    company: string;
+    bullishPercent: number;
+    messageCount: number;
+  }[];
+  mostBearish: {
+    ticker: string;
+    company: string;
+    bearishPercent: number;
+    messageCount: number;
+  }[];
+  trending: {
+    ticker: string;
+    messageVolume: number;
+    sentiment: 'bullish' | 'bearish' | 'neutral';
+    trendingScore: number;
+  }[];
+  contrarianSignals: {
+    ticker: string;
+    signal: 'extreme_bullish' | 'extreme_bearish';
+    interpretation: string;
+  }[];
+  highlights: string[];
+}
+
+// 综合智慧资金分析
+export interface SmartMoneyAnalysis {
+  timestamp: Date;
+  congressTrading?: CongressTradingAnalysis;
+  hedgeFund?: HedgeFundAnalysis;
+  predictionMarket?: PredictionMarketAnalysis;
+  socialSentiment?: SocialSentimentAnalysis;
+
+  // 综合研判
+  synthesis: {
+    overallSignal: 'bullish' | 'bearish' | 'neutral' | 'mixed';
+    signalStrength: 'strong' | 'moderate' | 'weak';
+
+    // 聚合信号
+    aggregatedSignals: {
+      source: string;
+      signal: 'bullish' | 'bearish' | 'neutral';
+      weight: number;
+      confidence: number;
+    }[];
+
+    // 重点关注标的
+    focusStocks: {
+      ticker: string;
+      company: string;
+      signals: string[];
+      recommendation: string;
+    }[];
+
+    // 可操作建议
+    actionableInsights: string[];
+
+    // 风险提示
+    riskWarnings: string[];
+  };
+
+  highlights: string[];
 }

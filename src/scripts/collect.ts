@@ -3,6 +3,15 @@
  * 运行所有可用的收集器，收集完整的财经数据
  *
  * 运行: npm run collect
+ * 
+ * 数据源说明:
+ * - Yahoo Finance: 市场行情 (免费)
+ * - Finnhub: 新闻 + 国会交易 (免费 API Key)
+ * - FRED: 宏观经济数据 (免费 API Key)
+ * - Polymarket: 预测市场 (免费)
+ * - ApeWisdom: Reddit 情绪 (免费)
+ * - SEC EDGAR: 对冲基金 13F (免费)
+ * - StockGeist: X.com 情绪 (免费层可选)
  */
 
 import * as fs from 'fs';
@@ -11,6 +20,11 @@ import {
   YahooFinanceCollector,
   FinnhubCollector,
   FredCollector,
+  CongressTradingCollector,
+  HedgeFundCollector,
+  PredictionMarketCollector,
+  SocialSentimentCollector,
+  TwitterSentimentCollector,
   CollectedData,
 } from '../collectors/index.js';
 import { appConfig, STOCK_INFO, AI_INDUSTRY_CATEGORIES } from '../config/index.js';
@@ -35,6 +49,11 @@ interface AggregatedData {
   market?: CollectedData;
   news?: CollectedData;
   economic?: CollectedData;
+  congressTrading?: CollectedData;
+  hedgeFund?: CollectedData;
+  predictionMarket?: CollectedData;
+  socialSentiment?: CollectedData;      // Reddit (ApeWisdom)
+  twitterSentiment?: CollectedData;     // X.com (StockGeist)
   summary: CollectionSummary;
 }
 
@@ -227,9 +246,89 @@ function generateConsolidatedMarkdown(data: AggregatedData): string {
     lines.push('');
   }
 
+  // ==================== 智慧资金数据 ====================
+  // 国会交易
+  if (data.congressTrading?.items && data.congressTrading.items.length > 0) {
+    lines.push('---');
+    lines.push('## 四、国会交易披露');
+    lines.push('');
+    lines.push('| 议员 | 党派 | 股票 | 操作 | 金额 | 日期 |');
+    lines.push('|------|------|------|------|------|------|');
+
+    for (const item of data.congressTrading.items.slice(0, 15)) {
+      const d = item.metadata;
+      if (d) {
+        const party = d.party === 'D' ? '🔵民主党' : d.party === 'R' ? '🔴共和党' : '⚪独立';
+        const action = d.transactionType === 'buy' ? '📈买入' : '📉卖出';
+        const date = d.transactionDate ? new Date(d.transactionDate).toLocaleDateString('zh-CN') : '-';
+        lines.push(`| ${d.politician} | ${party} | ${d.ticker} | ${action} | ${d.amount} | ${date} |`);
+      }
+    }
+    lines.push('');
+  }
+
+  // 预测市场
+  if (data.predictionMarket?.items && data.predictionMarket.items.length > 0) {
+    lines.push('---');
+    lines.push('## 五、预测市场赔率 (Polymarket)');
+    lines.push('');
+
+    for (const item of data.predictionMarket.items.slice(0, 10)) {
+      const outcomes = item.metadata?.outcomes || [];
+      lines.push(`### ${item.title}`);
+      lines.push(`交易量: $${(item.metadata?.volume || 0).toLocaleString()}`);
+      lines.push('');
+      lines.push('| 选项 | 概率 |');
+      lines.push('|------|------|');
+      for (const outcome of outcomes) {
+        const prob = ((outcome.probability || 0) * 100).toFixed(1);
+        lines.push(`| ${outcome.name} | ${prob}% |`);
+      }
+      lines.push('');
+    }
+  }
+
+  // 社交情绪
+  if (data.socialSentiment?.items && data.socialSentiment.items.length > 0) {
+    lines.push('---');
+    lines.push('## 六、Reddit 社交情绪 (ApeWisdom)');
+    lines.push('');
+    lines.push('| 股票 | Reddit排名 | 提及数 | 情绪 |');
+    lines.push('|------|-----------|--------|------|');
+
+    for (const item of data.socialSentiment.items.slice(0, 15)) {
+      const d = item.metadata;
+      if (d) {
+        const emoji = d.sentiment === 'bullish' ? '🟢' : d.sentiment === 'bearish' ? '🔴' : '⚪';
+        lines.push(`| ${d.ticker} | #${d.rank || '-'} | ${d.mentions?.toLocaleString() || '-'} | ${emoji} ${d.sentiment} |`);
+      }
+    }
+    lines.push('');
+  }
+
+  // X.com 情绪
+  if (data.twitterSentiment?.items && data.twitterSentiment.items.length > 0) {
+    lines.push('---');
+    lines.push('## 七、X.com 情绪 (StockGeist)');
+    lines.push('');
+    lines.push('| 股票 | 情绪分数 | 提及量 | 趋势 |');
+    lines.push('|------|----------|--------|------|');
+
+    for (const item of data.twitterSentiment.items.slice(0, 15)) {
+      const d = item.metadata;
+      if (d) {
+        const scoreSign = d.sentimentScore > 0 ? '+' : '';
+        const emoji = d.sentiment === 'bullish' ? '🟢' : d.sentiment === 'bearish' ? '🔴' : '⚪';
+        const trending = d.trending ? '🔥' : '';
+        lines.push(`| ${d.ticker} | ${scoreSign}${d.sentimentScore?.toFixed(0)} | ${d.messageVolume?.toLocaleString() || '-'} | ${emoji} ${trending} |`);
+      }
+    }
+    lines.push('');
+  }
+
   // ==================== 数据统计 ====================
   lines.push('---');
-  lines.push('## 四、数据收集统计');
+  lines.push('## 数据收集统计');
   lines.push('');
   lines.push('| 数据源 | 状态 | 数据条数 | 耗时 |');
   lines.push('|--------|------|----------|------|');
@@ -277,6 +376,7 @@ function formatMarketCap(cap: number): string {
 async function main() {
   console.log('╔════════════════════════════════════════════════════════════╗');
   console.log('║       Finance Briefing Agent - Data Collection             ║');
+  console.log('║       (All Free APIs - No Paid Subscriptions)              ║');
   console.log('╚════════════════════════════════════════════════════════════╝');
   console.log();
 
@@ -293,9 +393,9 @@ async function main() {
     summary,
   };
 
-  // 1. Yahoo Finance - 市场数据（无需 API Key）
+  // 1. Yahoo Finance - 市场数据（免费）
   console.log('┌──────────────────────────────────────────────────────────────┐');
-  console.log('│ 📊 [1/3] Yahoo Finance - Market Data                         │');
+  console.log('│ 📊 [1/8] Yahoo Finance - Market Data (Free)                  │');
   console.log('└──────────────────────────────────────────────────────────────┘');
 
   try {
@@ -322,9 +422,9 @@ async function main() {
     console.error(`❌ Failed: ${(error as Error).message}\n`);
   }
 
-  // 2. Finnhub - 财经新闻（需要 API Key）
+  // 2. Finnhub - 财经新闻（免费 API Key）
   console.log('┌──────────────────────────────────────────────────────────────┐');
-  console.log('│ 📰 [2/3] Finnhub - Financial News                            │');
+  console.log('│ 📰 [2/8] Finnhub - Financial News (Free API Key)             │');
   console.log('└──────────────────────────────────────────────────────────────┘');
 
   if (appConfig.finnhub.apiKey) {
@@ -338,7 +438,7 @@ async function main() {
 
       aggregatedData.news = newsData;
       summary.collectors.push({
-        name: 'finnhub',
+        name: 'finnhub-news',
         status: 'success',
         itemCount: newsData.items.length,
         duration: Date.now() - finnhubStart,
@@ -348,7 +448,7 @@ async function main() {
       console.log(`✅ Collected ${newsData.items.length} news articles\n`);
     } catch (error) {
       summary.collectors.push({
-        name: 'finnhub',
+        name: 'finnhub-news',
         status: 'failed',
         error: (error as Error).message,
       });
@@ -356,16 +456,16 @@ async function main() {
     }
   } else {
     summary.collectors.push({
-      name: 'finnhub',
+      name: 'finnhub-news',
       status: 'skipped',
       error: 'FINNHUB_API_KEY not configured',
     });
     console.log('⏭️  Skipped: FINNHUB_API_KEY not configured\n');
   }
 
-  // 3. FRED - 宏观经济数据（需要 API Key）
+  // 3. FRED - 宏观经济数据（免费 API Key）
   console.log('┌──────────────────────────────────────────────────────────────┐');
-  console.log('│ 🏦 [3/3] FRED - Economic Indicators                          │');
+  console.log('│ 🏦 [3/8] FRED - Economic Indicators (Free API Key)           │');
   console.log('└──────────────────────────────────────────────────────────────┘');
 
   if (appConfig.fred.apiKey) {
@@ -404,6 +504,186 @@ async function main() {
     console.log('⏭️  Skipped: FRED_API_KEY not configured\n');
   }
 
+  // 4. Finnhub - 国会交易数据（免费，复用 Finnhub API Key）
+  console.log('┌──────────────────────────────────────────────────────────────┐');
+  console.log('│ 🏛️  [4/8] Finnhub - Congress Trading (Free)                   │');
+  console.log('└──────────────────────────────────────────────────────────────┘');
+
+  if (appConfig.finnhub.apiKey) {
+    try {
+      const congressStart = Date.now();
+      const congressCollector = new CongressTradingCollector({
+        apiKey: appConfig.finnhub.apiKey,
+        saveRaw: true,
+        daysBack: appConfig.congressTrading?.daysBack || 30,
+      });
+      const congressData = await congressCollector.collect();
+
+      aggregatedData.congressTrading = congressData;
+      summary.collectors.push({
+        name: 'congress-trading',
+        status: 'success',
+        itemCount: congressData.items.length,
+        duration: Date.now() - congressStart,
+      });
+      summary.totalItems += congressData.items.length;
+
+      console.log(`✅ Collected ${congressData.items.length} congress trades\n`);
+    } catch (error) {
+      summary.collectors.push({
+        name: 'congress-trading',
+        status: 'failed',
+        error: (error as Error).message,
+      });
+      console.error(`❌ Failed: ${(error as Error).message}\n`);
+    }
+  } else {
+    summary.collectors.push({
+      name: 'congress-trading',
+      status: 'skipped',
+      error: 'FINNHUB_API_KEY not configured',
+    });
+    console.log('⏭️  Skipped: FINNHUB_API_KEY not configured\n');
+  }
+
+  // 5. SEC EDGAR - 对冲基金 13F 持仓（免费公开数据）
+  console.log('┌──────────────────────────────────────────────────────────────┐');
+  console.log('│ 🏦 [5/8] SEC EDGAR - Hedge Fund 13F (Free Public Data)       │');
+  console.log('└──────────────────────────────────────────────────────────────┘');
+
+  try {
+    const hedgeStart = Date.now();
+    const hedgeCollector = new HedgeFundCollector({
+      saveRaw: true,
+      topFunds: 10,
+    });
+    const hedgeFundData = await hedgeCollector.collect();
+
+    aggregatedData.hedgeFund = hedgeFundData;
+    summary.collectors.push({
+      name: 'hedge-fund-13f',
+      status: 'success',
+      itemCount: hedgeFundData.items.length,
+      duration: Date.now() - hedgeStart,
+    });
+    summary.totalItems += hedgeFundData.items.length;
+
+    console.log(`✅ Collected ${hedgeFundData.items.length} hedge fund holdings\n`);
+  } catch (error) {
+    summary.collectors.push({
+      name: 'hedge-fund-13f',
+      status: 'failed',
+      error: (error as Error).message,
+    });
+    console.error(`❌ Failed: ${(error as Error).message}\n`);
+  }
+
+  // 6. Polymarket - 预测市场数据（免费）
+  console.log('┌──────────────────────────────────────────────────────────────┐');
+  console.log('│ 🔮 [6/8] Polymarket - Prediction Markets (Free)              │');
+  console.log('└──────────────────────────────────────────────────────────────┘');
+
+  try {
+    const polyStart = Date.now();
+    const polyCollector = new PredictionMarketCollector({
+      saveRaw: true,
+      minVolume: 10000,
+    });
+    const predictionData = await polyCollector.collect();
+
+    aggregatedData.predictionMarket = predictionData;
+    summary.collectors.push({
+      name: 'polymarket',
+      status: 'success',
+      itemCount: predictionData.items.length,
+      duration: Date.now() - polyStart,
+    });
+    summary.totalItems += predictionData.items.length;
+
+    console.log(`✅ Collected ${predictionData.items.length} prediction markets\n`);
+  } catch (error) {
+    summary.collectors.push({
+      name: 'polymarket',
+      status: 'failed',
+      error: (error as Error).message,
+    });
+    console.error(`❌ Failed: ${(error as Error).message}\n`);
+  }
+
+  // 7. ApeWisdom - Reddit 社交情绪（免费）
+  console.log('┌──────────────────────────────────────────────────────────────┐');
+  console.log('│ 📱 [7/8] ApeWisdom - Reddit Sentiment (Free)                 │');
+  console.log('└──────────────────────────────────────────────────────────────┘');
+
+  try {
+    const redditStart = Date.now();
+    const redditCollector = new SocialSentimentCollector({
+      saveRaw: true,
+      includeMessages: false,
+    });
+    const sentimentData = await redditCollector.collect();
+
+    aggregatedData.socialSentiment = sentimentData;
+    summary.collectors.push({
+      name: 'reddit-sentiment',
+      status: 'success',
+      itemCount: sentimentData.items.length,
+      duration: Date.now() - redditStart,
+    });
+    summary.totalItems += sentimentData.items.length;
+
+    console.log(`✅ Collected sentiment for ${sentimentData.items.length} symbols\n`);
+  } catch (error) {
+    summary.collectors.push({
+      name: 'reddit-sentiment',
+      status: 'failed',
+      error: (error as Error).message,
+    });
+    console.error(`❌ Failed: ${(error as Error).message}\n`);
+  }
+
+  // 8. StockGeist - X.com 情绪（免费层可选）
+  console.log('┌──────────────────────────────────────────────────────────────┐');
+  console.log('│ 🐦 [8/8] StockGeist - X.com Sentiment (Free Tier Optional)   │');
+  console.log('└──────────────────────────────────────────────────────────────┘');
+
+  const stockGeistApiKey = process.env.STOCKGEIST_API_KEY;
+  if (stockGeistApiKey) {
+    try {
+      const twitterStart = Date.now();
+      const twitterCollector = new TwitterSentimentCollector({
+        apiKey: stockGeistApiKey,
+        saveRaw: true,
+      });
+      const twitterData = await twitterCollector.collect();
+
+      aggregatedData.twitterSentiment = twitterData;
+      summary.collectors.push({
+        name: 'twitter-sentiment',
+        status: 'success',
+        itemCount: twitterData.items.length,
+        duration: Date.now() - twitterStart,
+      });
+      summary.totalItems += twitterData.items.length;
+
+      console.log(`✅ Collected X.com sentiment for ${twitterData.items.length} symbols\n`);
+    } catch (error) {
+      summary.collectors.push({
+        name: 'twitter-sentiment',
+        status: 'failed',
+        error: (error as Error).message,
+      });
+      console.error(`❌ Failed: ${(error as Error).message}\n`);
+    }
+  } else {
+    summary.collectors.push({
+      name: 'twitter-sentiment',
+      status: 'skipped',
+      error: 'STOCKGEIST_API_KEY not configured (optional)',
+    });
+    console.log('⏭️  Skipped: STOCKGEIST_API_KEY not configured (optional)\n');
+  }
+
   // 保存汇总数据
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const outputDir = path.resolve(process.cwd(), 'data/processed');
@@ -435,7 +715,7 @@ async function main() {
     const durationStr = collector.duration ?
                         `(${(collector.duration / 1000).toFixed(1)}s)` : '';
 
-    console.log(`║  ${statusIcon} ${collector.name.padEnd(15)} ${itemStr.padEnd(20)} ${durationStr.padStart(8)} ║`);
+    console.log(`║  ${statusIcon} ${collector.name.padEnd(18)} ${itemStr.padEnd(17)} ${durationStr.padStart(8)} ║`);
   }
 
   console.log('╠════════════════════════════════════════════════════════════╣');
@@ -479,10 +759,18 @@ async function main() {
     }
   }
 
-  if (aggregatedData.economic?.items) {
-    console.log('\n🏦 Key Economic Data:');
-    for (const item of aggregatedData.economic.items.slice(0, 3)) {
-      console.log(`   • ${item.title}: ${item.metadata.value?.toFixed(2)} ${item.metadata.unit}`);
+  if (aggregatedData.congressTrading?.items && aggregatedData.congressTrading.items.length > 0) {
+    console.log('\n🏛️ Congress Trading:');
+    for (const trade of aggregatedData.congressTrading.items.slice(0, 3)) {
+      const d = trade.metadata;
+      console.log(`   • ${d?.politician}: ${d?.transactionType} ${d?.ticker}`);
+    }
+  }
+
+  if (aggregatedData.predictionMarket?.items && aggregatedData.predictionMarket.items.length > 0) {
+    console.log('\n🔮 Prediction Markets:');
+    for (const market of aggregatedData.predictionMarket.items.slice(0, 3)) {
+      console.log(`   • ${market.title.slice(0, 50)}...`);
     }
   }
 

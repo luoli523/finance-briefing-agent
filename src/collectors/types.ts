@@ -3,7 +3,7 @@
  */
 
 // 数据类型枚举
-export type DataType = 'news' | 'market' | 'economic' | 'sec-filings' | 'government-news' | 'company-ir' | 'rss';
+export type DataType = 'news' | 'market' | 'economic' | 'sec-filings' | 'government-news' | 'company-ir' | 'rss' | 'congress-trading' | 'hedge-fund' | 'prediction-market' | 'social-sentiment';
 
 // 市场类型
 export type MarketType = 'stock' | 'index' | 'forex' | 'crypto' | 'commodity';
@@ -181,4 +181,108 @@ export interface AlphaVantageConfig extends CollectorConfig {
 export interface RSSConfig extends CollectorConfig {
   feeds: string[];           // RSS feed URLs
   maxItemsPerFeed?: number;  // 每个 feed 最多获取的条目数
+}
+
+// ===== 智慧资金数据类型 =====
+
+// 国会交易数据
+export interface CongressTrade {
+  politician: string;          // 议员姓名
+  party: 'D' | 'R' | 'I';      // 党派 (Democrat/Republican/Independent)
+  chamber: 'House' | 'Senate'; // 众议院/参议院
+  ticker: string;              // 股票代码
+  company: string;             // 公司名称
+  transactionType: 'buy' | 'sell' | 'exchange'; // 交易类型
+  amount: string;              // 交易金额范围 (如 "$1,001 - $15,000")
+  amountMin?: number;          // 最小金额
+  amountMax?: number;          // 最大金额
+  transactionDate: Date;       // 交易日期
+  disclosureDate: Date;        // 披露日期
+  filingUrl?: string;          // 申报文件链接
+}
+
+// 国会交易收集器配置
+export interface CongressTradingConfig extends CollectorConfig {
+  apiKey: string;              // Finnhub API Key (免费版包含国会交易数据)
+  daysBack?: number;           // 回溯天数 (默认 30)
+  filterSymbols?: string[];    // 过滤特定股票
+}
+
+// 对冲基金持仓数据 (13F)
+export interface HedgeFundHolding {
+  fundName: string;            // 基金名称
+  fundManager: string;         // 基金经理
+  ticker: string;              // 股票代码
+  company: string;             // 公司名称
+  shares: number;              // 持股数量
+  value: number;               // 持仓市值 (美元)
+  portfolioWeight: number;     // 占组合权重 (%)
+  sharesChange: number;        // 持股变动
+  sharesChangePercent: number; // 持股变动 (%)
+  action: 'new' | 'add' | 'reduce' | 'sold' | 'unchanged'; // 操作类型
+  reportDate: Date;            // 报告日期
+  filingDate: Date;            // 申报日期
+}
+
+// 对冲基金持仓配置
+export interface HedgeFundConfig extends CollectorConfig {
+  apiKey?: string;             // 可选 API Key (SEC EDGAR 免费无需 key)
+  topFunds?: number;           // 获取 Top N 基金 (默认 10)
+  filterSymbols?: string[];    // 过滤特定股票
+}
+
+// 预测市场数据 (Polymarket)
+export interface PredictionMarket {
+  id: string;                  // 市场 ID
+  question: string;            // 预测问题
+  category: string;            // 分类 (经济/政治/科技等)
+  outcomes: {
+    name: string;              // 结果选项
+    probability: number;       // 概率 (0-1)
+    price: number;             // 价格
+  }[];
+  volume: number;              // 交易量 (美元)
+  liquidity: number;           // 流动性
+  endDate?: Date;              // 结束日期
+  createdAt: Date;             // 创建日期
+  url?: string;                // 市场链接
+}
+
+// 预测市场配置
+export interface PredictionMarketConfig extends CollectorConfig {
+  categories?: string[];       // 过滤分类
+  minVolume?: number;          // 最小交易量过滤
+}
+
+// 社交情绪数据 (Reddit via ApeWisdom)
+export interface SocialSentiment {
+  ticker: string;              // 股票代码
+  company?: string;            // 公司名称
+  sentiment: 'bullish' | 'bearish' | 'neutral'; // 整体情绪
+  bullishPercent: number;      // 看涨比例 (%)
+  bearishPercent: number;      // 看跌比例 (%)
+  messageCount: number;        // 提及次数
+  messageVolume24h?: number;   // 24小时消息量
+  watchersCount?: number;      // 关注人数 / 点赞数
+  trendingScore?: number;      // 热度分数
+  // ApeWisdom 特有字段
+  rank?: number;               // Reddit 排名
+  rankChange?: number;         // 排名变化 (24h)
+  mentionsChange?: number;     // 提及变化百分比 (24h)
+  upvotes?: number;            // 点赞数
+  topMessages?: {
+    body: string;              // 消息内容
+    sentiment: 'bullish' | 'bearish' | 'neutral';
+    likes: number;
+    createdAt: Date;
+    user: string;
+  }[];
+  timestamp: Date;
+}
+
+// 社交情绪配置
+export interface SocialSentimentConfig extends CollectorConfig {
+  apiKey?: string;             // StockTwits API Key (可选)
+  symbols: string[];           // 要监控的股票
+  includeMessages?: boolean;   // 是否包含热门消息
 }

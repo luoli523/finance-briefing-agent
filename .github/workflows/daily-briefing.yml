@@ -67,6 +67,9 @@ jobs:
           SEC_FORMS=${{ secrets.SEC_FORMS }}
           SEC_DAYS_BACK=${{ secrets.SEC_DAYS_BACK }}
 
+          # Smart Money Data APIs (Optional)
+          STOCKGEIST_API_KEY=${{ secrets.STOCKGEIST_API_KEY }}
+
           # LLM Configuration
           LLM_ENABLED=${{ secrets.LLM_ENABLED }}
           LLM_PROVIDER=${{ secrets.LLM_PROVIDER }}
