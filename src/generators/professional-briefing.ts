@@ -306,26 +306,25 @@ export class ProfessionalBriefingGenerator {
       if (indexAnalysis.marketOverview) {
         content += `**市场整体格局**: ${indexAnalysis.marketOverview}\n\n`;
       }
-      // 各指数分析
-      if (indexAnalysis.indexDetails && indexAnalysis.indexDetails.length > 0) {
-        for (const detail of indexAnalysis.indexDetails) {
-          const indexData = this.stockPerformance.get(detail.symbol);
-          const changeStr = indexData
-            ? `${indexData.changePercent >= 0 ? '+' : ''}${indexData.changePercent.toFixed(2)}%`
-            : '';
-          content += `#### ${detail.name}（${detail.symbol}）${changeStr}\n\n`;
-          content += `**数据面分析**: ${detail.dataAnalysis}\n\n`;
-          content += `**信息面分析**: ${detail.newsAnalysis}\n\n`;
-          content += `**底层逻辑**: ${detail.underlyingLogic}\n\n`;
-          if (detail.keyDrivers && detail.keyDrivers.length > 0) {
-            content += `**主要驱动因素**: ${detail.keyDrivers.join('、')}\n\n`;
-          }
-          content += `---\n\n`;
-        }
+      // 数据面综合分析
+      if (indexAnalysis.dataAnalysis) {
+        content += `**数据面分析**: ${indexAnalysis.dataAnalysis}\n\n`;
       }
-      // 指数间联动分析
-      if (indexAnalysis.crossIndexAnalysis) {
-        content += `**指数间联动分析**: ${indexAnalysis.crossIndexAnalysis}\n\n`;
+      // 信息面综合分析
+      if (indexAnalysis.newsAnalysis) {
+        content += `**信息面分析**: ${indexAnalysis.newsAnalysis}\n\n`;
+      }
+      // 底层逻辑综合分析
+      if (indexAnalysis.underlyingLogic) {
+        content += `**底层逻辑**: ${indexAnalysis.underlyingLogic}\n\n`;
+      }
+      // 主要驱动因素
+      if (indexAnalysis.keyDrivers && indexAnalysis.keyDrivers.length > 0) {
+        content += `**主要驱动因素**: ${indexAnalysis.keyDrivers.join('、')}\n\n`;
+      }
+      // 风险偏好判断
+      if (indexAnalysis.riskAppetite) {
+        content += `**风险偏好**: ${indexAnalysis.riskAppetite}\n\n`;
       }
     } else {
       // 无 LLM 分析时的默认内容
