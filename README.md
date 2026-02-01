@@ -42,15 +42,27 @@
 
 ## 🚀 快速开始
 
-### 1. 安装
+### 1. 克隆并安装
 
 ```bash
 git clone https://github.com/luoli523/finance-briefing-agent.git
 cd finance-briefing-agent
-npm install
+
+# 运行安装脚本 (自动检测环境、安装依赖、创建配置)
+./install.sh
 ```
 
+安装脚本会自动：
+- ✅ 检查 Node.js (>= 18.0) 和 Python (>= 3.9) 版本
+- ✅ 检查 NotebookLM CLI 安装状态
+- ✅ 安装 npm 依赖
+- ✅ 创建 `.env` 配置文件
+- ✅ 创建必要的目录结构
+- ✅ 验证 TypeScript 编译
+
 ### 2. 配置 API Keys
+
+如果 `.env` 文件不存在，安装脚本会自动从模板创建。手动创建：
 
 ```bash
 cp .env.example .env
