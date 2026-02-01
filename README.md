@@ -4,6 +4,10 @@
 
 专业的全自动化 **AI 产业链投资简报**生成工具，每日自动收集美股市场、财经新闻、宏观经济数据，通过 LLM 深度分析生成结构化的投资决策参考报告。
 
+**这是鬼哥的开源项目，欢迎大家试用、反馈和贡献！** 如有问题或建议，请提交 Issue 或 PR。
+
+![Finance Briefing Agent Overview](docs/finance-briefing-agent-infographic.png)
+
 ## ✨ 核心特性
 
 ### 📊 AI 产业链全覆盖
