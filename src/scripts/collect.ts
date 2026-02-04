@@ -25,6 +25,7 @@ import {
   PredictionMarketCollector,
   SocialSentimentCollector,
   TwitterSentimentCollector,
+  ForexCollector,
   CollectedData,
 } from '../collectors/index.js';
 import { appConfig, STOCK_INFO, AI_INDUSTRY_CATEGORIES } from '../config/index.js';
@@ -49,6 +50,7 @@ interface AggregatedData {
   market?: CollectedData;
   news?: CollectedData;
   economic?: CollectedData;
+  forex?: CollectedData;                // 美元指数、美债收益率、外汇
   congressTrading?: CollectedData;
   hedgeFund?: CollectedData;
   predictionMarket?: CollectedData;
@@ -395,7 +397,7 @@ async function main() {
 
   // 1. Yahoo Finance - 市场数据（免费）
   console.log('┌──────────────────────────────────────────────────────────────┐');
-  console.log('│ 📊 [1/8] Yahoo Finance - Market Data (Free)                  │');
+  console.log('│ 📊 [1/9] Yahoo Finance - Market Data (Free)                  │');
   console.log('└──────────────────────────────────────────────────────────────┘');
 
   try {
@@ -424,7 +426,7 @@ async function main() {
 
   // 2. Finnhub - 财经新闻（免费 API Key）
   console.log('┌──────────────────────────────────────────────────────────────┐');
-  console.log('│ 📰 [2/8] Finnhub - Financial News (Free API Key)             │');
+  console.log('│ 📰 [2/9] Finnhub - Financial News (Free API Key)             │');
   console.log('└──────────────────────────────────────────────────────────────┘');
 
   if (appConfig.finnhub.apiKey) {
@@ -548,7 +550,7 @@ async function main() {
 
   // 5. SEC EDGAR - 对冲基金 13F 持仓（免费公开数据）
   console.log('┌──────────────────────────────────────────────────────────────┐');
-  console.log('│ 🏦 [5/8] SEC EDGAR - Hedge Fund 13F (Free Public Data)       │');
+  console.log('│ 🏦 [5/9] SEC EDGAR - Hedge Fund 13F (Free Public Data)       │');
   console.log('└──────────────────────────────────────────────────────────────┘');
 
   try {
@@ -644,7 +646,7 @@ async function main() {
 
   // 8. StockGeist - X.com 情绪（免费层可选）
   console.log('┌──────────────────────────────────────────────────────────────┐');
-  console.log('│ 🐦 [8/8] StockGeist - X.com Sentiment (Free Tier Optional)   │');
+  console.log('│ 🐦 [8/9] StockGeist - X.com Sentiment (Free Tier Optional)   │');
   console.log('└──────────────────────────────────────────────────────────────┘');
 
   const stockGeistApiKey = process.env.STOCKGEIST_API_KEY;
@@ -682,6 +684,35 @@ async function main() {
       error: 'STOCKGEIST_API_KEY not configured (optional)',
     });
     console.log('⏭️  Skipped: STOCKGEIST_API_KEY not configured (optional)\n');
+  }
+
+  // 9. Forex - 美元指数、美债收益率、外汇（免费）
+  console.log('┌──────────────────────────────────────────────────────────────┐');
+  console.log('│ 💵 [9/9] Forex - Dollar Index, Yields, FX Pairs (Free)       │');
+  console.log('└──────────────────────────────────────────────────────────────┘');
+
+  try {
+    const forexStart = Date.now();
+    const forexCollector = new ForexCollector({ saveRaw: true });
+    const forexData = await forexCollector.collect();
+
+    aggregatedData.forex = forexData;
+    summary.collectors.push({
+      name: 'forex-collector',
+      status: 'success',
+      itemCount: forexData.items.length,
+      duration: Date.now() - forexStart,
+    });
+    summary.totalItems += forexData.items.length;
+
+    console.log(`✅ Collected ${forexData.items.length} forex data points\n`);
+  } catch (error) {
+    summary.collectors.push({
+      name: 'forex-collector',
+      status: 'failed',
+      error: (error as Error).message,
+    });
+    console.error(`❌ Failed: ${(error as Error).message}\n`);
   }
 
   // 保存汇总数据

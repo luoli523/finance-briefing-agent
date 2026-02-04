@@ -5,6 +5,7 @@ import { MarketAnalyzer } from './market';
 import { NewsAnalyzer } from './news';
 import { EconomicAnalyzer } from './economic';
 import { SmartMoneyAnalyzer } from './smart-money';
+import { ForexAnalyzer, ForexAnalysis } from './forex';
 import {
   ComprehensiveAnalysis,
   MarketAnalysis,
@@ -22,6 +23,7 @@ interface AggregatedData {
   market?: CollectedData;
   news?: CollectedData;
   economic?: CollectedData;
+  forex?: CollectedData;                // 美元指数、美债收益率、外汇
   congressTrading?: CollectedData;
   hedgeFund?: CollectedData;
   predictionMarket?: CollectedData;
@@ -38,6 +40,7 @@ export class UnifiedAnalyzer {
   private newsAnalyzer: NewsAnalyzer;
   private economicAnalyzer: EconomicAnalyzer;
   private smartMoneyAnalyzer: SmartMoneyAnalyzer;
+  private forexAnalyzer: ForexAnalyzer;
   private config: AnalyzerConfig;
 
   constructor(config: AnalyzerConfig = {}) {
@@ -46,6 +49,7 @@ export class UnifiedAnalyzer {
     this.newsAnalyzer = new NewsAnalyzer(config);
     this.economicAnalyzer = new EconomicAnalyzer(config);
     this.smartMoneyAnalyzer = new SmartMoneyAnalyzer(config);
+    this.forexAnalyzer = new ForexAnalyzer(config);
   }
 
   /**
@@ -57,6 +61,7 @@ export class UnifiedAnalyzer {
     let marketAnalysis: MarketAnalysis | undefined;
     let newsAnalysis: NewsAnalysis | undefined;
     let economicAnalysis: EconomicAnalysis | undefined;
+    let forexAnalysis: ForexAnalysis | undefined;
     let smartMoneyAnalysis: SmartMoneyAnalysis | undefined;
 
     // 分析市场数据
@@ -86,6 +91,15 @@ export class UnifiedAnalyzer {
       }
     }
 
+    // 分析外汇数据
+    if (data.forex) {
+      try {
+        forexAnalysis = await this.forexAnalyzer.analyze(data.forex);
+      } catch (error) {
+        console.error('[unified-analyzer] Forex analysis failed:', error);
+      }
+    }
+
     // 分析智慧资金数据
     const hasSmartMoneyData = data.congressTrading || data.hedgeFund ||
                              data.predictionMarket || data.socialSentiment;
@@ -110,6 +124,7 @@ export class UnifiedAnalyzer {
       market: marketAnalysis,
       news: newsAnalysis,
       economic: economicAnalysis,
+      forex: forexAnalysis,
       smartMoney: smartMoneyAnalysis,
       summary,
     };

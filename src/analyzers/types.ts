@@ -158,6 +158,7 @@ export interface ComprehensiveAnalysis {
   news?: NewsAnalysis;
   economic?: EconomicAnalysis;
   smartMoney?: SmartMoneyAnalysis;
+  forex?: any; // 外汇分析，类型定义在 forex.ts 中
 
   // 综合摘要
   summary: {

@@ -18,3 +18,7 @@ export type { IntelligentAnalysis } from './intelligent';
 
 // LLM 增强分析器
 export * from './llm';
+
+// 外汇与美债分析器
+export { ForexAnalyzer, createForexAnalyzer } from './forex';
+export type { ForexAnalysis, TreasuryYieldAnalysis, DollarIndexAnalysis, CurrencyPairAnalysis } from './forex';

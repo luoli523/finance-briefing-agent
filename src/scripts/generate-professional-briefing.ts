@@ -302,10 +302,11 @@ function buildDataSummary(analysis: ComprehensiveAnalysis): string {
     summary += `\n`;
   }
   
-  // 兜底：尝试读取 topHeadlines
-  if (analysis.news?.topHeadlines && analysis.news.topHeadlines.length > 0) {
+  // 兜底：尝试读取 keyHeadlines
+  const newsHeadlines = (analysis.news as any)?.keyHeadlines || [];
+  if (newsHeadlines.length > 0) {
     summary += `### 其他新闻\n`;
-    analysis.news.topHeadlines.slice(0, 10).forEach((headline: any, i: number) => {
+    newsHeadlines.slice(0, 10).forEach((headline: any, i: number) => {
       if (typeof headline === 'string') {
         summary += `${i + 1}. ${headline}\n`;
       } else {
@@ -326,6 +327,49 @@ function buildDataSummary(analysis: ComprehensiveAnalysis): string {
       }
     }
     summary += `\n`;
+  }
+  
+  // 美元与利率环境
+  if (analysis.forex) {
+    summary += `## 美元与利率环境\n\n`;
+    
+    const forex = analysis.forex as any;
+    
+    // 美元指数
+    if (forex.dollarIndex) {
+      const dxy = forex.dollarIndex;
+      summary += `### 美元指数 (DXY)\n`;
+      summary += `- 当前点位: ${dxy.current?.toFixed(2) || 'N/A'}\n`;
+      summary += `- 涨跌: ${dxy.changePercent >= 0 ? '+' : ''}${dxy.changePercent?.toFixed(2) || 'N/A'}%\n`;
+      summary += `- 趋势: ${dxy.trend || 'N/A'} (${dxy.level || 'N/A'}水平)\n\n`;
+    }
+    
+    // 美债收益率
+    if (forex.treasuryYields) {
+      const ty = forex.treasuryYields;
+      summary += `### 美债收益率\n`;
+      if (ty.yields) {
+        for (const [period, data] of Object.entries(ty.yields)) {
+          const yieldData = data as any;
+          summary += `- ${period}: ${yieldData.rate?.toFixed(2) || 'N/A'}% (${yieldData.changePercent >= 0 ? '+' : ''}${yieldData.changePercent?.toFixed(2) || 'N/A'}%, ${yieldData.trend})\n`;
+        }
+      }
+      if (ty.yieldCurve) {
+        summary += `- 收益率曲线: ${ty.yieldCurve.shape || 'N/A'}\n`;
+        summary += `- 2Y-10Y利差: ${ty.yieldCurve.spread2Y10Y?.toFixed(2) || 'N/A'}%\n`;
+      }
+      summary += `\n`;
+    }
+    
+    // 主要货币对
+    if (forex.currencyPairs) {
+      summary += `### 主要货币对\n`;
+      for (const [pair, data] of Object.entries(forex.currencyPairs)) {
+        const pairData = data as any;
+        summary += `- ${pair}: ${pairData.rate?.toFixed(4) || 'N/A'} (${pairData.changePercent >= 0 ? '+' : ''}${pairData.changePercent?.toFixed(2) || 'N/A'}%)\n`;
+      }
+      summary += `\n`;
+    }
   }
   
   // 智慧资金数据
