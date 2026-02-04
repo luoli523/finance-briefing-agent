@@ -148,6 +148,31 @@ interface LLMInsights {
     };
   };
   dailyBlessing?: string;
+  forexAnalysis?: {
+    dollarIndexInsight?: {
+      currentLevel: string;
+      trendAnalysis: string;
+      marketImpact: string;
+      tradingGuidance: string[];
+    };
+    treasuryYieldAnalysis?: {
+      curveInterpretation: string;
+      rateEnvironment: string;
+      keyInsights: string[];
+      sectorRotation: string;
+      riskWarning: string;
+    };
+    crossMarketAnalysis?: {
+      equityBondCorrelation: string;
+      dollarEquityRelationship: string;
+      integratedView: string;
+    };
+    actionableStrategy?: {
+      hedgeRecommendations: string[];
+      opportunitySpotting: string[];
+      timingGuidance: string;
+    };
+  };
   smartMoneyAnalysis?: {
     congressTrading?: {
       summary: string;
@@ -359,36 +384,23 @@ export class ProfessionalBriefingGenerator {
 
     // === 指数深度分析 ===
     content += `\n### 指数变化深度分析\n\n`;
-    const indexAnalysis = this.llmInsights?.indexAnalysis;
+    const indexAnalysis = this.llmInsights?.indexAnalysis as any;
     if (indexAnalysis) {
       // 市场概况
       if (indexAnalysis.marketOverview) {
         content += `**市场整体格局**: ${indexAnalysis.marketOverview}\n\n`;
       }
-      // 数据面综合分析
-      if (indexAnalysis.dataAnalysis) {
-        content += `**数据面分析**: ${indexAnalysis.dataAnalysis}\n\n`;
-      }
-      // 信息面综合分析
-      if (indexAnalysis.newsAnalysis) {
-        content += `**信息面分析**: ${indexAnalysis.newsAnalysis}\n\n`;
-      }
-      // 底层逻辑综合分析
-      if (indexAnalysis.underlyingLogic) {
-        content += `**底层逻辑**: ${indexAnalysis.underlyingLogic}\n\n`;
-      }
-      // 主要驱动因素
-      if (indexAnalysis.keyDrivers && indexAnalysis.keyDrivers.length > 0) {
-        content += `**主要驱动因素**: ${indexAnalysis.keyDrivers.join('、')}\n\n`;
-      }
-      // 风险偏好判断
-      if (indexAnalysis.riskAppetite) {
-        content += `**风险偏好**: ${indexAnalysis.riskAppetite}\n\n`;
+      // 跨指数分析（如果存在）
+      if (indexAnalysis.crossIndexAnalysis) {
+        content += `**综合分析**: ${indexAnalysis.crossIndexAnalysis}\n\n`;
       }
     } else {
       // 无 LLM 分析时的默认内容
       content += this.generateDefaultIndexAnalysis();
     }
+
+    // === 美元与利率环境 ===
+    content += this.generateForexSection();
 
     // === ETF 表现 ===
     content += `### ETF 表现\n\n`;
@@ -441,6 +453,276 @@ export class ProfessionalBriefingGenerator {
     content += `\n**未上市重要主体**：OpenAI / Anthropic / xAI / Perplexity（仅列示，不填价格）\n`;
 
     return content;
+  }
+
+  /**
+   * 生成美元与利率环境版块
+   */
+  private generateForexSection(): string {
+    let content = `\n### 美元与利率环境\n\n`;
+
+    const forexData = this.analysis.forex;
+    const forexLLM = this.llmInsights?.forexAnalysis;
+
+    if (!forexData) {
+      content += `*暂无美元和利率数据*\n\n`;
+      return content;
+    }
+
+    // ==== 1. 美元指数 ====
+    const dollarIndex = forexData.dollarIndex;
+    if (dollarIndex) {
+      const emoji = dollarIndex.changePercent > 0 ? '🔴' : dollarIndex.changePercent < 0 ? '🟢' : '➡️';
+      const changeStr = dollarIndex.changePercent !== 0
+        ? `${dollarIndex.changePercent >= 0 ? '+' : ''}${dollarIndex.changePercent.toFixed(2)}%`
+        : 'N/A';
+      
+      content += `#### 💵 美元指数 (DXY)\n\n`;
+      content += `| 指标 | 数值 | 涨跌幅 | 表现 |\n`;
+      content += `|:-----|-----:|-------:|:----:|\n`;
+      content += `| 美元指数 | ${dollarIndex.current.toFixed(2)} | ${changeStr} | ${emoji} |\n\n`;
+      
+      // 优先使用LLM深度分析
+      if (forexLLM?.dollarIndexInsight) {
+        const llmDollar = forexLLM.dollarIndexInsight;
+        if (llmDollar.trendAnalysis) {
+          content += `**趋势分析**: ${llmDollar.trendAnalysis}\n\n`;
+        }
+        if (llmDollar.marketImpact) {
+          content += `**市场影响**: ${llmDollar.marketImpact}\n\n`;
+        }
+        if (llmDollar.tradingGuidance && llmDollar.tradingGuidance.length > 0) {
+          content += `**交易指引**:\n`;
+          llmDollar.tradingGuidance.forEach((guidance: string) => {
+            content += `- ${guidance}\n`;
+          });
+          content += `\n`;
+        }
+      } else {
+        // 使用规则引擎分析作为备选
+        if (dollarIndex.interpretation) {
+          content += `**解读**: ${dollarIndex.interpretation}\n\n`;
+        }
+        if (dollarIndex.implications && dollarIndex.implications.length > 0) {
+          content += `**市场影响**:\n`;
+          dollarIndex.implications.forEach((imp: string) => {
+            content += `- ${imp}\n`;
+          });
+          content += `\n`;
+        }
+      }
+    }
+
+    // ==== 2. 美债收益率 ====
+    const treasuryYields = forexData.treasuryYields;
+    if (treasuryYields && treasuryYields.yields) {
+      content += `#### 📊 美债收益率\n\n`;
+      content += `| 期限 | 收益率(%) | 涨跌幅 | 趋势 |\n`;
+      content += `|:-----|----------:|-------:|:-----|\n`;
+      
+      // 按期限顺序显示
+      const periods = ['3M', '2Y', '5Y', '10Y', '30Y'];
+      for (const period of periods) {
+        const yieldData = treasuryYields.yields[period];
+        if (yieldData) {
+          const trendEmoji = yieldData.trend === 'rising' ? '⬆️' : 
+                            yieldData.trend === 'falling' ? '⬇️' : '➡️';
+          const changeStr = yieldData.changePercent !== 0
+            ? `${yieldData.changePercent >= 0 ? '+' : ''}${yieldData.changePercent.toFixed(2)}%`
+            : 'N/A';
+          content += `| ${period} | ${yieldData.rate.toFixed(2)}% | ${changeStr} | ${trendEmoji} |\n`;
+        }
+      }
+      content += `\n`;
+
+      // 收益率曲线分析
+      if (treasuryYields.yieldCurve) {
+        const curve = treasuryYields.yieldCurve;
+        content += `**收益率曲线形态**: ${this.getYieldCurveShapeText(curve.shape)}\n`;
+        content += `- 2年期-10年期利差: ${curve.spread2Y10Y >= 0 ? '+' : ''}${curve.spread2Y10Y.toFixed(2)}%\n`;
+        if (curve.spread10Y30Y !== undefined) {
+          content += `- 10年期-30年期利差: ${curve.spread10Y30Y >= 0 ? '+' : ''}${curve.spread10Y30Y.toFixed(2)}%\n`;
+        }
+        content += `\n`;
+      }
+
+      // 优先使用LLM深度分析
+      if (forexLLM?.treasuryYieldAnalysis) {
+        const llmYield = forexLLM.treasuryYieldAnalysis;
+        
+        if (llmYield.curveInterpretation) {
+          content += `**曲线深度解读**: ${llmYield.curveInterpretation}\n\n`;
+        }
+        
+        if (llmYield.rateEnvironment) {
+          content += `**利率环境影响**: ${llmYield.rateEnvironment}\n\n`;
+        }
+        
+        if (llmYield.keyInsights && llmYield.keyInsights.length > 0) {
+          content += `**关键洞察**:\n`;
+          llmYield.keyInsights.forEach((insight: string) => {
+            content += `- ${insight}\n`;
+          });
+          content += `\n`;
+        }
+        
+        if (llmYield.sectorRotation) {
+          content += `**行业轮动建议**: ${llmYield.sectorRotation}\n\n`;
+        }
+        
+        if (llmYield.riskWarning) {
+          content += `⚠️ **风险提示**: ${llmYield.riskWarning}\n\n`;
+        }
+      } else {
+        // 使用规则引擎分析作为备选
+        if (treasuryYields.yieldCurve?.interpretation) {
+          content += `**曲线解读**: ${treasuryYields.yieldCurve.interpretation}\n\n`;
+        }
+        
+        if (treasuryYields.volatility) {
+          const vol = treasuryYields.volatility;
+          const volEmoji = vol.level === 'low' ? '🟢' : vol.level === 'medium' ? '🟡' : '🔴';
+          content += `**波动性**: ${volEmoji} ${vol.level === 'low' ? '低' : vol.level === 'medium' ? '中' : '高'}\n`;
+          content += `${vol.description}\n\n`;
+        }
+
+        if (treasuryYields.marketImplications && treasuryYields.marketImplications.length > 0) {
+          content += `**市场含义**:\n`;
+          treasuryYields.marketImplications.forEach((imp: string) => {
+            content += `${imp}\n\n`;
+          });
+        }
+
+        if (treasuryYields.risks && treasuryYields.risks.length > 0) {
+          content += `**风险提示**:\n`;
+          treasuryYields.risks.forEach((risk: string) => {
+            content += `${risk}\n\n`;
+          });
+        }
+
+        if (treasuryYields.outlook) {
+          content += `**投资展望**: ${treasuryYields.outlook}\n\n`;
+        }
+      }
+    }
+
+    // ==== 3. 主要货币对 ====
+    const currencyPairs = forexData.currencyPairs;
+    if (currencyPairs && Object.keys(currencyPairs).length > 0) {
+      content += `#### 🌍 主要货币对\n\n`;
+      content += `| 货币对 | 汇率 | 涨跌幅 | 美元动向 |\n`;
+      content += `|:-------|-----:|-------:|:---------|\n`;
+      
+      // 按顺序显示货币对
+      const pairs = ['USDCHF', 'USDSGD', 'USDJPY', 'USDCNH'];
+      for (const pair of pairs) {
+        const pairData = currencyPairs[pair];
+        if (pairData) {
+          const trendEmoji = pairData.trend === 'usd_strengthening' ? '💪' : 
+                            pairData.trend === 'usd_weakening' ? '📉' : '➡️';
+          const trendText = pairData.trend === 'usd_strengthening' ? '走强' : 
+                           pairData.trend === 'usd_weakening' ? '走弱' : '持稳';
+          const changeStr = pairData.changePercent !== 0
+            ? `${pairData.changePercent >= 0 ? '+' : ''}${pairData.changePercent.toFixed(2)}%`
+            : 'N/A';
+          content += `| ${pair} | ${pairData.rate.toFixed(4)} | ${changeStr} | ${trendEmoji} ${trendText} |\n`;
+        }
+      }
+      content += `\n`;
+
+      // 货币对解读（选择重要的显示）
+      const usdcnh = currencyPairs['USDCNH'];
+      const usdjpy = currencyPairs['USDJPY'];
+      if (usdcnh && usdcnh.interpretation) {
+        content += `**人民币汇率**: ${usdcnh.interpretation}\n\n`;
+      }
+      if (usdjpy && usdjpy.interpretation) {
+        content += `**日元汇率**: ${usdjpy.interpretation}\n\n`;
+      }
+    }
+
+    // ==== 4. 综合评估 ====
+    content += `#### 🎯 综合评估\n\n`;
+    
+    // 优先使用LLM跨市场分析和策略建议
+    if (forexLLM) {
+      // 跨市场联动分析
+      if (forexLLM.crossMarketAnalysis) {
+        const cross = forexLLM.crossMarketAnalysis;
+        
+        if (cross.integratedView) {
+          content += `**三市联动**: ${cross.integratedView}\n\n`;
+        }
+        
+        if (cross.equityBondCorrelation) {
+          content += `**股债相关性**: ${cross.equityBondCorrelation}\n\n`;
+        }
+        
+        if (cross.dollarEquityRelationship) {
+          content += `**美元-股市关系**: ${cross.dollarEquityRelationship}\n\n`;
+        }
+      }
+      
+      // 可操作策略
+      if (forexLLM.actionableStrategy) {
+        const strategy = forexLLM.actionableStrategy;
+        
+        if (strategy.hedgeRecommendations && strategy.hedgeRecommendations.length > 0) {
+          content += `**对冲建议**:\n`;
+          strategy.hedgeRecommendations.forEach((rec: string) => {
+            content += `- ${rec}\n`;
+          });
+          content += `\n`;
+        }
+        
+        if (strategy.opportunitySpotting && strategy.opportunitySpotting.length > 0) {
+          content += `**投资机会**:\n`;
+          strategy.opportunitySpotting.forEach((opp: string) => {
+            content += `- ${opp}\n`;
+          });
+          content += `\n`;
+        }
+        
+        if (strategy.timingGuidance) {
+          content += `**时机判断**: ${strategy.timingGuidance}\n\n`;
+        }
+      }
+    } else {
+      // 使用规则引擎分析作为备选
+      const overall = forexData.overallAssessment;
+      if (overall) {
+        if (overall.keyTakeaways && overall.keyTakeaways.length > 0) {
+          content += `**关键要点**:\n`;
+          overall.keyTakeaways.forEach((point: string) => {
+            content += `- ${point}\n`;
+          });
+          content += `\n`;
+        }
+
+        if (overall.tradingGuidance && overall.tradingGuidance.length > 0) {
+          content += `**交易指引**:\n`;
+          overall.tradingGuidance.forEach((guidance: string) => {
+            content += `- ${guidance}\n`;
+          });
+          content += `\n`;
+        }
+      }
+    }
+
+    return content;
+  }
+
+  /**
+   * 获取收益率曲线形态文本
+   */
+  private getYieldCurveShapeText(shape: string): string {
+    switch (shape) {
+      case 'inverted': return '⚠️ 倒挂';
+      case 'flat': return '➡️ 平坦';
+      case 'steep': return '📈 陡峭';
+      case 'normal': return '✅ 正常';
+      default: return shape;
+    }
   }
 
   /**
@@ -550,7 +832,7 @@ export class ProfessionalBriefingGenerator {
 
     // 从分析数据中获取新闻
     const newsData = this.analysis.news;
-    const topHeadlines = newsData?.topHeadlines || [];
+    const newsHeadlines = (newsData as any)?.keyHeadlines || [];
     
     if (llmNews?.keyNews && llmNews.keyNews.length > 0) {
       // 使用LLM生成的新闻分析
@@ -562,10 +844,10 @@ export class ProfessionalBriefingGenerator {
         content += `**分类**: ${news.category}\n\n`;
         content += `---\n\n`;
       });
-    } else if (topHeadlines.length > 0) {
+    } else if (newsHeadlines.length > 0) {
       // 使用收集的新闻数据
-      topHeadlines.slice(0, 10).forEach((headline, index) => {
-        content += `### ${index + 1}. ${headline.title || headline}\n\n`;
+      newsHeadlines.slice(0, 10).forEach((headline: any, index: number) => {
+        content += `### ${index + 1}. ${headline.headline || headline.title || headline}\n\n`;
         if (typeof headline === 'object') {
           content += `**来源**: ${headline.source || 'N/A'}\n\n`;
           if (headline.summary) {

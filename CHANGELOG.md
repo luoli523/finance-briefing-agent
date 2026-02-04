@@ -1,5 +1,72 @@
 # 更新日志 (Changelog)
 
+## [v1.1.0] - 2026-02-02
+
+### 💵 美元与利率环境监控（新增！）
+
+#### ✨ 核心功能
+在简报第一部分"核心股票池表现"中新增**美元与利率环境**子版块，提供全面的外汇和利率市场分析。
+
+#### 📊 数据收集（新增第9个收集器）
+- ✅ 美元指数 (DXY)
+- ✅ 美债收益率（3M、2Y、5Y、10Y、30Y）
+- ✅ 主要货币对（USDCHF、USDSGD、USDJPY、USDCNH）
+- ✅ 数据源：Yahoo Finance（免费，无需API Key）
+
+#### 🧠 双层分析架构
+1. **规则引擎分析**（默认，快速零成本）
+   - 收益率曲线形态判断（正常/倒挂/平坦/陡峭）
+   - 2Y-10Y 和 10Y-30Y 利差计算
+   - 美元强弱判断（强势/中性/弱势）
+   - 波动性评估（低/中/高）
+   - 基于经典金融理论的市场影响分析
+
+2. **LLM 深度增强**（启用 LLM 后自动生效）
+   - 结合当日新闻的美元走势分析
+   - 收益率曲线的深度解读（含历史对比、未来预测）
+   - 针对 AI 产业链的行业轮动建议
+   - 跨市场联动分析（美元-利率-股市三者关系）
+   - 具体的对冲建议和投资机会
+   - 精确的时机判断（关键点位和信号）
+
+#### 📁 新增文件
+- `src/collectors/forex-collector.ts` - 外汇数据收集器
+- `src/analyzers/forex.ts` - 外汇深度分析器
+- `docs/FOREX_MODULE.md` - 功能文档
+- `docs/FOREX_LLM_ANALYSIS.md` - LLM增强说明
+- `docs/FOREX_ANALYSIS_FLOW.md` - 完整流程图
+
+#### 🔧 修改文件
+- `src/collectors/index.ts` - 导出 ForexCollector
+- `src/analyzers/index.ts` - 导出 ForexAnalyzer  
+- `src/analyzers/types.ts` - 添加 forex 字段到 ComprehensiveAnalysis
+- `src/analyzers/unified.ts` - 集成 ForexAnalyzer
+- `src/scripts/collect.ts` - 添加外汇收集器（第9个）
+- `src/scripts/generate-professional-briefing.ts` - 添加 forex 数据到 LLM 输入
+- `src/generators/professional-briefing.ts` - 新增 `generateForexSection()` 方法
+- `prompts/professional-briefing-task.txt` - 添加 `forexAnalysis` 输出格式
+- `README.md` - 更新文档，添加美元模块说明
+
+#### 💡 使用方法
+```bash
+# 基础使用（规则引擎）
+npm run collect      # 自动收集美元/利率数据
+npm run analyze      # 自动分析
+npm run generate:pro # 自动生成简报（含美元版块）
+
+# LLM 增强（推荐）
+# 在 .env 中配置: LLM_ENABLED=true
+npm run daily  # 一键运行，自动包含LLM深度分析
+```
+
+#### 🎯 核心价值
+- **经济衰退预警**: 通过 2Y-10Y 利差监控，提前 12-18 个月预警风险
+- **利率环境应对**: 实时追踪利率变化，指导 AI 产业链配置调整
+- **美元影响分析**: 评估美元强弱对跨国科技公司盈利的影响
+- **跨市场联动**: 发现美元-利率-股市的非常规组合，提前识别转折点
+
+---
+
 ## [未发布] - 2026-01-22
 
 ### 📝 Prompt 自定义管理系统（最新！）

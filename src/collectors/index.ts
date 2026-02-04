@@ -35,3 +35,7 @@ export { PredictionMarketCollector, createPredictionMarketCollector, predictionM
 export { SocialSentimentCollector, createSocialSentimentCollector, socialSentimentCollector } from './social-sentiment';
 export { TwitterSentimentCollector, createTwitterSentimentCollector, twitterSentimentCollector } from './twitter-sentiment';
 export type { TwitterSentiment, TwitterSentimentConfig } from './twitter-sentiment';
+
+// 外汇与美元收集器
+export { ForexCollector, createForexCollector, forexCollector, FOREX_SYMBOLS } from './forex-collector';
+export type { ForexConfig } from './forex-collector';

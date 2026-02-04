@@ -159,6 +159,43 @@
   
   "dailyBlessing": "温和、积极、让人开心的一句话祝福（不涉及投资，不含表情符号）",
 
+  "forexAnalysis": {
+    // 【新增】美元与利率环境深度分析
+    "dollarIndexInsight": {
+      "currentLevel": "当前美元指数水平描述（强势/中性/弱势）",
+      "trendAnalysis": "结合今日新闻和经济数据，分析美元走势的核心驱动因素（2-3句）",
+      "marketImpact": "美元强弱对AI产业链、大宗商品、新兴市场的具体影响（2-3句）",
+      "tradingGuidance": ["具体交易建议1（如：增持/减持某类资产）", "建议2"]
+    },
+    "treasuryYieldAnalysis": {
+      "curveInterpretation": "收益率曲线形态（正常/倒挂/平坦/陡峭）的深度解读，结合2Y-10Y利差分析经济衰退风险（3-4句）",
+      "rateEnvironment": "当前利率环境（上行/下行/持稳）对不同资产类别的影响分析（3-4句）",
+      "keyInsights": [
+        "关键洞察1（如：倒挂信号显示经济衰退概率上升）",
+        "关键洞察2（如：融资成本上升压制估值）",
+        "关键洞察3"
+      ],
+      "sectorRotation": "基于利率环境的行业轮动建议（2-3句，说明应增持/减持哪些行业）",
+      "riskWarning": "主要风险提示（如：快速加息风险、流动性危机等）"
+    },
+    "crossMarketAnalysis": {
+      "equityBondCorrelation": "股债相关性分析（当前环境下股票与债券的关系，是否仍有对冲作用）",
+      "dollarEquityRelationship": "美元走势与美股（特别是科技股）的关联分析（2-3句）",
+      "integratedView": "美元、利率、股市三者的联动关系及投资含义（2-3句）"
+    },
+    "actionableStrategy": {
+      "hedgeRecommendations": [
+        "对冲建议1（具体工具和配置比例）",
+        "对冲建议2"
+      ],
+      "opportunitySpotting": [
+        "投资机会1（基于美元/利率环境发现的机会）",
+        "投资机会2"
+      ],
+      "timingGuidance": "入场/出场时机建议（基于美元指数和收益率曲线的关键点位）"
+    }
+  },
+
   "smartMoneyAnalysis": {
     // 【新增】智慧资金与市场情绪分析
     "congressTrading": {

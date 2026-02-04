@@ -26,6 +26,7 @@
 - **Finnhub** - 全球财经新闻
 - **FRED** - 美国宏观经济指标
 - **政府 RSS** - Fed 公告、SEC 新闻
+- **💵 美元与利率环境** - 美元指数、美债收益率、主要货币对（免费）
 
 ### 💰 智慧资金追踪（新增）
 - **对冲基金 13F** - SEC EDGAR 直接解析，追踪顶级基金持仓（免费）
@@ -91,10 +92,10 @@ npm run daily
 ```
 
 这将自动执行完整流程：
-1. **📊 收集数据** (~30秒) - 市场行情、新闻、经济指标、智慧资金数据
+1. **📊 收集数据** (~30秒) - 市场行情、新闻、经济指标、美元/利率、智慧资金数据
 2. **🧠 智能分析** (~2秒) - 多维度数据分析
 3. **🤖 LLM 深度分析** (~90秒) - GPT-5.2 产业链 + 智慧资金洞察
-4. **📄 生成简报** (~1秒) - 专业投资报告（含智慧资金分析）
+4. **📄 生成简报** (~1秒) - 专业投资报告（含智慧资金和美元分析）
 5. **🎨 生成信息图** (~60秒) - NotebookLM 中文可视化
 6. **📑 生成 Slides** (~60秒) - NotebookLM PPT
 7. **📧 发送邮件** - 含信息图和 Slides 附件
@@ -113,7 +114,7 @@ npm run daily
 
 ### 一、核心股票池表现
 
-#### 主要指数（新增深度分析）
+#### 主要指数（含深度分析）
 五大指数实时行情 + **深度分析**（数据面、信息面、底层逻辑）：
 
 | 指数名称 | 代号 | 最新点位 | 涨跌幅 | 表现 |
@@ -129,6 +130,41 @@ npm run daily
 - **信息面分析** - 当日影响指数的新闻、政策、经济数据
 - **底层逻辑** - 为什么涨/跌、板块贡献、资金流向
 - **指数间联动** - 成长vs价值、大盘vs小盘、VIX关系
+
+#### 💵 美元与利率环境（新增）
+全面监控美元指数、美债收益率和主要货币对，并提供深度分析：
+
+**美元指数 (DXY)**
+- 实时价格、涨跌幅、趋势判断（走强/走弱/持稳）
+- 水平评估（强势/中性/弱势）
+- 对股市、大宗商品、新兴市场的影响分析
+
+**美债收益率**（覆盖 3M、2Y、5Y、10Y、30Y）
+- 各期限收益率及涨跌
+- **收益率曲线形态**：正常/倒挂/平坦/陡峭
+- **2Y-10Y 利差**：经典衰退预警指标
+- **波动性分析**：低/中/高波动及市场含义
+- **市场影响**：融资成本、利率趋势对资产的影响
+- **风险提示**：经济衰退风险、市场不确定性
+- **投资展望**：基于收益率曲线的配置建议
+
+**主要货币对**
+- USDCHF（瑞郎 - 避险货币）
+- USDSGD（新元 - 亚太经济）
+- USDJPY（日元 - 套息交易）
+- USDCNH（人民币 - 中国经济）
+
+**综合评估**
+- 关键要点整合
+- 交易指引（防御/进取策略、资产配置）
+
+> 💡 **LLM 增强**: 启用 LLM 后，美元与利率分析将获得：
+> - 结合当日新闻的深度解读
+> - AI产业链视角的行业轮动建议
+> - 跨市场联动分析（美元-利率-股市）
+> - 具体的标的推荐和时机判断
+> 
+> 详见 [`docs/FOREX_LLM_ANALYSIS.md`](./docs/FOREX_LLM_ANALYSIS.md)
 
 #### ETF 表现
 8 只核心 ETF 实时行情：
@@ -304,6 +340,13 @@ npm run collect:reddit           # Reddit 情绪（ApeWisdom）
 npm run collect:twitter          # X.com 情绪（StockGeist）
 ```
 
+### 测试命令
+
+```bash
+# 测试外汇收集器（美元指数、美债收益率、货币对）
+node test-forex.js
+```
+
 ### 发送命令
 
 ```bash
@@ -444,6 +487,7 @@ finance-briefing-agent/
 │   │   ├── yahoo-finance.ts # 美股行情（免费）
 │   │   ├── finnhub.ts       # 财经新闻
 │   │   ├── fred.ts          # 经济数据
+│   │   ├── forex-collector.ts    # 美元/利率/外汇（免费）
 │   │   ├── hedge-fund.ts    # 对冲基金 13F（SEC EDGAR 免费）
 │   │   ├── prediction-market.ts  # Polymarket 预测市场（免费）
 │   │   ├── social-sentiment.ts   # Reddit 情绪（ApeWisdom 免费）
@@ -455,6 +499,7 @@ finance-briefing-agent/
 │   │   ├── market.ts        # 市场分析
 │   │   ├── news.ts          # 新闻分析
 │   │   ├── economic.ts      # 经济分析
+│   │   ├── forex.ts         # 美元/利率/外汇分析
 │   │   ├── smart-money.ts   # 智慧资金分析
 │   │   └── llm/             # LLM增强分析
 │   │       ├── providers/   # 多LLM提供商
@@ -522,6 +567,8 @@ export const MONITORED_SYMBOLS = {
 | [`docs/LLM_ENHANCEMENT.md`](./docs/LLM_ENHANCEMENT.md) | LLM 配置详解 |
 | [`docs/LLM_PROVIDER_COMPARISON.md`](./docs/LLM_PROVIDER_COMPARISON.md) | LLM 提供商对比 |
 | [`docs/COLLECTORS_OVERVIEW.md`](./docs/COLLECTORS_OVERVIEW.md) | 数据收集器说明 |
+| [`docs/FOREX_MODULE.md`](./docs/FOREX_MODULE.md) | 💵 美元与利率环境模块 |
+| [`docs/FOREX_LLM_ANALYSIS.md`](./docs/FOREX_LLM_ANALYSIS.md) | 🤖 美元/利率 LLM 深度分析 |
 | [`docs/SYMBOLS_CONFIGURATION.md`](./docs/SYMBOLS_CONFIGURATION.md) | 股票配置指南 |
 | [`docs/PROMPT_CUSTOMIZATION.md`](./docs/PROMPT_CUSTOMIZATION.md) | 提示词定制 |
 | [`docs/INTELLIGENT_ANALYZER.md`](./docs/INTELLIGENT_ANALYZER.md) | 智能分析器 |
@@ -819,7 +866,7 @@ A: 可以！系统会使用规则引擎生成基础报告。但推荐启用 LLM 
 A: GPT-5.2 质量最佳；Gemini 2.0 Flash 免费；GPT-4o-mini 性价比高。
 
 **Q: 数据多久更新？**  
-A: 手动运行命令时更新。建议美股收盘后（北京时间早上 5-6 点，新加坡时间早上 9-10 点）运行。
+A: 手动运行命令时更新。建议美股收盘后（北京时间早上 5-6 点，新加坡时间早上 9-10 点）运行。美元指数、美债收益率、外汇数据均为实时更新。
 
 **Q: LLM 分析超时怎么办？**  
 A: 增加 `LLM_TIMEOUT` 值（默认 300000 = 5分钟）。
@@ -844,6 +891,12 @@ A: 根据 SEC 规定，13F 报告需在季度结束后 45 天内提交。因此�
 
 **Q: 如何添加更多对冲基金追踪？**  
 A: 编辑 `src/collectors/hedge-fund.ts` 中的 `TRACKED_FUNDS` 数组，添加基金名称和 CIK 号码即可。
+
+**Q: 美债收益率倒挂是什么意思？**  
+A: 当短期国债收益率（如2年期）高于长期国债收益率（如10年期）时，称为"倒挂"。这是经济衰退的经典预警信号，历史上倒挂后12-18个月内往往出现经济衰退。
+
+**Q: 美元指数怎么解读？**  
+A: DXY > 105 为强势美元，通常压制大宗商品和新兴市场；DXY < 95 为弱势美元，利好黄金、原油和跨国企业海外收入。系统会自动提供详细的市场影响分析和交易指引。
 
 ---
 
