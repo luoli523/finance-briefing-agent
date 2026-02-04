@@ -24,7 +24,7 @@ export const FOREX_SYMBOLS = {
   // 美债收益率（Yahoo Finance 使用 ^IRX, ^FVX, ^TNX, ^TYX）
   treasuryYields: {
     '3M': '^IRX',    // 13周（约3个月）国债
-    '2Y': '^/TNX',  // 2年期国债（使用期货代码）
+    '2Y': '^2YY',    // 2年期国债
     '5Y': '^FVX',    // 5年期国债
     '10Y': '^TNX',   // 10年期国债
     '30Y': '^TYX',   // 30年期国债
@@ -159,7 +159,9 @@ export class ForexCollector extends BaseCollector<ForexConfig> {
    */
   private async fetchQuote(symbol: string): Promise<QuoteData | null> {
     try {
-      const quote = await YahooFinance.quote(symbol) as any;
+      // 创建 Yahoo Finance 客户端实例
+      const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+      const quote = await yahooFinance.quote(symbol) as any;
       
       if (!quote || typeof quote.regularMarketPrice !== 'number') {
         this.log(`Invalid quote data for ${symbol}`);
