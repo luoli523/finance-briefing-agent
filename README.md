@@ -85,7 +85,15 @@ LLM_MAX_TOKENS=16384
 LLM_TIMEOUT=300000
 ```
 
-### 3. 一键生成简报 🎯
+### 3. 查看所有可用命令 📖
+
+```bash
+npm run help
+```
+
+显示完整的命令行帮助，包括所有可用的 npm scripts、使用示例和配置说明。
+
+### 4. 一键生成简报 🎯
 
 ```bash
 npm run daily
@@ -858,6 +866,9 @@ notebooklm login
 ---
 
 ## ⚠️ 常见问题
+
+**Q: 如何查看所有可用的命令？**  
+A: 运行 `npm run help` 查看完整的命令列表、使用示例和配置说明。
 
 **Q: 没有 LLM API Key 能用吗？**  
 A: 可以！系统会使用规则引擎生成基础报告。但推荐启用 LLM 获得深度洞察。
