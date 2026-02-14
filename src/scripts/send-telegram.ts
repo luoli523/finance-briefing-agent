@@ -9,7 +9,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
-import { sendBriefingTelegram, getTelegramConfig } from '../services/telegram';
+import { sendBriefingTelegram, getTelegramConfig, sendTelegramPhoto, sendBriefingDocument } from '../services/telegram';
 
 dotenv.config();
 
@@ -47,12 +47,42 @@ async function main() {
   console.log(`📄 简报文件: ${briefingPath}`);
   console.log(`📱 Chat ID: ${config.chatId}\n`);
 
-  // 发送
+  // 1. 发送文字摘要
   const success = await sendBriefingTelegram(briefingPath);
   
   if (!success) {
     process.exit(1);
   }
+
+  // 2. 发送信息图（infographic）
+  const infographicPath = path.join(outputDir, `ai-briefing-${targetDate}-infographic.png`);
+  if (fs.existsSync(infographicPath)) {
+    console.log(`\n🖼️  发送信息图: ${infographicPath}`);
+    const photoSent = await sendTelegramPhoto(infographicPath, `📊 AI Industry Infographic - ${targetDate}`);
+    if (photoSent) {
+      console.log('   ✅ 信息图发送成功');
+    } else {
+      console.log('   ⚠️  信息图发送失败，继续发送其他文件...');
+    }
+  } else {
+    console.log(`\n⏭️  未找到信息图文件，跳过: ${infographicPath}`);
+  }
+
+  // 3. 发送幻灯片（slides）
+  const slidesPath = path.join(outputDir, `ai-briefing-${targetDate}-slide-deck.pdf`);
+  if (fs.existsSync(slidesPath)) {
+    console.log(`\n📑 发送幻灯片: ${slidesPath}`);
+    const slidesSent = await sendBriefingDocument(slidesPath, `📑 AI Industry Slide Deck - ${targetDate}`);
+    if (slidesSent) {
+      console.log('   ✅ 幻灯片发送成功');
+    } else {
+      console.log('   ⚠️  幻灯片发送失败');
+    }
+  } else {
+    console.log(`\n⏭️  未找到幻灯片文件，跳过: ${slidesPath}`);
+  }
+
+  console.log('\n📱 Telegram 发送流程完成\n');
 }
 
 main().catch(console.error);
