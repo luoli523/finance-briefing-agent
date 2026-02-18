@@ -71,11 +71,11 @@ function generateEnhancedInfographic(analysis: ComprehensiveAnalysis, theme: key
     day: 'numeric' 
   });
   
-  // 提取数据
-  const topGainers = market.topGainers.slice(0, 5);
-  const topLosers = market.topLosers.slice(0, 5);
-  const keyIndicators = economic.keyIndicators.slice(0, 5);
-  const topHeadlines = news.keyHeadlines.slice(0, 5);
+  // 提取数据（安全访问可选字段）
+  const topGainers = market?.topGainers?.slice(0, 5) || [];
+  const topLosers = market?.topLosers?.slice(0, 5) || [];
+  const keyIndicators = economic?.keyIndicators?.slice(0, 5) || [];
+  const topHeadlines = news?.keyHeadlines?.slice(0, 5) || [];
   
   // 计算板块表现
   const sectors = [
@@ -90,7 +90,7 @@ function generateEnhancedInfographic(analysis: ComprehensiveAnalysis, theme: key
   // 生成饼图数据
   const pieData = {
     labels: topGainers.map(q => q.symbol),
-    values: topGainers.map(q => Math.abs(q.regularMarketChangePercent || 0)),
+    values: topGainers.map(q => Math.abs(q.changePercent || 0)),
   };
   
   // 生成雷达图数据
@@ -605,10 +605,10 @@ gantt
     <header>
       <h1>🎯 增强版投资决策 Infographic</h1>
       <div class="date">${date} | 当前主题: ${themeConfig.name}</div>
-      <div class="market-status ${market.marketCondition === 'bullish' ? '' : market.marketCondition === 'neutral' ? 'warning' : 'danger'}">
-        ${market.marketCondition === 'bullish' ? '📈' : market.marketCondition === 'neutral' ? '⚖️' : '📉'} 
-        市场状态: ${market.marketCondition === 'bullish' ? '牛市' : market.marketCondition === 'neutral' ? '震荡' : '熊市'}
-        ${market.fearGreedIndex?.vix ? `| VIX: ${market.fearGreedIndex.vix.toFixed(2)}` : ''}
+      <div class="market-status ${market?.condition === 'risk-on' ? '' : market?.condition === 'mixed' ? 'warning' : 'danger'}">
+        ${market?.condition === 'risk-on' ? '📈' : market?.condition === 'mixed' ? '⚖️' : '📉'} 
+        市场状态: ${market?.condition === 'risk-on' ? '风险偏好' : market?.condition === 'mixed' ? '震荡分化' : '避险模式'}
+        ${market?.sentiment ? `| 情绪: ${market.sentiment}` : ''}
       </div>
       
       <!-- 控制按钮 -->
@@ -630,16 +630,16 @@ gantt
       </div>
       <div class="stat-grid">
         <div class="stat-card">
-          <div class="stat-value">+${topGainers[0]?.regularMarketChangePercent?.toFixed(1) || '0'}%</div>
+          <div class="stat-value">+${topGainers[0]?.changePercent?.toFixed(1) || '0'}%</div>
           <div class="stat-label">最大涨幅</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">${topLosers[0]?.regularMarketChangePercent?.toFixed(1) || '0'}%</div>
+          <div class="stat-value">${topLosers[0]?.changePercent?.toFixed(1) || '0'}%</div>
           <div class="stat-label">最大跌幅</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">${market.fearGreedIndex?.vix?.toFixed(1) || 'N/A'}</div>
-          <div class="stat-label">VIX 指数</div>
+          <div class="stat-value">${market?.condition || 'N/A'}</div>
+          <div class="stat-label">市场状态</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">${keyIndicators.length}</div>
@@ -702,9 +702,9 @@ gantt
             <div class="stock-item">
               <div>
                 <div class="stock-symbol">${q.symbol}</div>
-                <div style="font-size: 12px; color: var(--text-secondary);">${q.shortName || q.symbol}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${q.name || q.symbol}</div>
               </div>
-              <div class="stock-change">+${q.regularMarketChangePercent?.toFixed(2)}%</div>
+              <div class="stock-change">+${q.changePercent?.toFixed(2)}%</div>
             </div>
           `).join('')}
         </div>
@@ -720,9 +720,9 @@ gantt
             <div class="stock-item negative">
               <div>
                 <div class="stock-symbol">${q.symbol}</div>
-                <div style="font-size: 12px; color: var(--text-secondary);">${q.shortName || q.symbol}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${q.name || q.symbol}</div>
               </div>
-              <div class="stock-change negative">${q.regularMarketChangePercent?.toFixed(2)}%</div>
+              <div class="stock-change negative">${q.changePercent?.toFixed(2)}%</div>
             </div>
           `).join('')}
         </div>

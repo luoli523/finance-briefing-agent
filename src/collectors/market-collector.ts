@@ -1,43 +1,11 @@
 import { YahooFinanceCollector } from './yahoo-finance';
 import { AlphaVantageCollector } from './alpha-vantage';
 import { CollectedData, QuoteData } from './types';
-import { appConfig } from '../config';
+import { appConfig, getIndexSymbols, getStockSymbols, getETFSymbols } from '../config';
 import { historyManager } from './history';
 
-// 默认监控的股票列表
-const DEFAULT_INDICES = [
-  '^GSPC',    // S&P 500
-  '^DJI',     // Dow Jones
-  '^IXIC',    // NASDAQ
-  '^RUT',     // Russell 2000
-  '^VIX',     // VIX 恐慌指数
-  '^SPX',     // S&P 500 Index
-];
-
-const DEFAULT_SYMBOLS = [
-  // ETF
-  'SPY', 'QQQ', 'VOO', 'SOXX', 'SMH', 'GLD',
-  // 科技巨头
-  'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'ORCL', 'PLTR',
-  // 半导体
-  'NVDA', 'AMD', 'INTC', 'AVGO', 'QCOM', 'TSM', 'ASML', 'MU', 'MRVL', 'ARM', 'LRCX', 'AMAT', 'KLAC',
-  // 存储
-  'WDC', 'STX', 'PSTG',
-  // 数据中心
-  'VRT', 'DELL', 'ANET',
-  // 能源/核电
-  'VST', 'CEG', 'LEU', 'OKLO', 'BE',
-  // 航天
-  'RKLB',
-  // 金融
-  'BRK-B', 'JPM', 'V',
-  // 保险科技
-  'LMND',
-  // 医疗
-  'LLY',
-  // 其他
-  'CRWV',
-];
+const DEFAULT_INDICES = getIndexSymbols();
+const DEFAULT_SYMBOLS = [...getETFSymbols(), ...getStockSymbols()];
 
 export type DataSource = 'yahoo' | 'alpha-vantage';
 

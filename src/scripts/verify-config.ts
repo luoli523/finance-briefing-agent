@@ -32,12 +32,14 @@ function main() {
   const categories = [
     { name: '主要指数', data: MONITORED_SYMBOLS.indices },
     { name: 'ETF', data: MONITORED_SYMBOLS.etf },
-    { name: '科技巨头', data: MONITORED_SYMBOLS.techGiants },
-    { name: '半导体', data: MONITORED_SYMBOLS.semiconductor },
-    { name: '存储', data: MONITORED_SYMBOLS.storage },
-    { name: '数据中心', data: MONITORED_SYMBOLS.dataCenter },
-    { name: '能源', data: MONITORED_SYMBOLS.energy },
-    { name: '金融', data: MONITORED_SYMBOLS.finance },
+    { name: 'GPU/加速', data: MONITORED_SYMBOLS.gpuAccelerator },
+    { name: '晶圆制造', data: MONITORED_SYMBOLS.waferManufacturing },
+    { name: '设备/EDA', data: MONITORED_SYMBOLS.equipmentEda },
+    { name: '服务器', data: MONITORED_SYMBOLS.serverInfra },
+    { name: '云与平台', data: MONITORED_SYMBOLS.cloudPlatform },
+    { name: '应用软件', data: MONITORED_SYMBOLS.aiSoftware },
+    { name: '自动驾驶', data: MONITORED_SYMBOLS.autonomousRobotics },
+    { name: '能源', data: MONITORED_SYMBOLS.dataCenterEnergy },
     { name: '其他', data: MONITORED_SYMBOLS.others },
   ];
 
@@ -99,7 +101,7 @@ function main() {
     { name: '指数都以^开头', pass: indices.every(s => s.startsWith('^')) },
     { name: '股票都不以^开头', pass: stocks.every(s => !s.startsWith('^')) },
     { name: '没有重复项', pass: duplicates.length === 0 },
-    { name: '总数正确(51)', pass: allSymbols.length === 51 },
+    { name: `总数正确(${allSymbols.length})`, pass: allSymbols.length === getAllMonitoredSymbols().length },
   ];
 
   checks.forEach(check => {

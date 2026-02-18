@@ -10,26 +10,18 @@
  *   npm run send-instagram 2026-01-25   # 发布指定日期内容
  *
  * 前置条件:
- *   pip install instagrapi pdf2image
+ *   bash install.sh  (自动创建 .venv 并安装 Python 依赖)
  *   macOS: brew install poppler
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
-import { execSync, spawnSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { getVenvPython, checkPythonModule } from '../utils/python';
 
 dotenv.config();
-
-function checkPythonDep(module: string): boolean {
-  try {
-    execSync(`python3 -c "import ${module}"`, { stdio: 'pipe' });
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 /**
  * 将 PDF 切分为图片，输出到与 PDF 同名的目录
@@ -49,7 +41,7 @@ function convertPdfToImages(pdfPath: string, pyScriptsDir: string): string | nul
   }
 
   const convertScript = path.join(pyScriptsDir, 'pdf-to-images.py');
-  const result = spawnSync('python3', [convertScript, pdfPath, '--dpi', '150'], {
+  const result = spawnSync(getVenvPython(), [convertScript, pdfPath, '--dpi', '150'], {
     stdio: 'inherit',
     timeout: 120000,
   });
@@ -143,9 +135,9 @@ async function main() {
   }
 
   // 检查 Python 依赖
-  if (!checkPythonDep('instagrapi')) {
+  if (!checkPythonModule('instagrapi')) {
     console.log('❌ Python 依赖 instagrapi 未安装');
-    console.log('   请运行: pip install instagrapi');
+    console.log('   请运行: bash install.sh (自动安装到 .venv)');
     process.exit(1);
   }
 
@@ -183,7 +175,7 @@ async function main() {
     console.log(`   文件: ${path.basename(infographicPath)}`);
     console.log(`   Caption: ${caption.length} 字符\n`);
 
-    const result = spawnSync('python3', [postScript, 'photo', infographicPath, caption], {
+    const result = spawnSync(getVenvPython(), [postScript, 'photo', infographicPath, caption], {
       stdio: 'inherit',
       env: igEnv,
       timeout: 120000,
@@ -212,9 +204,9 @@ async function main() {
     console.log('└──────────────────────────────────────────────────────────────┘');
 
     // 检查 pdf2image 依赖
-    if (!checkPythonDep('pdf2image')) {
+    if (!checkPythonModule('pdf2image')) {
       console.log('   ⚠️  Python 依赖 pdf2image 未安装，跳过幻灯片');
-      console.log('   请运行: pip install pdf2image');
+      console.log('   请运行: bash install.sh (自动安装到 .venv)');
       console.log('   macOS 还需要: brew install poppler\n');
     } else {
       // PDF 切分为图片
@@ -228,7 +220,7 @@ async function main() {
 
         console.log(`\n   📤 发布相册到 Instagram...\n`);
 
-        const result = spawnSync('python3', [postScript, 'album', slideImagesDir, slideCaption], {
+        const result = spawnSync(getVenvPython(), [postScript, 'album', slideImagesDir, slideCaption], {
           stdio: 'inherit',
           env: igEnv,
           timeout: 180000,

@@ -192,18 +192,36 @@ export class SECCollector extends BaseCollector<SECConfig> {
     return items;
   }
 
+  private tickerToCikCache: Map<string, string> | null = null;
+
+  /**
+   * 加载 SEC 的 ticker → CIK 映射表
+   */
+  private async loadTickerMap(): Promise<Map<string, string>> {
+    if (this.tickerToCikCache) return this.tickerToCikCache;
+
+    try {
+      const url = 'https://www.sec.gov/files/company_tickers.json';
+      const data = await this.httpsRequest(url) as Record<string, { cik_str: number; ticker: string; title: string }>;
+      const map = new Map<string, string>();
+      for (const entry of Object.values(data)) {
+        map.set(entry.ticker.toUpperCase(), String(entry.cik_str));
+      }
+      this.tickerToCikCache = map;
+      this.log(`Loaded ${map.size} ticker-to-CIK mappings`);
+      return map;
+    } catch (error) {
+      this.logError('Failed to load ticker-to-CIK map', error as Error);
+      return new Map();
+    }
+  }
+
   /**
    * 通过 ticker 获取 CIK
    */
   private async getCIKFromTicker(ticker: string): Promise<string | null> {
-    try {
-      const url = `${SEC_BASE_URL}/submissions/CIK${ticker.toUpperCase()}.json`;
-      const data = await this.httpsRequest(url);
-      return data.cik;
-    } catch {
-      // 如果直接查找失败，尝试从公司 ticker 列表搜索
-      return null;
-    }
+    const map = await this.loadTickerMap();
+    return map.get(ticker.toUpperCase()) || null;
   }
 
   /**

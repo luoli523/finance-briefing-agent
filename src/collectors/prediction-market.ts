@@ -86,7 +86,8 @@ export class PredictionMarketCollector extends BaseCollector<PredictionMarketCon
       // 过滤和处理数据
       for (const market of activeMarkets) {
         // 过滤低流动性市场
-        if (market.volume < (this.config.minVolume || 10000)) continue;
+        const vol = Number(market.volume) || 0;
+        if (vol < (this.config.minVolume || 10000)) continue;
 
         // 检查是否匹配关键词
         if (!this.isRelevantMarket(market)) continue;

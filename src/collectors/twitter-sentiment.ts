@@ -268,7 +268,7 @@ export class TwitterSentimentCollector extends BaseCollector<TwitterSentimentCon
         neutralPercent: (neutral / total) * 100,
         messageVolume: data.mentions?.total || 0,
         volumeChange24h: data.mentions?.change_24h,
-        trending: data.trending || (data.mentions?.change_24h && data.mentions.change_24h > 50),
+        trending: data.trending || (data.mentions?.change_24h != null && data.mentions.change_24h > 50) || undefined,
         timestamp: new Date(data.timestamp || Date.now()),
       };
     } catch {

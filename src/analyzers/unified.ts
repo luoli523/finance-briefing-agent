@@ -119,7 +119,7 @@ export class UnifiedAnalyzer {
     }
 
     // 生成综合摘要
-    const summary = this.generateSummary(marketAnalysis, newsAnalysis, economicAnalysis, smartMoneyAnalysis);
+    const summary = this.generateSummary(marketAnalysis, newsAnalysis, economicAnalysis, smartMoneyAnalysis, forexAnalysis);
 
     const result: ComprehensiveAnalysis = {
       timestamp: new Date(),
@@ -174,7 +174,8 @@ export class UnifiedAnalyzer {
     market?: MarketAnalysis,
     news?: NewsAnalysis,
     economic?: EconomicAnalysis,
-    smartMoney?: SmartMoneyAnalysis
+    smartMoney?: SmartMoneyAnalysis,
+    forex?: ForexAnalysis,
   ): ComprehensiveAnalysis['summary'] {
     // 综合市场状态
     const marketCondition = market?.condition || 'mixed';
@@ -200,6 +201,11 @@ export class UnifiedAnalyzer {
       keyPoints.push(...economic.highlights.slice(0, 2));
     }
 
+    // 外汇关键点
+    if (forex?.overallAssessment?.keyTakeaways) {
+      keyPoints.push(...forex.overallAssessment.keyTakeaways.slice(0, 2));
+    }
+
     // 智慧资金关键点
     if (smartMoney) {
       keyPoints.push(...smartMoney.highlights.slice(0, 2));
@@ -222,7 +228,7 @@ export class UnifiedAnalyzer {
     }
 
     // 生成展望
-    const outlook = this.generateOutlook(market, economic);
+    const outlook = this.generateOutlook(market, economic, forex);
 
     return {
       marketCondition,
@@ -258,7 +264,8 @@ export class UnifiedAnalyzer {
    */
   private generateOutlook(
     market?: MarketAnalysis,
-    economic?: EconomicAnalysis
+    economic?: EconomicAnalysis,
+    forex?: ForexAnalysis,
   ): string {
     const parts: string[] = [];
 
@@ -292,6 +299,19 @@ export class UnifiedAnalyzer {
       // 收益率曲线
       if (economic.categories.rates.yieldCurve === 'inverted') {
         parts.push('需关注收益率曲线倒挂带来的潜在风险');
+      }
+    }
+
+    // 外汇/美元展望
+    if (forex?.overallAssessment) {
+      const { dollarStrength, rateEnvironment } = forex.overallAssessment;
+      if (dollarStrength === 'strong') {
+        parts.push('美元走强对出口型科技股构成压力');
+      } else if (dollarStrength === 'weak') {
+        parts.push('美元走弱有利于跨国企业盈利');
+      }
+      if (rateEnvironment === 'rising') {
+        parts.push('利率上行环境下关注高成长股估值压力');
       }
     }
 

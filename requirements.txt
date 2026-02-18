@@ -1,0 +1,4 @@
+notebooklm-py
+instagrapi
+pdf2image
+Pillow

@@ -38,7 +38,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y poppler-utils
-          pip install notebooklm-py instagrapi pdf2image
+          pip install -r requirements.txt
           which notebooklm && notebooklm --version || echo "NotebookLM CLI verification needed"
           python3 -c "import instagrapi; print('instagrapi OK')" || echo "instagrapi verification needed"
           python3 -c "import pdf2image; print('pdf2image OK')" || echo "pdf2image verification needed"
@@ -71,8 +71,7 @@ jobs:
 
       - name: Create .env file
         run: |
-          cat << EOF > .env
-          # Data Collection APIs
+          cat << 'ENVEOF' > .env
           FINNHUB_API_KEY=${{ secrets.FINNHUB_API_KEY }}
           FRED_API_KEY=${{ secrets.FRED_API_KEY }}
           ALPHA_VANTAGE_API_KEY=${{ secrets.ALPHA_VANTAGE_API_KEY }}
@@ -80,12 +79,8 @@ jobs:
           SEC_SYMBOLS=${{ secrets.SEC_SYMBOLS }}
           SEC_FORMS=${{ secrets.SEC_FORMS }}
           SEC_DAYS_BACK=${{ secrets.SEC_DAYS_BACK }}
-
-          # Smart Money Data APIs (Optional)
           STOCKGEIST_API_KEY=${{ secrets.STOCKGEIST_API_KEY }}
           CONGRESS_DAYS_BACK=${{ secrets.CONGRESS_DAYS_BACK }}
-
-          # LLM Configuration
           LLM_ENABLED=${{ secrets.LLM_ENABLED }}
           LLM_PROVIDER=${{ secrets.LLM_PROVIDER }}
           LLM_MODEL=${{ secrets.LLM_MODEL }}
@@ -94,8 +89,6 @@ jobs:
           LLM_TEMPERATURE=${{ secrets.LLM_TEMPERATURE }}
           LLM_MAX_TOKENS=${{ secrets.LLM_MAX_TOKENS }}
           LLM_TIMEOUT=${{ secrets.LLM_TIMEOUT }}
-
-          # Email Configuration
           EMAIL_ENABLED=${{ secrets.EMAIL_ENABLED }}
           EMAIL_TO=${{ secrets.EMAIL_TO }}
           EMAIL_FROM=${{ secrets.EMAIL_FROM }}
@@ -103,17 +96,17 @@ jobs:
           EMAIL_SMTP_PORT=${{ secrets.EMAIL_SMTP_PORT }}
           EMAIL_SMTP_USER=${{ secrets.EMAIL_SMTP_USER }}
           EMAIL_SMTP_PASS=${{ secrets.EMAIL_SMTP_PASS }}
-
-          # Telegram Configuration
           TELEGRAM_ENABLED=${{ secrets.TELEGRAM_ENABLED }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
-
-          # Instagram Configuration
           IG_ENABLED=${{ secrets.IG_ENABLED }}
           IG_USERNAME=${{ secrets.IG_USERNAME }}
           IG_PASSWORD=${{ secrets.IG_PASSWORD }}
-          EOF
+          ENVEOF
+          sed -i 's/^[[:space:]]*//' .env
+
+      - name: Create data directories
+        run: mkdir -p data/raw data/processed data/history output
 
       - name: Collect market data
         run: npm run collect

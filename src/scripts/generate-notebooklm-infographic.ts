@@ -14,8 +14,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync, spawnSync } from 'child_process';
 import * as dotenv from 'dotenv';
+import { getVenvBin } from '../utils/python';
 
 dotenv.config();
+
+const NOTEBOOKLM_CMD = getVenvBin('notebooklm');
 
 // 固定的 Notebook 名称
 const NOTEBOOK_NAME = 'AI投资简报';
@@ -32,7 +35,7 @@ interface InfographicResult {
  */
 function checkNotebookLMCLI(): boolean {
   try {
-    execSync('notebooklm --version', { stdio: 'pipe' });
+    execSync(`${NOTEBOOKLM_CMD} --version`, { stdio: 'pipe' });
     return true;
   } catch {
     return false;
@@ -44,7 +47,7 @@ function checkNotebookLMCLI(): boolean {
  */
 function checkNotebookLMAuth(): boolean {
   try {
-    const result = execSync('notebooklm status 2>&1', { encoding: 'utf-8' });
+    const result = execSync(`${NOTEBOOKLM_CMD} status 2>&1`, { encoding: 'utf-8' });
     return !result.includes('not authenticated') && !result.includes('login');
   } catch {
     return false;
@@ -58,7 +61,7 @@ function checkNotebookLMAuth(): boolean {
 function findNotebook(): string | null {
   try {
     // 使用 --json 格式获取更精确的数据
-    const result = execSync('notebooklm list --json 2>&1', { encoding: 'utf-8' });
+    const result = execSync(`${NOTEBOOKLM_CMD} list --json 2>&1`, { encoding: 'utf-8' });
     try {
       const data = JSON.parse(result);
       // 格式: { notebooks: [...] }
@@ -99,7 +102,7 @@ function findNotebook(): string | null {
  * @returns notebook ID
  */
 function createNotebook(): string {
-  const result = spawnSync('notebooklm', ['create', NOTEBOOK_NAME], {
+  const result = spawnSync(NOTEBOOKLM_CMD, ['create', NOTEBOOK_NAME], {
     encoding: 'utf-8',
     timeout: 30000,
   });
@@ -122,7 +125,7 @@ function createNotebook(): string {
  */
 function findExistingSource(targetDate: string): string | null {
   try {
-    const result = execSync('notebooklm source list --json 2>&1', { encoding: 'utf-8' });
+    const result = execSync(`${NOTEBOOKLM_CMD} source list --json 2>&1`, { encoding: 'utf-8' });
     // 匹配 "ai-briefing-2026-01-28" 或 "ai-briefing-2026-01-28.md"
     const sourcePattern = `ai-briefing-${targetDate}`;
 
@@ -180,7 +183,7 @@ async function generateInfographic(
 
     // 2. 设置当前 Notebook
     console.log(`📌 设置当前 Notebook...`);
-    const useResult = spawnSync('notebooklm', ['use', notebookId], {
+    const useResult = spawnSync(NOTEBOOKLM_CMD, ['use', notebookId], {
       encoding: 'utf-8',
       timeout: 30000,
     });
@@ -198,7 +201,7 @@ async function generateInfographic(
     } else {
       // 上传简报文件
       console.log(`📤 上传简报文件: ${path.basename(briefingPath)}`);
-      const addResult = spawnSync('notebooklm', [
+      const addResult = spawnSync(NOTEBOOKLM_CMD, [
         'source', 'add', briefingPath,
         '--title', `ai-briefing-${targetDate}`,
         '--json'
@@ -228,7 +231,7 @@ async function generateInfographic(
       if (sourceId) {
         console.log(`⏳ 等待 NotebookLM 处理文件...`);
         console.log(`   Source ID: ${sourceId}`);
-        const waitResult = spawnSync('notebooklm', [
+        const waitResult = spawnSync(NOTEBOOKLM_CMD, [
           'source', 'wait', sourceId,
           '--timeout', '120'
         ], {
@@ -274,7 +277,7 @@ async function generateInfographic(
         ];
 
     // 发起生成请求（不等待）
-    const generateResult = spawnSync('notebooklm', generateArgs, {
+    const generateResult = spawnSync(NOTEBOOKLM_CMD, generateArgs, {
       encoding: 'utf-8',
       timeout: 60000,
     });
@@ -298,7 +301,7 @@ async function generateInfographic(
     // 等待生成完成
     if (taskId) {
       console.log(`   ⏳ 等待生成完成 (Task: ${taskId.slice(0, 8)}...)...`);
-      const waitResult = spawnSync('notebooklm', [
+      const waitResult = spawnSync(NOTEBOOKLM_CMD, [
         'artifact', 'wait', taskId,
         '--timeout', '600'  // 10 分钟超时
       ], {
@@ -321,7 +324,7 @@ async function generateInfographic(
     if (taskId) {
       const artifactName = `ai-briefing-${targetDate}-${artifactType}`;
       console.log(`   📝 重命名 Artifact: ${artifactName}`);
-      spawnSync('notebooklm', ['artifact', 'rename', taskId, artifactName], {
+      spawnSync(NOTEBOOKLM_CMD, ['artifact', 'rename', taskId, artifactName], {
         encoding: 'utf-8',
         timeout: 30000,
       });
@@ -329,7 +332,7 @@ async function generateInfographic(
 
     // 5. 下载生成的文件
     console.log(`📥 下载 ${typeLabel} 到: ${outputPath}`);
-    const downloadResult = spawnSync('notebooklm', [
+    const downloadResult = spawnSync(NOTEBOOKLM_CMD, [
       'download', artifactType, outputPath,
       '--force',  // 覆盖已有文件
       '--latest'  // 下载最新的 artifact
@@ -400,7 +403,7 @@ async function main() {
   console.log('🔍 检查 NotebookLM CLI...');
   if (!checkNotebookLMCLI()) {
     console.error('❌ NotebookLM CLI 未安装');
-    console.error('   请先安装: pip install notebooklm-py');
+    console.error('   请运行: bash install.sh (自动安装到 .venv)');
     process.exit(1);
   }
   console.log('   ✅ NotebookLM CLI 已安装');
@@ -409,7 +412,7 @@ async function main() {
   console.log('🔐 检查认证状态...');
   if (!checkNotebookLMAuth()) {
     console.error('❌ NotebookLM 未认证');
-    console.error('   请先运行: notebooklm login');
+    console.error('   请运行: .venv/bin/notebooklm login');
     process.exit(1);
   }
   console.log('   ✅ 已认证');

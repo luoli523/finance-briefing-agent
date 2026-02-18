@@ -153,7 +153,7 @@ export class SmartMoneyAnalyzer {
       topSells: sellAggregated.slice(0, this.config.topN || 10).map(s => ({
         ticker: s.ticker,
         company: s.company,
-        sellCount: s.buyCount, // reuse the same aggregation logic
+        sellCount: s.tradeCount,
         politicians: s.politicians,
         totalAmount: s.totalAmount,
       })),
@@ -712,7 +712,7 @@ export class SmartMoneyAnalyzer {
 
   private aggregateTradesByTicker(
     trades: any[]
-  ): { ticker: string; company: string; buyCount: number; politicians: string[]; totalAmount: string }[] {
+  ): { ticker: string; company: string; tradeCount: number; buyCount: number; politicians: string[]; totalAmount: string }[] {
     const aggregated = new Map<string, {
       ticker: string;
       company: string;
@@ -744,12 +744,13 @@ export class SmartMoneyAnalyzer {
       .map(a => ({
         ticker: a.ticker,
         company: a.company,
+        tradeCount: a.count,
         buyCount: a.count,
         politicians: Array.from(a.politicians).slice(0, 5),
         totalAmount: a.maxAmount > 1000000 ? `$${(a.maxAmount / 1e6).toFixed(1)}M+` :
                      a.maxAmount > 1000 ? `$${(a.maxAmount / 1e3).toFixed(0)}K+` : 'N/A',
       }))
-      .sort((a, b) => b.buyCount - a.buyCount);
+      .sort((a, b) => b.tradeCount - a.tradeCount);
   }
 
   private assessTradeSignificance(trade: any): string {
