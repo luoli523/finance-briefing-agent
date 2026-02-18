@@ -35,12 +35,13 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install NotebookLM CLI
+      - name: Install Python dependencies
         run: |
-          # Install notebooklm-py (provides 'notebooklm' command)
-          pip install notebooklm-py
-          # Verify installation
-          which notebooklm && notebooklm --version || echo "Installation verification needed"
+          sudo apt-get update && sudo apt-get install -y poppler-utils
+          pip install notebooklm-py instagrapi pdf2image
+          which notebooklm && notebooklm --version || echo "NotebookLM CLI verification needed"
+          python3 -c "import instagrapi; print('instagrapi OK')" || echo "instagrapi verification needed"
+          python3 -c "import pdf2image; print('pdf2image OK')" || echo "pdf2image verification needed"
 
       - name: Setup NotebookLM authentication
         env:
@@ -53,6 +54,19 @@ jobs:
             echo "✅ NotebookLM authentication configured"
           else
             echo "⚠️ NotebookLM authentication not configured (secret not set)"
+          fi
+
+      - name: Setup Instagram session
+        env:
+          IG_SESSION_STATE: ${{ secrets.IG_SESSION_STATE }}
+        run: |
+          if [ -n "$IG_SESSION_STATE" ]; then
+            mkdir -p ~/.instagram
+            echo "$IG_SESSION_STATE" | base64 -d > ~/.instagram/session.json
+            chmod 600 ~/.instagram/session.json
+            echo "✅ Instagram session configured"
+          else
+            echo "⚠️ Instagram session not configured (will login with password)"
           fi
 
       - name: Create .env file
@@ -69,6 +83,7 @@ jobs:
 
           # Smart Money Data APIs (Optional)
           STOCKGEIST_API_KEY=${{ secrets.STOCKGEIST_API_KEY }}
+          CONGRESS_DAYS_BACK=${{ secrets.CONGRESS_DAYS_BACK }}
 
           # LLM Configuration
           LLM_ENABLED=${{ secrets.LLM_ENABLED }}
@@ -93,6 +108,11 @@ jobs:
           TELEGRAM_ENABLED=${{ secrets.TELEGRAM_ENABLED }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}
+
+          # Instagram Configuration
+          IG_ENABLED=${{ secrets.IG_ENABLED }}
+          IG_USERNAME=${{ secrets.IG_USERNAME }}
+          IG_PASSWORD=${{ secrets.IG_PASSWORD }}
           EOF
 
       - name: Collect market data
@@ -120,6 +140,20 @@ jobs:
 
       - name: Send Telegram
         run: npm run send-telegram
+
+      - name: Post to Instagram
+        run: npm run send-instagram
+        continue-on-error: true
+
+      - name: Save Instagram session for next run
+        if: always()
+        run: |
+          if [ -f ~/.instagram/session.json ]; then
+            cp ~/.instagram/session.json output/ig-session.json 2>/dev/null || true
+            echo "✅ Instagram session saved to artifact"
+            echo "💡 To update IG_SESSION_STATE secret, run:"
+            echo "   base64 < output/ig-session.json | pbcopy"
+          fi
 
       - name: Upload briefing as artifact
         uses: actions/upload-artifact@v4
