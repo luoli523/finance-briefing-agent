@@ -8,7 +8,7 @@ PDF 转图片工具
     python src/scripts/pdf-to-images.py <pdf_path> [--dpi 150]
 
 依赖:
-    pip install pdf2image
+    bash install.sh (自动安装到 .venv)
     macOS: brew install poppler
     Ubuntu: apt-get install poppler-utils
 """
@@ -20,7 +20,7 @@ from pathlib import Path
 try:
     from pdf2image import convert_from_path
 except ImportError:
-    print("❌ pdf2image 未安装，请运行: pip install pdf2image")
+    print("❌ pdf2image 未安装，请运行: bash install.sh")
     print("   macOS 还需要: brew install poppler")
     sys.exit(1)
 

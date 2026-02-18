@@ -32,7 +32,7 @@ try:
         TwoFactorRequired,
     )
 except ImportError:
-    print("❌ instagrapi 未安装，请运行: pip install instagrapi")
+    print("❌ instagrapi 未安装，请运行: bash install.sh")
     sys.exit(1)
 
 
