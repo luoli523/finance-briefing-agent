@@ -22,6 +22,7 @@ interface SmartMoneyData {
   hedgeFund?: CollectedData;
   predictionMarket?: CollectedData;
   socialSentiment?: CollectedData;
+  twitterSentiment?: CollectedData;
 }
 
 /**
@@ -56,8 +57,10 @@ export class SmartMoneyAnalyzer {
       ? this.analyzePredictionMarket(data.predictionMarket)
       : undefined;
 
-    const sentimentAnalysis = data.socialSentiment
-      ? this.analyzeSocialSentiment(data.socialSentiment)
+    // 合并 Reddit + X.com 情绪数据后统一分析
+    const mergedSentimentData = this.mergeSentimentSources(data.socialSentiment, data.twitterSentiment);
+    const sentimentAnalysis = mergedSentimentData
+      ? this.analyzeSocialSentiment(mergedSentimentData)
       : undefined;
 
     // 生成综合研判
@@ -446,6 +449,29 @@ export class SmartMoneyAnalyzer {
       trending,
       contrarianSignals,
       highlights,
+    };
+  }
+
+  /**
+   * 合并 Reddit 和 X.com 情绪数据源
+   */
+  private mergeSentimentSources(
+    reddit?: CollectedData,
+    twitter?: CollectedData
+  ): CollectedData | undefined {
+    if (!reddit && !twitter) return undefined;
+    if (!reddit) return twitter;
+    if (!twitter) return reddit;
+
+    return {
+      ...reddit,
+      items: [...reddit.items, ...twitter.items],
+      metadata: {
+        ...reddit.metadata,
+        sources: ['reddit', 'twitter'],
+        redditItems: reddit.items.length,
+        twitterItems: twitter.items.length,
+      },
     };
   }
 

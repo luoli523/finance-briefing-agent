@@ -102,7 +102,8 @@ export class UnifiedAnalyzer {
 
     // 分析智慧资金数据
     const hasSmartMoneyData = data.congressTrading || data.hedgeFund ||
-                             data.predictionMarket || data.socialSentiment;
+                             data.predictionMarket || data.socialSentiment ||
+                             data.twitterSentiment;
     if (hasSmartMoneyData) {
       try {
         smartMoneyAnalysis = await this.smartMoneyAnalyzer.analyze({
@@ -110,6 +111,7 @@ export class UnifiedAnalyzer {
           hedgeFund: data.hedgeFund,
           predictionMarket: data.predictionMarket,
           socialSentiment: data.socialSentiment,
+          twitterSentiment: data.twitterSentiment,
         });
       } catch (error) {
         console.error('[unified-analyzer] Smart money analysis failed:', error);

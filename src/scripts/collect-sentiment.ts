@@ -1,5 +1,5 @@
 /**
- * StockTwits 社交情绪数据收集脚本
+ * Reddit 社交情绪数据收集脚本 (ApeWisdom)
  * 运行: npm run collect:sentiment
  */
 
@@ -7,7 +7,7 @@ import { SocialSentimentCollector } from '../collectors/social-sentiment';
 
 async function main() {
   console.log('='.repeat(60));
-  console.log('Finance Briefing Agent - StockTwits Sentiment Collector');
+  console.log('Finance Briefing Agent - Reddit Sentiment Collector (ApeWisdom)');
   console.log('='.repeat(60));
   console.log();
 

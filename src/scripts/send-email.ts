@@ -24,9 +24,9 @@ async function main() {
   // 检查邮件配置
   const emailConfig = getEmailConfig();
   if (!emailConfig.enabled) {
-    console.error('❌ 邮件发送未启用');
-    console.error('   请在 .env 中设置 EMAIL_ENABLED=true');
-    process.exit(1);
+    console.log('⚠️  邮件发送未启用');
+    console.log('   请在 .env 中设置 EMAIL_ENABLED=true');
+    process.exit(0);
   }
 
   if (!emailConfig.smtp.pass || emailConfig.smtp.pass === '你的16位AppPassword') {

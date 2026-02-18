@@ -147,7 +147,8 @@ npm run generate:pro
 
 ### 测试外汇收集器
 ```bash
-node test-forex.js
+# 外汇数据在 npm run collect 中自动收集（Step [9/9]）
+npm run collect
 ```
 
 ## 📈 数据更新频率

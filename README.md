@@ -342,17 +342,16 @@ npm run collect:sec      # SEC文件
 npm run collect:rss      # 政府RSS
 
 # 智慧资金数据
-npm run collect:hedge-fund       # 对冲基金 13F（SEC EDGAR）
+npm run collect:hedgefund        # 对冲基金 13F（SEC EDGAR）
 npm run collect:prediction       # Polymarket 预测市场
-npm run collect:reddit           # Reddit 情绪（ApeWisdom）
-npm run collect:twitter          # X.com 情绪（StockGeist）
+npm run collect:sentiment        # Reddit 情绪（ApeWisdom）
 ```
 
 ### 测试命令
 
 ```bash
-# 测试外汇收集器（美元指数、美债收益率、货币对）
-node test-forex.js
+# 外汇数据（美元指数、美债收益率、货币对）在 npm run collect 中自动收集
+npm run collect
 ```
 
 ### 发送命令

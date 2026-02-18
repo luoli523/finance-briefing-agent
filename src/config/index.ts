@@ -407,14 +407,24 @@ export const appConfig = {
 /**
  * 验证必需的配置
  */
+const CONFIG_KEY_MAP: Record<string, () => string> = {
+  FINNHUB_API_KEY: () => appConfig.finnhub.apiKey,
+  FRED_API_KEY: () => appConfig.fred.apiKey,
+  ALPHA_VANTAGE_API_KEY: () => appConfig.alphaVantage.apiKey,
+  SEC_USER_AGENT: () => appConfig.sec.userAgent,
+  LLM_API_KEY: () => appConfig.llm.apiKey,
+  STOCKGEIST_API_KEY: () => process.env.STOCKGEIST_API_KEY || '',
+  EMAIL_SMTP_PASS: () => process.env.EMAIL_SMTP_PASS || '',
+  TELEGRAM_BOT_TOKEN: () => process.env.TELEGRAM_BOT_TOKEN || '',
+  TELEGRAM_CHAT_ID: () => process.env.TELEGRAM_CHAT_ID || '',
+};
+
 export function validateConfig(requiredKeys: string[]): void {
   const missing: string[] = [];
 
   for (const key of requiredKeys) {
-    if (key === 'FINNHUB_API_KEY' && !appConfig.finnhub.apiKey) {
-      missing.push(key);
-    }
-    if (key === 'FRED_API_KEY' && !appConfig.fred.apiKey) {
+    const getter = CONFIG_KEY_MAP[key];
+    if (getter && !getter()) {
       missing.push(key);
     }
   }
