@@ -221,7 +221,8 @@ export class ForexAnalyzer extends BaseAnalyzer<ForexAnalysis> {
    * 分析收益率曲线
    */
   private analyzeYieldCurve(yields: Record<string, any>): TreasuryYieldAnalysis['yieldCurve'] {
-    const y2 = yields['2Y']?.rate || 0;
+    // 2Y 收益率优先使用 Yahoo Finance 数据，fallback 到 3M 近似短端
+    const y2 = yields['2Y']?.rate || yields['3M']?.rate || 0;
     const y10 = yields['10Y']?.rate || 0;
     const y30 = yields['30Y']?.rate || 0;
 

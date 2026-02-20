@@ -3,12 +3,14 @@
  * 
  * 收集内容：
  * - 美元指数 (DXY)
- * - 美债收益率（2年期、5年期、10年期、30年期）
+ * - 美债收益率（3M、5Y、10Y、30Y）
  * - 主要货币对（USDCHF, USDSGD, USDJPY, USDCNH）
+ * 
+ * 注：2Y 收益率由 FRED (DGS2) 提供，Yahoo Finance 无可靠符号
  */
 
-import YahooFinance from 'yahoo-finance2';
 import { BaseCollector } from './base';
+import { createYahooFinanceClient } from './yahoo-finance';
 import {
   CollectedData,
   CollectorConfig,
@@ -16,21 +18,16 @@ import {
   DataItem,
 } from './types';
 
-// 美元相关指标配置
 export const FOREX_SYMBOLS = {
-  // 美元指数
-  dollarIndex: 'DX-Y.NYB',  // 美元指数期货
-  
-  // 美债收益率（Yahoo Finance 使用 ^IRX, ^FVX, ^TNX, ^TYX）
+  dollarIndex: 'DX-Y.NYB',
+
   treasuryYields: {
-    '3M': '^IRX',    // 13周（约3个月）国债
-    '2Y': '^2YY',    // 2年期国债
-    '5Y': '^FVX',    // 5年期国债
-    '10Y': '^TNX',   // 10年期国债
-    '30Y': '^TYX',   // 30年期国债
+    '3M': '^IRX',
+    '5Y': '^FVX',
+    '10Y': '^TNX',
+    '30Y': '^TYX',
   },
-  
-  // 主要货币对
+
   currencyPairs: {
     'USDCHF': 'USDCHF=X',
     'USDSGD': 'USDSGD=X',
@@ -40,8 +37,8 @@ export const FOREX_SYMBOLS = {
 };
 
 export interface ForexConfig extends CollectorConfig {
-  includeYields?: boolean;      // 是否包含美债收益率
-  includeCurrencies?: boolean;  // 是否包含货币对
+  includeYields?: boolean;
+  includeCurrencies?: boolean;
 }
 
 const DEFAULT_CONFIG: ForexConfig = {
@@ -53,9 +50,6 @@ const DEFAULT_CONFIG: ForexConfig = {
   includeCurrencies: true,
 };
 
-/**
- * 外汇与美元数据收集器
- */
 export class ForexCollector extends BaseCollector<ForexConfig> {
   readonly name = 'forex-collector';
   readonly description = 'Dollar Index, Treasury Yields, and Forex pairs collector';
@@ -64,32 +58,26 @@ export class ForexCollector extends BaseCollector<ForexConfig> {
     super({ ...DEFAULT_CONFIG, ...config });
   }
 
-  /**
-   * 收集外汇和美元数据
-   */
   async collect(): Promise<CollectedData> {
     this.log('Starting forex and dollar data collection...');
 
     const symbols: string[] = [FOREX_SYMBOLS.dollarIndex];
-    
-    // 添加美债收益率符号
+
     if (this.config.includeYields) {
       symbols.push(...Object.values(FOREX_SYMBOLS.treasuryYields));
     }
-    
-    // 添加货币对符号
+
     if (this.config.includeCurrencies) {
       symbols.push(...Object.values(FOREX_SYMBOLS.currencyPairs));
     }
 
     try {
       const quotes = await this.fetchQuotes(symbols);
-      
-      // 转换为 DataItem 格式
+
       const items: DataItem[] = quotes.map(quote => ({
         id: quote.symbol,
         title: quote.name,
-        content: JSON.stringify(quote),
+        content: this.formatQuoteSummary(quote),
         timestamp: quote.timestamp,
         metadata: quote,
       }));
@@ -107,17 +95,19 @@ export class ForexCollector extends BaseCollector<ForexConfig> {
         raw: this.config.saveRaw ? quotes : undefined,
       };
 
+      if (this.config.saveRaw) {
+        await this.saveRawData(quotes);
+      }
+      await this.saveProcessedData(result);
+
       this.log(`Collected ${quotes.length} forex data points`);
       return result;
     } catch (error) {
-      this.logError('Failed to collect forex data:', error as Error);
+      this.logError('Failed to collect forex data', error as Error);
       throw error;
     }
   }
 
-  /**
-   * 批量获取报价
-   */
   private async fetchQuotes(symbols: string[]): Promise<QuoteData[]> {
     const quotes: QuoteData[] = [];
     const batchSize = 5;
@@ -125,114 +115,100 @@ export class ForexCollector extends BaseCollector<ForexConfig> {
 
     this.log(`Fetching quotes for ${symbols.length} symbols...`);
 
+    const yahooFinance = await createYahooFinanceClient();
+
     for (let i = 0; i < symbols.length; i += batchSize) {
       const batch = symbols.slice(i, i + batchSize);
-      
-      try {
-        const results = await Promise.allSettled(
-          batch.map(symbol => this.fetchQuote(symbol))
-        );
 
-        for (let j = 0; j < results.length; j++) {
-          const result = results[j];
-          if (result.status === 'fulfilled' && result.value) {
-            quotes.push(result.value);
-          } else if (result.status === 'rejected') {
-            this.log(`Failed to fetch ${batch[j]}: ${result.reason}`);
+      const results = await Promise.allSettled(
+        batch.map(async (symbol) => {
+          const quote = await yahooFinance.quote(symbol) as any;
+          return { symbol, quote };
+        })
+      );
+
+      for (let j = 0; j < results.length; j++) {
+        const result = results[j];
+        if (result.status === 'fulfilled') {
+          const transformed = this.transformQuote(result.value.quote, batch[j]);
+          if (transformed) {
+            quotes.push(transformed);
           }
+        } else {
+          this.log(`Failed to fetch ${batch[j]}: ${result.reason}`);
         }
+      }
 
-        // 批次间延迟，避免请求过快
-        if (i + batchSize < symbols.length) {
-          await new Promise(resolve => setTimeout(resolve, delayMs));
-        }
-      } catch (error) {
-        this.logError(`Failed to fetch batch starting at index ${i}:`, error as Error);
+      if (i + batchSize < symbols.length) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
 
     return quotes;
   }
 
-  /**
-   * 获取单个报价
-   */
-  private async fetchQuote(symbol: string): Promise<QuoteData | null> {
-    try {
-      // 创建 Yahoo Finance 客户端实例
-      const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
-      const quote = await yahooFinance.quote(symbol) as any;
-      
-      if (!quote || typeof quote.regularMarketPrice !== 'number') {
-        this.log(`Invalid quote data for ${symbol}`);
-        return null;
-      }
-
-      return {
-        symbol: quote.symbol,
-        name: quote.longName || quote.shortName || symbol,
-        price: quote.regularMarketPrice,
-        change: quote.regularMarketChange || 0,
-        changePercent: quote.regularMarketChangePercent || 0,
-        open: quote.regularMarketOpen,
-        high: quote.regularMarketDayHigh,
-        low: quote.regularMarketDayLow,
-        volume: quote.regularMarketVolume,
-        previousClose: quote.regularMarketPreviousClose,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      this.log(`Failed to fetch quote for ${symbol}: ${error}`);
+  private transformQuote(quote: any, originalSymbol: string): QuoteData | null {
+    if (!quote || typeof quote.regularMarketPrice !== 'number') {
+      this.log(`Invalid quote data for ${originalSymbol}`);
       return null;
     }
+
+    const marketTime = quote.regularMarketTime instanceof Date
+      ? quote.regularMarketTime
+      : quote.regularMarketTime
+        ? new Date(quote.regularMarketTime)
+        : new Date();
+
+    return {
+      symbol: quote.symbol,
+      name: quote.longName || quote.shortName || originalSymbol,
+      price: quote.regularMarketPrice,
+      change: quote.regularMarketChange ?? 0,
+      changePercent: quote.regularMarketChangePercent ?? 0,
+      open: quote.regularMarketOpen,
+      high: quote.regularMarketDayHigh,
+      low: quote.regularMarketDayLow,
+      volume: quote.regularMarketVolume,
+      previousClose: quote.regularMarketPreviousClose,
+      timestamp: marketTime,
+    };
   }
 
-  /**
-   * 提取美元指数数据
-   */
+  private formatQuoteSummary(quote: QuoteData): string {
+    const direction = quote.change >= 0 ? '↑' : '↓';
+    const sign = quote.change >= 0 ? '+' : '';
+    return `${quote.name}: ${quote.price.toFixed(4)} ${direction} ${sign}${quote.change.toFixed(4)} (${sign}${quote.changePercent.toFixed(2)}%)`;
+  }
+
   private extractDollarIndex(quotes: QuoteData[]): QuoteData | null {
     return quotes.find(q => q.symbol === FOREX_SYMBOLS.dollarIndex) || null;
   }
 
-  /**
-   * 提取美债收益率数据
-   */
   private extractTreasuryYields(quotes: QuoteData[]): Record<string, QuoteData> {
     const yields: Record<string, QuoteData> = {};
-    
     for (const [period, symbol] of Object.entries(FOREX_SYMBOLS.treasuryYields)) {
       const quote = quotes.find(q => q.symbol === symbol);
       if (quote) {
         yields[period] = quote;
       }
     }
-    
     return yields;
   }
 
-  /**
-   * 提取货币对数据
-   */
   private extractCurrencyPairs(quotes: QuoteData[]): Record<string, QuoteData> {
     const pairs: Record<string, QuoteData> = {};
-    
     for (const [pair, symbol] of Object.entries(FOREX_SYMBOLS.currencyPairs)) {
       const quote = quotes.find(q => q.symbol === symbol);
       if (quote) {
         pairs[pair] = quote;
       }
     }
-    
     return pairs;
   }
 }
 
-// 单例实例
 export const forexCollector = new ForexCollector();
 
-/**
- * 创建外汇收集器实例
- */
 export function createForexCollector(config?: Partial<ForexConfig>): ForexCollector {
   return new ForexCollector(config);
 }

@@ -33,8 +33,8 @@ async function getProxyAgent(): Promise<unknown> {
   return undefined;
 }
 
-// 创建 yahoo-finance2 实例（支持代理）
-async function createYahooFinanceClient(): Promise<InstanceType<typeof YahooFinance>> {
+// 创建 yahoo-finance2 实例（支持代理），供其他 collector 复用
+export async function createYahooFinanceClient(): Promise<InstanceType<typeof YahooFinance>> {
   const agent = await getProxyAgent();
   const options: Record<string, unknown> = { suppressNotices: ['yahooSurvey'] };
 
